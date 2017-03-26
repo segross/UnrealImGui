@@ -2,20 +2,31 @@
 
 #include "ImGuiPrivatePCH.h"
 
+#include "ImGuiModuleManager.h"
+
 #include <IPluginManager.h>
 
 
 #define LOCTEXT_NAMESPACE "FImGuiModule"
 
+
+static FImGuiModuleManager* ModuleManager = nullptr;
+
 void FImGuiModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+	checkf(!ModuleManager, TEXT("Instance of Module Manager already exists. Instance should be created only during module startup."));
+
+	// Create module manager that implements modules logic.
+	ModuleManager = new FImGuiModuleManager();
 }
 
 void FImGuiModule::ShutdownModule()
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
+	checkf(ModuleManager, TEXT("Null Module Manager. Manager instance should be deleted during module shutdown."));
+	
+	// Before we shutdown we need to delete manager that will do all necessary cleanup.
+	delete ModuleManager;
+	ModuleManager = nullptr;
 }
 
 #undef LOCTEXT_NAMESPACE
