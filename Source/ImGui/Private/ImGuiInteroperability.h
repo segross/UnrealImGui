@@ -7,9 +7,56 @@
 #include <imgui.h>
 
 
+class FImGuiInputState;
+
 // Utilities to help standardise operations between Unreal and ImGui.
 namespace ImGuiInterops
 {
+	//====================================================================================================
+	// ImGui Types
+	//====================================================================================================
+
+	namespace ImGuiTypes
+	{
+		using FMouseButtonsArray = decltype(ImGuiIO::MouseDown);
+		using FKeysArray = decltype(ImGuiIO::KeysDown);
+
+		using FInputCharactersBuffer = decltype(ImGuiIO::InputCharacters);
+
+		using FKeyMap = decltype(ImGuiIO::KeyMap);
+	}
+
+
+	//====================================================================================================
+	// Input Mapping
+	//====================================================================================================
+
+	// Set in ImGui IO mapping to recognize indices generated from Unreal input events.
+	void SetUnrealKeyMap(ImGuiIO& IO);
+
+	// Map FKey to index in keys buffer.
+	uint32 GetKeyIndex(const FKey& Key);
+
+	// Map key event to index in keys buffer.
+	uint32 GetKeyIndex(const FKeyEvent& KeyEvent) { return KeyEvent.GetKeyCode(); }
+
+	// Map mouse FKey to index in mouse buttons buffer.
+	uint32 GetMouseIndex(const FKey& MouseButton);
+
+	// Map pointer event to index in mouse buttons buffer.
+	uint32 GetMouseIndex(const FPointerEvent& MouseEvent) { return GetMouseIndex(MouseEvent.GetEffectingButton()); }
+
+
+	//====================================================================================================
+	// Input State Copying
+	//====================================================================================================
+
+	// Copy input to ImGui IO.
+	// @param IO - Target ImGui IO
+	// @param InputState - Input state to copy
+	void CopyInput(ImGuiIO& IO, const FImGuiInputState& InputState);
+
+
 	//====================================================================================================
 	// Conversions
 	//====================================================================================================

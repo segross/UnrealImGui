@@ -118,7 +118,10 @@ void FImGuiModuleManager::Tick(float DeltaSeconds)
 	if (IsInUpdateThread())
 	{
 		// Update context proxy to advance to next frame.
-		ContextProxy.Tick(DeltaSeconds);
+		ContextProxy.Tick(DeltaSeconds, ViewportWidget.IsValid() ? &ViewportWidget->GetInputState() : nullptr);
+
+		// Inform that we finished updating ImGui, so other subsystems can react.
+		PostImGuiUpdateEvent.Broadcast();
 	}
 }
 

@@ -4,6 +4,8 @@
 
 #include "SImGuiWidget.h"
 
+#include "ImGuiContextProxy.h"
+#include "ImGuiInteroperability.h"
 #include "ImGuiModuleManager.h"
 #include "TextureManager.h"
 #include "Utilities/ScopeGuards.h"
@@ -14,8 +16,75 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 {
 	checkf(InArgs._ModuleManager, TEXT("Null Module Manager argument"));
 	ModuleManager = InArgs._ModuleManager;
+
+	ModuleManager->OnPostImGuiUpdate().AddRaw(this, &SImGuiWidget::OnPostImGuiUpdate);
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
+
+SImGuiWidget::~SImGuiWidget()
+{
+	ModuleManager->OnPostImGuiUpdate().RemoveAll(this);
+}
+
+FReply SImGuiWidget::OnKeyChar(const FGeometry& MyGeometry, const FCharacterEvent& CharacterEvent)
+{
+	InputState.AddCharacter(CharacterEvent.GetCharacter());
+	return FReply::Handled();
+}
+
+FReply SImGuiWidget::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent)
+{
+	InputState.SetKeyDown(ImGuiInterops::GetKeyIndex(KeyEvent), true);
+
+	// If this is tilde key then let input through and release the focus to allow console to process it.
+	if (KeyEvent.GetKey() == EKeys::Tilde)
+	{
+		return FReply::Unhandled();
+	}
+
+	return FReply::Handled();
+}
+
+FReply SImGuiWidget::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent)
+{
+	InputState.SetKeyDown(ImGuiInterops::GetKeyIndex(KeyEvent), false);
+	return FReply::Handled();
+}
+
+FReply SImGuiWidget::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	InputState.SetMouseDown(ImGuiInterops::GetMouseIndex(MouseEvent), true);
+	return FReply::Handled();
+}
+
+FReply SImGuiWidget::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	InputState.SetMouseDown(ImGuiInterops::GetMouseIndex(MouseEvent), true);
+	return FReply::Handled();
+}
+
+FReply SImGuiWidget::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	InputState.SetMouseDown(ImGuiInterops::GetMouseIndex(MouseEvent), false);
+	return FReply::Handled();
+}
+
+FReply SImGuiWidget::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	InputState.AddMouseWheelDelta(MouseEvent.GetWheelDelta());
+	return FReply::Handled();
+}
+
+FReply SImGuiWidget::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	InputState.SetMousePosition(MouseEvent.GetScreenSpacePosition() - MyGeometry.AbsolutePosition);
+	return FReply::Handled();
+}
+
+void SImGuiWidget::OnPostImGuiUpdate()
+{
+	InputState.ClearUpdateState();
+}
 
 int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyClippingRect,
 	FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& WidgetStyle, bool bParentEnabled) const

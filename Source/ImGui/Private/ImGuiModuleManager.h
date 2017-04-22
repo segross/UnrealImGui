@@ -22,6 +22,9 @@ public:
 	// Get texture resources manager.
 	FTextureManager& GetTextureManager() { return TextureManager; }
 
+	// Event called right after ImGui is updated, to give other subsystems chance to react.
+	FSimpleMulticastDelegate& OnPostImGuiUpdate() { return PostImGuiUpdateEvent; }
+
 private:
 
 	FImGuiModuleManager();
@@ -49,6 +52,9 @@ private:
 
 	void AddWidgetToViewport(UGameViewportClient* GameViewport);
 	void AddWidgetToAllViewports();
+
+	// Event that we call after ImGui is updated.
+	FSimpleMulticastDelegate PostImGuiUpdateEvent;
 
 	// Proxy controlling ImGui context.
 	FImGuiContextProxy ContextProxy;

@@ -20,6 +20,9 @@ FImGuiContextProxy::FImGuiContextProxy()
 	unsigned char* Pixels;
 	IO.Fonts->GetTexDataAsRGBA32(&Pixels, nullptr, nullptr);
 
+	// Initialize key mapping, so context can correctly interpret input state.
+	ImGuiInterops::SetUnrealKeyMap(IO);
+
 	// Begin frame to complete context initialization (this is to avoid problems with other systems calling to ImGui
 	// during startup).
 	BeginFrame();
@@ -30,7 +33,7 @@ FImGuiContextProxy::~FImGuiContextProxy()
 	ImGui::Shutdown();
 }
 
-void FImGuiContextProxy::Tick(float DeltaSeconds)
+void FImGuiContextProxy::Tick(float DeltaSeconds, const FImGuiInputState* InputState)
 {
 	if (bIsFrameStarted)
 	{
@@ -46,15 +49,20 @@ void FImGuiContextProxy::Tick(float DeltaSeconds)
 	}
 
 	// Begin a new frame and set the context back to a state in which it allows to draw controls.
-	BeginFrame(DeltaSeconds);
+	BeginFrame(DeltaSeconds, InputState);
 }
 
-void FImGuiContextProxy::BeginFrame(float DeltaTime)
+void FImGuiContextProxy::BeginFrame(float DeltaTime, const FImGuiInputState* InputState)
 {
 	if (!bIsFrameStarted)
 	{
 		ImGuiIO& IO = ImGui::GetIO();
 		IO.DeltaTime = DeltaTime;
+
+		if (InputState)
+		{
+			ImGuiInterops::CopyInput(IO, *InputState);
+		}
 
 		ImGui::NewFrame();
 
