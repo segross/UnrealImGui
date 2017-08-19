@@ -29,12 +29,14 @@ SImGuiWidget::~SImGuiWidget()
 FReply SImGuiWidget::OnKeyChar(const FGeometry& MyGeometry, const FCharacterEvent& CharacterEvent)
 {
 	InputState.AddCharacter(CharacterEvent.GetCharacter());
+
 	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent)
 {
 	InputState.SetKeyDown(ImGuiInterops::GetKeyIndex(KeyEvent), true);
+	CopyModifierKeys(KeyEvent);
 
 	// If this is tilde key then let input through and release the focus to allow console to process it.
 	if (KeyEvent.GetKey() == EKeys::Tilde)
@@ -48,37 +50,56 @@ FReply SImGuiWidget::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Key
 FReply SImGuiWidget::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent)
 {
 	InputState.SetKeyDown(ImGuiInterops::GetKeyIndex(KeyEvent), false);
+	CopyModifierKeys(KeyEvent);
+
 	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	InputState.SetMouseDown(ImGuiInterops::GetMouseIndex(MouseEvent), true);
+	CopyModifierKeys(MouseEvent);
+
 	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	InputState.SetMouseDown(ImGuiInterops::GetMouseIndex(MouseEvent), true);
+	CopyModifierKeys(MouseEvent);
+
 	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	InputState.SetMouseDown(ImGuiInterops::GetMouseIndex(MouseEvent), false);
+	CopyModifierKeys(MouseEvent);
+
 	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	InputState.AddMouseWheelDelta(MouseEvent.GetWheelDelta());
+	CopyModifierKeys(MouseEvent);
+
 	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	InputState.SetMousePosition(MouseEvent.GetScreenSpacePosition() - MyGeometry.AbsolutePosition);
+	CopyModifierKeys(MouseEvent);
+
 	return FReply::Handled();
+}
+
+void SImGuiWidget::CopyModifierKeys(const FInputEvent& InputEvent)
+{
+	InputState.SetControlDown(InputEvent.IsControlDown());
+	InputState.SetShiftDown(InputEvent.IsShiftDown());
+	InputState.SetAltDown(InputEvent.IsAltDown());
 }
 
 void SImGuiWidget::OnPostImGuiUpdate()

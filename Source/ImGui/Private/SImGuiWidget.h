@@ -12,6 +12,8 @@ class FImGuiModuleManager;
 // Slate widget for rendering ImGui output and storing Slate inputs.
 class SImGuiWidget : public SLeafWidget
 {
+	typedef SLeafWidget Super;
+
 public:
 
 	SLATE_BEGIN_ARGS(SImGuiWidget)
@@ -48,6 +50,8 @@ public:
 	virtual FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
 private:
+
+	FORCEINLINE void CopyModifierKeys(const FInputEvent& InputEvent);
 
 	void OnPostImGuiUpdate();
 

@@ -154,9 +154,9 @@ namespace ImGuiInterops
 		IO.MouseWheel += InputState.GetMouseWheelDelta();
 
 		// Copy key modifiers.
-		IO.KeyCtrl = InputState.GetKeys()[LeftControl] || InputState.GetKeys()[RightControl];
-		IO.KeyShift = InputState.GetKeys()[LeftShift] || InputState.GetKeys()[RightShift];
-		IO.KeyAlt = InputState.GetKeys()[LeftAlt] || InputState.GetKeys()[RightAlt];
+		IO.KeyCtrl = InputState.IsControlDown();
+		IO.KeyShift = InputState.IsShiftDown();
+		IO.KeyAlt = InputState.IsAltDown();
 		IO.KeySuper = false;
 
 		// Copy buffers.
@@ -172,7 +172,7 @@ namespace ImGuiInterops
 
 		if (InputState.GetCharactersNum() > 0)
 		{
-			Copy(InputState.GetCharacters(), IO.InputCharacters, InputState.GetCharactersNum());
+			Copy(InputState.GetCharacters(), IO.InputCharacters);
 		}
 	}
 }

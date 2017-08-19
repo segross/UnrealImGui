@@ -76,8 +76,29 @@ public:
 	// @param Position - New mouse position
 	void SetMousePosition(const FVector2D& Position) { MousePosition = Position; }
 
-	// Clear state and mark as dirty.
-	void ClearState();
+	// Get Control down state.
+	bool IsControlDown() const { return bIsControlDown; }
+
+	// Set Control down state.
+	// @param bIsDown - True, if Control is down
+	void SetControlDown(bool bIsDown) { bIsControlDown = bIsDown; }
+
+	// Get Shift down state.
+	bool IsShiftDown() const { return bIsShiftDown; }
+
+	// Set Shift down state.
+	// @param bIsDown - True, if Shift is down
+	void SetShiftDown(bool bIsDown) { bIsShiftDown = bIsDown; }
+
+	// Get Alt down state.
+	bool IsAltDown() const { return bIsAltDown; }
+
+	// Set Alt down state.
+	// @param bIsDown - True, if Alt is down
+	void SetAltDown(bool bIsDown) { bIsAltDown = bIsDown; }
+
+	// Reset state and mark as dirty.
+	void ResetState();
 
 	// Clear part of the state that is meant to be updated in every frame like: accumulators, buffers and information
 	// about dirty parts of keys or mouse buttons arrays.
@@ -86,6 +107,10 @@ public:
 private:
 
 	void ClearCharacters();
+	void ClearKeys();
+	void ClearMouseButtons();
+	void ClearMouseAnalogue();
+	void ClearModifierKeys();
 
 	FVector2D MousePosition = FVector2D::ZeroVector;
 	float MouseWheelDelta = 0.f;
@@ -98,4 +123,8 @@ private:
 
 	FKeysArray KeysDown;
 	FKeysIndexRange KeysUpdateRange;
+
+	bool bIsControlDown = false;
+	bool bIsShiftDown = false;
+	bool bIsAltDown = false;
 };

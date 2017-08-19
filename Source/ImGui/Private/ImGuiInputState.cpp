@@ -7,7 +7,7 @@
 
 FImGuiInputState::FImGuiInputState()
 {
-	ClearState();
+	ResetState();
 }
 
 void FImGuiInputState::AddCharacter(TCHAR Char)
@@ -45,22 +45,23 @@ void FImGuiInputState::SetMouseDown(uint32 MouseIndex, bool bIsDown)
 	}
 }
 
-void FImGuiInputState::ClearState()
+void FImGuiInputState::ResetState()
 {
 	ClearCharacters();
+	ClearKeys();
 
-	using std::fill;
-	fill(KeysDown, &KeysDown[Utilities::GetArraySize(KeysDown)], false);
-	fill(MouseButtonsDown, &MouseButtonsDown[Utilities::GetArraySize(MouseButtonsDown)], false);
+	ClearMouseButtons();
+	ClearMouseAnalogue();
 
-	// Fully expanding dirty parts of both arrays, to inform about the change.
-	KeysUpdateRange.SetFull();
-	MouseButtonsUpdateRange.SetFull();
+	ClearModifierKeys();
 }
 
 void FImGuiInputState::ClearUpdateState()
 {
-	ClearCharacters();
+	if (InputCharactersNum > 0)
+	{
+		ClearCharacters();
+	}
 
 	KeysUpdateRange.SetEmpty();
 	MouseButtonsUpdateRange.SetEmpty();
@@ -70,6 +71,38 @@ void FImGuiInputState::ClearUpdateState()
 
 void FImGuiInputState::ClearCharacters()
 {
+	using std::fill;
+	fill(InputCharacters, &InputCharacters[Utilities::GetArraySize(InputCharacters)], 0);
 	InputCharactersNum = 0;
-	InputCharacters[0];
+}
+
+void FImGuiInputState::ClearKeys()
+{
+	using std::fill;
+	fill(KeysDown, &KeysDown[Utilities::GetArraySize(KeysDown)], false);
+
+	// Expand update range because keys array has been updated.
+	KeysUpdateRange.SetFull();
+}
+
+void FImGuiInputState::ClearMouseButtons()
+{
+	using std::fill;
+	fill(MouseButtonsDown, &MouseButtonsDown[Utilities::GetArraySize(MouseButtonsDown)], false);
+
+	// Expand update range because mouse buttons array has been updated.
+	MouseButtonsUpdateRange.SetFull();
+}
+
+void FImGuiInputState::ClearMouseAnalogue()
+{
+	MousePosition = FVector2D::ZeroVector;
+	MouseWheelDelta = 0.f;
+}
+
+void FImGuiInputState::ClearModifierKeys()
+{
+	bIsControlDown = false;
+	bIsShiftDown = false;
+	bIsAltDown = false;
 }
