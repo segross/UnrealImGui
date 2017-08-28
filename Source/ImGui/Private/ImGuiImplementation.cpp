@@ -20,3 +20,11 @@
 #if PLATFORM_WINDOWS
 #include <HideWindowsPlatformTypes.h>
 #endif // PLATFORM_WINDOWS
+
+
+// This is exposing ImGui default context for the whole module.
+// This is assuming that we don't define custom GImGui and therefore have GImDefaultContext defined in imgui.cpp.
+ImGuiContext& GetDefaultContext()
+{
+	return GImDefaultContext;
+}

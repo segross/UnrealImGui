@@ -2,8 +2,7 @@
 
 #pragma once
 
-#include "ImGuiContextProxy.h"
-#include "ImGuiDemo.h"
+#include "ImGuiContextManager.h"
 #include "SImGuiWidget.h"
 #include "TextureManager.h"
 
@@ -16,8 +15,8 @@ class FImGuiModuleManager
 
 public:
 
-	// Get ImGui context proxy.
-	FImGuiContextProxy& GetContextProxy() { return ContextProxy; }
+	// Get ImGui contexts manager.
+	FImGuiContextManager& GetContextManager() { return ContextManager; }
 
 	// Get texture resources manager.
 	FTextureManager& GetTextureManager() { return TextureManager; }
@@ -56,18 +55,14 @@ private:
 	// Event that we call after ImGui is updated.
 	FSimpleMulticastDelegate PostImGuiUpdateEvent;
 
-	// Proxy controlling ImGui context.
-	FImGuiContextProxy ContextProxy;
-
-	// ImWidget that draws ImGui demo.
-	FImGuiDemo ImGuiDemo;
+	// Manager for ImGui contexts.
+	FImGuiContextManager ContextManager;
 
 	// Manager for textures resources.
 	FTextureManager TextureManager;
 
-	// Slate widget that we attach to created game viewports (widget without per-viewport state can be attached to
-	// multiple viewports).
-	TSharedPtr<SImGuiWidget> ViewportWidget;
+	// Slate widgets that we attach to game viewports.
+	TMap<int32, TSharedPtr<SImGuiWidget>> ViewportWidgets;
 
 	FDelegateHandle TickDelegateHandle;
 	FDelegateHandle ViewportCreatedHandle;

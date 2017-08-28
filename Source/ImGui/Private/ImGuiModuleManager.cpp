@@ -11,8 +11,8 @@
 
 FImGuiModuleManager::FImGuiModuleManager()
 {
-	// Bind ImGui demo to proxy, so it can draw controls in its context.
-	ContextProxy.OnDraw().AddRaw(&ImGuiDemo, &FImGuiDemo::DrawControls);
+	// Make sure that default ImGui context is setup.
+	ContextManager.GetDefaultContextProxy();
 
 	// Typically we will use viewport created events to add widget to new game viewports.
 	ViewportCreatedHandle = UGameViewportClient::OnViewportCreated().AddRaw(this, &FImGuiModuleManager::OnViewportCreated);
@@ -117,8 +117,8 @@ void FImGuiModuleManager::Tick(float DeltaSeconds)
 {
 	if (IsInUpdateThread())
 	{
-		// Update context proxy to advance to next frame.
-		ContextProxy.Tick(DeltaSeconds, ViewportWidget.IsValid() ? &ViewportWidget->GetInputState() : nullptr);
+		// Update context manager to advance all ImGui contexts to the next frame.
+		ContextManager.Tick(DeltaSeconds);
 
 		// Inform that we finished updating ImGui, so other subsystems can react.
 		PostImGuiUpdateEvent.Broadcast();
@@ -141,15 +141,24 @@ void FImGuiModuleManager::AddWidgetToViewport(UGameViewportClient* GameViewport)
 	checkf(GameViewport, TEXT("Null game viewport."));
 	checkf(FSlateApplication::IsInitialized(), TEXT("Slate should be initialized before we can add widget to game viewports."));
 
+	const int32 ContextIndex = Utilities::GetWorldContextIndex(GameViewport);
+
+	// This makes sure that context for this world is created.
+	auto& Proxy = ContextManager.GetWorldContextProxy(*GameViewport->GetWorld());
+
+	// Get widget for this world.
+	auto& ViewportWidget = ViewportWidgets.FindOrAdd(ContextIndex);
 	if (!ViewportWidget.IsValid())
 	{
-		SAssignNew(ViewportWidget, SImGuiWidget).ModuleManager(this);
-		checkf(ViewportWidget.IsValid(), TEXT("Failed to create SImGuiWidget."));
+		SAssignNew(ViewportWidget, SImGuiWidget).ModuleManager(this).ContextIndex(ContextIndex);
+		check(ViewportWidget.IsValid());
 	}
+
+	// Bind widget's input to context for this world.
+	Proxy.SetInputState(&ViewportWidget->GetInputState());
 
 	// High enough z-order guarantees that ImGui output is rendered on top of the game UI.
 	constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
-
 	GameViewport->AddViewportWidgetContent(SNew(SWeakWidget).PossiblyNullContent(ViewportWidget), IMGUI_WIDGET_Z_ORDER);
 }
 

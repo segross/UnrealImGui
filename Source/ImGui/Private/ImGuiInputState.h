@@ -98,13 +98,21 @@ public:
 	void SetAltDown(bool bIsDown) { bIsAltDown = bIsDown; }
 
 	// Reset state and mark as dirty.
-	void ResetState();
+	void ResetState() { Reset(true, true); }
+
+	// Reset keyboard state and mark as dirty.
+	void ResetKeyboardState() { Reset(true, false); }
+
+	// Reset mouse state and mark as dirty.
+	void ResetMouseState() { Reset(false, true); }
 
 	// Clear part of the state that is meant to be updated in every frame like: accumulators, buffers and information
 	// about dirty parts of keys or mouse buttons arrays.
 	void ClearUpdateState();
 
 private:
+
+	void Reset(bool bKeyboard, bool bMouse);
 
 	void ClearCharacters();
 	void ClearKeys();

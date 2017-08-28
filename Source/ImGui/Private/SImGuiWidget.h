@@ -19,12 +19,17 @@ public:
 	SLATE_BEGIN_ARGS(SImGuiWidget)
 	{}
 	SLATE_ARGUMENT(FImGuiModuleManager*, ModuleManager)
+	SLATE_ARGUMENT(int32, ContextIndex)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
 
 	~SImGuiWidget();
 
+	// Get index of the context that this widget is targeting.
+	int32 GetContextIndex() const { return ContextIndex; }
+
+	// Get input state associated with this widget.
 	const FImGuiInputState& GetInputState() const { return InputState; }
 
 	//----------------------------------------------------------------------------------------------------
@@ -49,9 +54,28 @@ public:
 
 	virtual FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
+	virtual FReply OnFocusReceived(const FGeometry& MyGeometry, const FFocusEvent& FocusEvent) override;
+
+	virtual void OnFocusLost(const FFocusEvent& FocusEvent) override;
+
+	virtual void OnMouseEnter(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+
+	virtual void OnMouseLeave(const FPointerEvent& MouseEvent) override;
+
 private:
 
+	enum class EInputMode
+	{
+		None,
+		MouseOnly,
+		MouseAndKeyboard
+	};
+
 	FORCEINLINE void CopyModifierKeys(const FInputEvent& InputEvent);
+	FORCEINLINE void CopyModifierKeys(const FPointerEvent& MouseEvent);
+
+	// Determine new input mode based on requirement hints.
+	void UpdateInputMode(bool bNeedKeyboard, bool bNeedMouse);
 
 	void OnPostImGuiUpdate();
 
@@ -63,6 +87,10 @@ private:
 
 	mutable TArray<FSlateVertex> VertexBuffer;
 	mutable TArray<SlateIndex> IndexBuffer;
+
+	int32 ContextIndex = 0;
+
+	EInputMode InputMode = EInputMode::None;
 
 	FImGuiInputState InputState;
 };

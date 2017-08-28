@@ -45,15 +45,24 @@ void FImGuiInputState::SetMouseDown(uint32 MouseIndex, bool bIsDown)
 	}
 }
 
-void FImGuiInputState::ResetState()
+void FImGuiInputState::Reset(bool bKeyboard, bool bMouse)
 {
-	ClearCharacters();
-	ClearKeys();
+	if (bKeyboard)
+	{
+		ClearCharacters();
+		ClearKeys();
+	}
 
-	ClearMouseButtons();
-	ClearMouseAnalogue();
+	if (bMouse)
+	{
+		ClearMouseButtons();
+		ClearMouseAnalogue();
+	}
 
-	ClearModifierKeys();
+	if (bKeyboard && bMouse)
+	{
+		ClearModifierKeys();
+	}
 }
 
 void FImGuiInputState::ClearUpdateState()

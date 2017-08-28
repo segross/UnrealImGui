@@ -4,17 +4,26 @@
 
 #include "ImGuiContextProxy.h"
 
+#include "ImGuiImplementation.h"
+#include "ImGuiInteroperability.h"
+
 
 static constexpr float DEFAULT_CANVAS_WIDTH = 3840.f;
 static constexpr float DEFAULT_CANVAS_HEIGHT = 2160.f;
 
 FImGuiContextProxy::FImGuiContextProxy()
 {
+	// Create context.
+	Context = ImGui::CreateContext();
+
+	// Set this context in ImGui for initialization (any allocations will be tracked in this context).
+	SetAsCurrent();
+
+	// Start initialization.
 	ImGuiIO& IO = ImGui::GetIO();
 
 	// Use pre-defined canvas size.
-	IO.DisplaySize.x = DEFAULT_CANVAS_WIDTH;
-	IO.DisplaySize.y = DEFAULT_CANVAS_HEIGHT;
+	IO.DisplaySize = { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT };
 
 	// Load texture atlas.
 	unsigned char* Pixels;
@@ -28,12 +37,44 @@ FImGuiContextProxy::FImGuiContextProxy()
 	BeginFrame();
 }
 
-FImGuiContextProxy::~FImGuiContextProxy()
+FImGuiContextProxy::FImGuiContextProxy(FImGuiContextProxy&& Other)
+	: Context(std::move(Other.Context))
+	, DrawEvent(std::move(Other.DrawEvent))
+	, InputState(std::move(Other.InputState))
+	, DrawLists(std::move(Other.DrawLists))
 {
-	ImGui::Shutdown();
+	Other.Context = nullptr;
 }
 
-void FImGuiContextProxy::Tick(float DeltaSeconds, const FImGuiInputState* InputState)
+FImGuiContextProxy& FImGuiContextProxy::operator=(FImGuiContextProxy&& Other)
+{
+	Context = std::move(Other.Context);
+	Other.Context = nullptr;
+	DrawEvent = std::move(Other.DrawEvent);
+	InputState = std::move(Other.InputState);
+	DrawLists = std::move(Other.DrawLists);
+	return *this;
+}
+
+FImGuiContextProxy::~FImGuiContextProxy()
+{
+	if (Context)
+	{
+		// Set this context in ImGui for de-initialization (any de-allocations will be tracked in this context).
+		SetAsCurrent();
+
+		// Shutdown to save data etc.
+		ImGui::Shutdown();
+
+		// Destroy the context.
+		ImGui::DestroyContext(Context);
+
+		// Set default context in ImGui to keep global context pointer valid.
+		ImGui::SetCurrentContext(&GetDefaultContext());
+	}
+}
+
+void FImGuiContextProxy::Tick(float DeltaSeconds)
 {
 	if (bIsFrameStarted)
 	{
@@ -49,10 +90,10 @@ void FImGuiContextProxy::Tick(float DeltaSeconds, const FImGuiInputState* InputS
 	}
 
 	// Begin a new frame and set the context back to a state in which it allows to draw controls.
-	BeginFrame(DeltaSeconds, InputState);
+	BeginFrame(DeltaSeconds);
 }
 
-void FImGuiContextProxy::BeginFrame(float DeltaTime, const FImGuiInputState* InputState)
+void FImGuiContextProxy::BeginFrame(float DeltaTime)
 {
 	if (!bIsFrameStarted)
 	{
