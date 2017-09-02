@@ -12,6 +12,15 @@
 #include "Utilities/ScopeGuards.h"
 
 
+namespace CVars
+{
+	TAutoConsoleVariable<int> InputEnabled(TEXT("ImGui.InputEnabled"), 0,
+		TEXT("Allows to enable or disable ImGui input mode.\n")
+		TEXT("0: disabled (default)\n")
+		TEXT("1: enabled, input is routed to ImGui and with a few exceptions is consumed."),
+		ECVF_Default);
+}
+
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SImGuiWidget::Construct(const FArguments& InArgs)
 {
@@ -20,12 +29,24 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 	ContextIndex = InArgs._ContextIndex;
 
 	ModuleManager->OnPostImGuiUpdate().AddRaw(this, &SImGuiWidget::OnPostImGuiUpdate);
+
+	// Sync visibility with default input enabled state.
+	SetVisibilityFromInputEnabled();
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 SImGuiWidget::~SImGuiWidget()
 {
 	ModuleManager->OnPostImGuiUpdate().RemoveAll(this);
+}
+
+void SImGuiWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
+{
+	Super::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+
+	// Note: Moving that update to console variable sink or callback might seem like a better alternative but input
+	// setup in this function is better handled here.
+	UpdateInputEnabled();
 }
 
 FReply SImGuiWidget::OnKeyChar(const FGeometry& MyGeometry, const FCharacterEvent& CharacterEvent)
@@ -151,6 +172,41 @@ void SImGuiWidget::CopyModifierKeys(const FPointerEvent& MouseEvent)
 	if (InputMode == EInputMode::MouseOnly)
 	{
 		CopyModifierKeys(static_cast<const FInputEvent&>(MouseEvent));
+	}
+}
+
+void SImGuiWidget::SetVisibilityFromInputEnabled()
+{
+	// If we don't use input disable hit test to make this widget invisible for cursors hit detection.
+	SetVisibility(bInputEnabled ? EVisibility::Visible : EVisibility::HitTestInvisible);
+}
+
+void SImGuiWidget::UpdateInputEnabled()
+{
+	const bool bEnabled = CVars::InputEnabled.GetValueOnGameThread() > 0;
+	if (bInputEnabled != bEnabled)
+	{
+		bInputEnabled = bEnabled;
+
+		SetVisibilityFromInputEnabled();
+
+		// Setup input to show cursor and take focus when we use input or clear state and pass focus back to viewport
+		// when we don't.
+		auto& Slate = FSlateApplication::Get();
+		if (bInputEnabled)
+		{
+			Slate.ResetToDefaultPointerInputSettings();
+			Slate.SetKeyboardFocus(SharedThis(this));
+		}
+		else
+		{
+			if (Slate.GetKeyboardFocusedWidget().Get() == this)
+			{
+				Slate.SetUserFocusToGameViewport(Slate.GetUserIndexForKeyboard());
+			}
+
+			UpdateInputMode(false, false);
+		}
 	}
 }
 

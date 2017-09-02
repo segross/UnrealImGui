@@ -36,7 +36,9 @@ public:
 	// SWidget overrides
 	//----------------------------------------------------------------------------------------------------
 
-	virtual bool SupportsKeyboardFocus() const override { return true; }
+	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
+
+	virtual bool SupportsKeyboardFocus() const override { return bInputEnabled; }
 
 	virtual FReply OnKeyChar(const FGeometry& MyGeometry, const FCharacterEvent& CharacterEvent) override;
 
@@ -64,7 +66,7 @@ public:
 
 private:
 
-	enum class EInputMode
+	enum class EInputMode : uint8
 	{
 		None,
 		MouseOnly,
@@ -73,6 +75,12 @@ private:
 
 	FORCEINLINE void CopyModifierKeys(const FInputEvent& InputEvent);
 	FORCEINLINE void CopyModifierKeys(const FPointerEvent& MouseEvent);
+
+	// Update visibility based on input enabled state.
+	void SetVisibilityFromInputEnabled();
+
+	// Update input enabled state from console variable.
+	void UpdateInputEnabled();
 
 	// Determine new input mode based on requirement hints.
 	void UpdateInputMode(bool bNeedKeyboard, bool bNeedMouse);
@@ -91,6 +99,7 @@ private:
 	int32 ContextIndex = 0;
 
 	EInputMode InputMode = EInputMode::None;
+	bool bInputEnabled = false;
 
 	FImGuiInputState InputState;
 };
