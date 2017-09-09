@@ -12,6 +12,12 @@
 #include "Utilities/ScopeGuards.h"
 
 
+DEFINE_LOG_CATEGORY_STATIC(LogImGuiWidget, Warning, All);
+
+#define TEXT_INPUT_MODE(Val) ((Val) == EInputMode::MouseAndKeyboard ? TEXT("MouseAndKeyboard") : (Val) == EInputMode::MouseOnly ? TEXT("MouseOnly") : TEXT("None"))
+#define TEXT_BOOL(Val) ((Val) ? TEXT("true") : TEXT("false"))
+
+
 namespace CVars
 {
 	TAutoConsoleVariable<int> InputEnabled(TEXT("ImGui.InputEnabled"), 0,
@@ -19,24 +25,44 @@ namespace CVars
 		TEXT("0: disabled (default)\n")
 		TEXT("1: enabled, input is routed to ImGui and with a few exceptions is consumed."),
 		ECVF_Default);
+
+	TAutoConsoleVariable<int> DebugWidget(TEXT("ImGui.Debug.Widget"), 0,
+		TEXT("Show debug for SImGuiWidget.\n")
+		TEXT("0: disabled (default)\n")
+		TEXT("1: enabled."),
+		ECVF_Default);
 }
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SImGuiWidget::Construct(const FArguments& InArgs)
 {
 	checkf(InArgs._ModuleManager, TEXT("Null Module Manager argument"));
+
 	ModuleManager = InArgs._ModuleManager;
 	ContextIndex = InArgs._ContextIndex;
 
-	ModuleManager->OnPostImGuiUpdate().AddRaw(this, &SImGuiWidget::OnPostImGuiUpdate);
-
 	// Sync visibility with default input enabled state.
 	SetVisibilityFromInputEnabled();
+
+	// Register to get post-update notifications, so we can clean frame updates.
+	ModuleManager->OnPostImGuiUpdate().AddRaw(this, &SImGuiWidget::OnPostImGuiUpdate);
+
+	// Register self-debug function.
+	auto* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex);
+	checkf(ContextProxy, TEXT("Missing context during widget construction: ContextIndex = %d"), ContextIndex);
+	ContextProxy->OnDraw().AddRaw(this, &SImGuiWidget::OnDebugDraw);
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 SImGuiWidget::~SImGuiWidget()
 {
+	// Remove binding between this widget and its context proxy.
+	if (auto* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex))
+	{
+		ContextProxy->OnDraw().RemoveAll(this);
+	}
+
+	// Unregister from post-update notifications.
 	ModuleManager->OnPostImGuiUpdate().RemoveAll(this);
 }
 
@@ -122,6 +148,8 @@ FReply SImGuiWidget::OnFocusReceived(const FGeometry& MyGeometry, const FFocusEv
 {
 	Super::OnFocusReceived(MyGeometry, FocusEvent);
 
+	UE_LOG(LogImGuiWidget, VeryVerbose, TEXT("ImGui Widget %d - Focus Received."), ContextIndex);
+
 	// If widget has a keyboard focus we always maintain mouse input. Technically, if mouse is outside of the widget
 	// area it won't generate events but we freeze its state until it either comes back or input is completely lost.
 	UpdateInputMode(true, true);
@@ -133,12 +161,16 @@ void SImGuiWidget::OnFocusLost(const FFocusEvent& FocusEvent)
 {
 	Super::OnFocusLost(FocusEvent);
 
+	UE_LOG(LogImGuiWidget, VeryVerbose, TEXT("ImGui Widget %d - Focus Lost."), ContextIndex);
+
 	UpdateInputMode(false, IsHovered());
 }
 
 void SImGuiWidget::OnMouseEnter(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	Super::OnMouseEnter(MyGeometry, MouseEvent);
+
+	UE_LOG(LogImGuiWidget, VeryVerbose, TEXT("ImGui Widget %d - Mouse Enter."), ContextIndex);
 
 	// If mouse enters while input is active then we need to update mouse buttons because there is a chance that we
 	// missed some events.
@@ -156,6 +188,8 @@ void SImGuiWidget::OnMouseEnter(const FGeometry& MyGeometry, const FPointerEvent
 void SImGuiWidget::OnMouseLeave(const FPointerEvent& MouseEvent)
 {
 	Super::OnMouseLeave(MouseEvent);
+
+	UE_LOG(LogImGuiWidget, VeryVerbose, TEXT("ImGui Widget %d - Mouse Leave."), ContextIndex);
 
 	UpdateInputMode(HasKeyboardFocus(), false);
 }
@@ -179,6 +213,9 @@ void SImGuiWidget::SetVisibilityFromInputEnabled()
 {
 	// If we don't use input disable hit test to make this widget invisible for cursors hit detection.
 	SetVisibility(bInputEnabled ? EVisibility::Visible : EVisibility::HitTestInvisible);
+
+	UE_LOG(LogImGuiWidget, VeryVerbose, TEXT("ImGui Widget %d - Visibility updated to '%s'."),
+		ContextIndex, *GetVisibility().ToString());
 }
 
 void SImGuiWidget::UpdateInputEnabled()
@@ -187,6 +224,9 @@ void SImGuiWidget::UpdateInputEnabled()
 	if (bInputEnabled != bEnabled)
 	{
 		bInputEnabled = bEnabled;
+
+		UE_LOG(LogImGuiWidget, Log, TEXT("ImGui Widget %d - Input Enabled changed to '%s'."),
+			ContextIndex, TEXT_BOOL(bInputEnabled));
 
 		SetVisibilityFromInputEnabled();
 
@@ -219,6 +259,9 @@ void SImGuiWidget::UpdateInputMode(bool bNeedKeyboard, bool bNeedMouse)
 
 	if (InputMode != NewInputMode)
 	{
+		UE_LOG(LogImGuiWidget, Verbose, TEXT("ImGui Widget %d - Input Mode changed from '%s' to '%s'."),
+			ContextIndex, TEXT_INPUT_MODE(InputMode), TEXT_INPUT_MODE(NewInputMode));
+
 		// We need to reset input components if we are either fully shutting down or we are downgrading from full to
 		// mouse-only input mode.
 		if (NewInputMode == EInputMode::None)
@@ -291,3 +334,64 @@ FVector2D SImGuiWidget::ComputeDesiredSize(float) const
 {
 	return FVector2D{ 3840.f, 2160.f };
 }
+
+// Controls tweaked for 2-columns layout.
+namespace TwoColumns
+{
+	static void Value(const char* Label, int Value)
+	{
+		ImGui::Text("%s:", Label); ImGui::NextColumn();
+		ImGui::Text("%d", Value); ImGui::NextColumn();
+	}
+
+	static void Value(const char* Label, bool bValue)
+	{
+		ImGui::Text("%s:", Label); ImGui::NextColumn();
+		ImGui::Text("%ls", TEXT_BOOL(bValue)); ImGui::NextColumn();
+	}
+
+	static void Value(const char* Label, const TCHAR* Value)
+	{
+		ImGui::Text("%s:", Label); ImGui::NextColumn();
+		ImGui::Text("%ls", Value); ImGui::NextColumn();
+	}
+}
+
+void SImGuiWidget::OnDebugDraw()
+{
+	bool bDebug = CVars::DebugWidget.GetValueOnGameThread() > 0;
+	if (bDebug)
+	{
+		ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_Once);
+		if (ImGui::Begin("ImGui Widget Debug", &bDebug))
+		{
+			ImGui::Columns(2, nullptr, false);
+
+			TwoColumns::Value("Context Index", ContextIndex);
+
+			ImGui::Separator();
+
+			TwoColumns::Value("Input Enabled", bInputEnabled);
+			TwoColumns::Value("Input Mode", TEXT_INPUT_MODE(InputMode));
+
+			ImGui::Separator();
+
+			TwoColumns::Value("Visibility", *GetVisibility().ToString());
+			TwoColumns::Value("Is Hovered", IsHovered());
+			TwoColumns::Value("Is Directly Hovered", IsDirectlyHovered());
+			TwoColumns::Value("Has Keyboard Input", HasKeyboardFocus());
+
+			ImGui::Columns(1);
+		}
+		ImGui::End();
+
+		if (!bDebug)
+		{
+			CVars::DebugWidget->ClearFlags(ECVF_SetByConsole);
+			CVars::DebugWidget->Set(0);
+		}
+	}
+}
+
+#undef TEXT_INPUT_MODE
+#undef TEXT_BOOL

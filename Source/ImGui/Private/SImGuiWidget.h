@@ -91,6 +91,8 @@ private:
 
 	virtual FVector2D ComputeDesiredSize(float) const override;
 
+	void OnDebugDraw();
+
 	FImGuiModuleManager* ModuleManager = nullptr;
 
 	mutable TArray<FSlateVertex> VertexBuffer;
