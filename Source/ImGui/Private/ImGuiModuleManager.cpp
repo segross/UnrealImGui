@@ -157,9 +157,8 @@ void FImGuiModuleManager::AddWidgetToViewport(UGameViewportClient* GameViewport)
 	// Bind widget's input to context for this world.
 	Proxy.SetInputState(&ViewportWidget->GetInputState());
 
-	// High enough z-order guarantees that ImGui output is rendered on top of the game UI.
-	constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
-	GameViewport->AddViewportWidgetContent(SNew(SWeakWidget).PossiblyNullContent(ViewportWidget), IMGUI_WIDGET_Z_ORDER);
+	// We should always have one viewport per context index at a time (this will be validated by widget).
+	ViewportWidget->AttachToViewport(GameViewport);
 }
 
 void FImGuiModuleManager::AddWidgetToAllViewports()

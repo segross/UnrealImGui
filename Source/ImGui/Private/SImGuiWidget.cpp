@@ -12,6 +12,10 @@
 #include "Utilities/ScopeGuards.h"
 
 
+// High enough z-order guarantees that ImGui output is rendered on top of the game UI.
+constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
+
+
 DEFINE_LOG_CATEGORY_STATIC(LogImGuiWidget, Warning, All);
 
 #define TEXT_INPUT_MODE(Val) ((Val) == EInputMode::MouseAndKeyboard ? TEXT("MouseAndKeyboard") : (Val) == EInputMode::MouseOnly ? TEXT("MouseOnly") : TEXT("None"))
@@ -64,6 +68,23 @@ SImGuiWidget::~SImGuiWidget()
 
 	// Unregister from post-update notifications.
 	ModuleManager->OnPostImGuiUpdate().RemoveAll(this);
+}
+
+void SImGuiWidget::AttachToViewport(UGameViewportClient* InGameViewport, bool bResetInput)
+{
+	checkf(InGameViewport, TEXT("Null InGameViewport"));
+	checkf(!GameViewport.IsValid() || GameViewport.Get() == InGameViewport,
+		TEXT("Widget is attached to another game viewport and will be available for reuse only after this session ")
+		TEXT("ends. ContextIndex = %d, CurrentGameViewport = %s, InGameViewport = %s"),
+		ContextIndex, *GameViewport->GetName(), InGameViewport->GetName());
+
+	if (bResetInput)
+	{
+		ResetInputState();
+	}
+
+	GameViewport = InGameViewport;
+	GameViewport->AddViewportWidgetContent(SNew(SWeakWidget).PossiblyNullContent(SharedThis(this)), IMGUI_WIDGET_Z_ORDER);
 }
 
 void SImGuiWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
@@ -209,6 +230,13 @@ void SImGuiWidget::CopyModifierKeys(const FPointerEvent& MouseEvent)
 	}
 }
 
+void SImGuiWidget::ResetInputState()
+{
+	bInputEnabled = false;
+	SetVisibilityFromInputEnabled();
+	UpdateInputMode(false, false);
+}
+
 void SImGuiWidget::SetVisibilityFromInputEnabled()
 {
 	// If we don't use input disable hit test to make this widget invisible for cursors hit detection.
@@ -230,20 +258,32 @@ void SImGuiWidget::UpdateInputEnabled()
 
 		SetVisibilityFromInputEnabled();
 
-		// Setup input to show cursor and take focus when we use input or clear state and pass focus back to viewport
-		// when we don't.
+		// Setup input to show cursor and to pass keyboard/user focus between viewport and widget. Note that we should
+		// only pass focus if it is inside of the parent viewport, otherwise we would be stealing from other viewports
+		// or windows.
 		auto& Slate = FSlateApplication::Get();
 		if (bInputEnabled)
 		{
-			Slate.ResetToDefaultPointerInputSettings();
-			Slate.SetKeyboardFocus(SharedThis(this));
+			const auto& ViewportWidget = GameViewport->GetGameViewportWidget();
+			if (ViewportWidget->HasKeyboardFocus() || ViewportWidget->HasFocusedDescendants())
+			{
+				// Remember where is user focus, so we will have an option to restore it.
+				PreviousUserFocusedWidget = Slate.GetUserFocusedWidget(Slate.GetUserIndexForKeyboard());
+
+				Slate.ResetToDefaultPointerInputSettings();
+				Slate.SetKeyboardFocus(SharedThis(this));
+			}
 		}
 		else
 		{
 			if (Slate.GetKeyboardFocusedWidget().Get() == this)
 			{
-				Slate.SetUserFocusToGameViewport(Slate.GetUserIndexForKeyboard());
+				Slate.ResetToDefaultPointerInputSettings();
+				Slate.SetUserFocus(Slate.GetUserIndexForKeyboard(),
+					PreviousUserFocusedWidget.IsValid() ? PreviousUserFocusedWidget.Pin() : GameViewport->GetGameViewportWidget());
 			}
+
+			PreviousUserFocusedWidget.Reset();
 
 			UpdateInputMode(false, false);
 		}
@@ -338,6 +378,11 @@ FVector2D SImGuiWidget::ComputeDesiredSize(float) const
 // Controls tweaked for 2-columns layout.
 namespace TwoColumns
 {
+	static void GroupName(const char* Name)
+	{
+		ImGui::TextColored({ 0.5f, 0.5f, 0.5f, 1.f }, Name); ImGui::NextColumn(); ImGui::NextColumn();
+	}
+
 	static void Value(const char* Label, int Value)
 	{
 		ImGui::Text("%s:", Label); ImGui::NextColumn();
@@ -362,12 +407,13 @@ void SImGuiWidget::OnDebugDraw()
 	bool bDebug = CVars::DebugWidget.GetValueOnGameThread() > 0;
 	if (bDebug)
 	{
-		ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_Once);
+		ImGui::SetNextWindowSize(ImVec2(380, 320), ImGuiSetCond_Once);
 		if (ImGui::Begin("ImGui Widget Debug", &bDebug))
 		{
 			ImGui::Columns(2, nullptr, false);
 
 			TwoColumns::Value("Context Index", ContextIndex);
+			TwoColumns::Value("Game Viewport", *GameViewport->GetName());
 
 			ImGui::Separator();
 
@@ -376,10 +422,33 @@ void SImGuiWidget::OnDebugDraw()
 
 			ImGui::Separator();
 
-			TwoColumns::Value("Visibility", *GetVisibility().ToString());
-			TwoColumns::Value("Is Hovered", IsHovered());
-			TwoColumns::Value("Is Directly Hovered", IsDirectlyHovered());
-			TwoColumns::Value("Has Keyboard Input", HasKeyboardFocus());
+			const float GroupIndent = 5.f;
+
+			TwoColumns::GroupName("Widget");
+			ImGui::Indent(GroupIndent);
+			{
+				TwoColumns::Value("Visibility", *GetVisibility().ToString());
+				TwoColumns::Value("Is Hovered", IsHovered());
+				TwoColumns::Value("Is Directly Hovered", IsDirectlyHovered());
+				TwoColumns::Value("Has Keyboard Input", HasKeyboardFocus());
+			}
+			ImGui::Unindent(GroupIndent);
+
+			ImGui::Separator();
+
+			TwoColumns::GroupName("Viewport Widget");
+			ImGui::Indent(GroupIndent);
+			{
+				const auto& ViewportWidget = GameViewport->GetGameViewportWidget();
+				TwoColumns::Value("Is Hovered", ViewportWidget->IsHovered());
+				TwoColumns::Value("Is Directly Hovered", ViewportWidget->IsDirectlyHovered());
+				TwoColumns::Value("Has Mouse Capture", ViewportWidget->HasMouseCapture());
+				TwoColumns::Value("Has Keyboard Input", ViewportWidget->HasKeyboardFocus());
+				TwoColumns::Value("Has Focused Descendants", ViewportWidget->HasFocusedDescendants());
+				auto Widget = PreviousUserFocusedWidget.Pin();
+				TwoColumns::Value("Previous User Focused", Widget.IsValid() ? *Widget->GetTypeAsString() : TEXT("None"));
+			}
+			ImGui::Unindent(GroupIndent);
 
 			ImGui::Columns(1);
 		}
