@@ -39,6 +39,8 @@ public:
 	// Set this context as current ImGui context.
 	void SetAsCurrent() { ImGui::SetCurrentContext(Context); }
 
+	bool HasActiveItem() const { return bHasActiveItem; }
+
 	// Delegate called right before ending the frame to allows listeners draw their controls.
 	FSimpleMulticastDelegate& OnDraw() { return DrawEvent; }
 
@@ -53,6 +55,8 @@ private:
 	void UpdateDrawData(ImDrawData* DrawData);
 
 	ImGuiContext* Context = nullptr;
+
+	bool bHasActiveItem = false;
 
 	bool bIsFrameStarted = false;
 	FSimpleMulticastDelegate DrawEvent;

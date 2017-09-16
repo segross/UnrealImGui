@@ -11,6 +11,8 @@
 #include "TextureManager.h"
 #include "Utilities/ScopeGuards.h"
 
+#include <Engine/Console.h>
+
 
 // High enough z-order guarantees that ImGui output is rendered on top of the game UI.
 constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
@@ -98,6 +100,11 @@ void SImGuiWidget::Tick(const FGeometry& AllottedGeometry, const double InCurren
 
 FReply SImGuiWidget::OnKeyChar(const FGeometry& MyGeometry, const FCharacterEvent& CharacterEvent)
 {
+	if (IsConsoleOpened())
+	{
+		return FReply::Unhandled();
+	}
+
 	InputState.AddCharacter(CharacterEvent.GetCharacter());
 
 	return FReply::Handled();
@@ -105,6 +112,11 @@ FReply SImGuiWidget::OnKeyChar(const FGeometry& MyGeometry, const FCharacterEven
 
 FReply SImGuiWidget::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent)
 {
+	if (IsConsoleOpened() || IgnoreKeyEvent(KeyEvent))
+	{
+		return FReply::Unhandled();
+	}
+
 	InputState.SetKeyDown(ImGuiInterops::GetKeyIndex(KeyEvent), true);
 	CopyModifierKeys(KeyEvent);
 
@@ -119,10 +131,13 @@ FReply SImGuiWidget::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Key
 
 FReply SImGuiWidget::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent)
 {
+	// Even if we don't send new keystrokes to ImGui, we still handle key up events, to make sure that we clear keys
+	// pressed before suppressing keyboard input.
 	InputState.SetKeyDown(ImGuiInterops::GetKeyIndex(KeyEvent), false);
 	CopyModifierKeys(KeyEvent);
 
-	return FReply::Handled();
+	// If console is opened we notify key change but we also let event trough, so it can be handled by console.
+	return IsConsoleOpened() ? FReply::Unhandled() : FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
@@ -175,6 +190,7 @@ FReply SImGuiWidget::OnFocusReceived(const FGeometry& MyGeometry, const FFocusEv
 	// area it won't generate events but we freeze its state until it either comes back or input is completely lost.
 	UpdateInputMode(true, true);
 
+	FSlateApplication::Get().ResetToDefaultPointerInputSettings();
 	return FReply::Handled();
 }
 
@@ -230,6 +246,32 @@ void SImGuiWidget::CopyModifierKeys(const FPointerEvent& MouseEvent)
 	}
 }
 
+bool SImGuiWidget::IsConsoleOpened() const
+{
+	return GameViewport->ViewportConsole && GameViewport->ViewportConsole->ConsoleState != NAME_None;
+}
+
+bool SImGuiWidget::IgnoreKeyEvent(const FKeyEvent& KeyEvent) const
+{
+	// Ignore console open/close events.
+	if (KeyEvent.GetKey() == EKeys::Tilde)
+	{
+		return true;
+	}
+
+	// Ignore escape keys unless they are needed to cancel operations in ImGui.
+	if (KeyEvent.GetKey() == EKeys::Escape)
+	{
+		auto* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex);
+		if (!ContextProxy || !ContextProxy->HasActiveItem())
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void SImGuiWidget::ResetInputState()
 {
 	bInputEnabled = false;
@@ -258,24 +300,9 @@ void SImGuiWidget::UpdateInputEnabled()
 
 		SetVisibilityFromInputEnabled();
 
-		// Setup input to show cursor and to pass keyboard/user focus between viewport and widget. Note that we should
-		// only pass focus if it is inside of the parent viewport, otherwise we would be stealing from other viewports
-		// or windows.
-		auto& Slate = FSlateApplication::Get();
-		if (bInputEnabled)
+		if (!bInputEnabled)
 		{
-			const auto& ViewportWidget = GameViewport->GetGameViewportWidget();
-			if (ViewportWidget->HasKeyboardFocus() || ViewportWidget->HasFocusedDescendants())
-			{
-				// Remember where is user focus, so we will have an option to restore it.
-				PreviousUserFocusedWidget = Slate.GetUserFocusedWidget(Slate.GetUserIndexForKeyboard());
-
-				Slate.ResetToDefaultPointerInputSettings();
-				Slate.SetKeyboardFocus(SharedThis(this));
-			}
-		}
-		else
-		{
+			auto& Slate = FSlateApplication::Get();
 			if (Slate.GetKeyboardFocusedWidget().Get() == this)
 			{
 				Slate.ResetToDefaultPointerInputSettings();
@@ -286,6 +313,19 @@ void SImGuiWidget::UpdateInputEnabled()
 			PreviousUserFocusedWidget.Reset();
 
 			UpdateInputMode(false, false);
+		}
+	}
+
+	// Note: Some widgets, like console, can reset focus to viewport after we already grabbed it. If we detect that
+	// viewport has a focus while input is enabled we will take it.
+	if (bInputEnabled && !HasKeyboardFocus() && !IsConsoleOpened())
+	{
+		const auto& ViewportWidget = GameViewport->GetGameViewportWidget();
+		if (ViewportWidget->HasKeyboardFocus() || ViewportWidget->HasFocusedDescendants())
+		{
+			auto& Slate = FSlateApplication::Get();
+			PreviousUserFocusedWidget = Slate.GetUserFocusedWidget(Slate.GetUserIndexForKeyboard());
+			Slate.SetKeyboardFocus(SharedThis(this));
 		}
 	}
 }

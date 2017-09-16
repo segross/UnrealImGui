@@ -39,6 +39,7 @@ FImGuiContextProxy::FImGuiContextProxy()
 
 FImGuiContextProxy::FImGuiContextProxy(FImGuiContextProxy&& Other)
 	: Context(std::move(Other.Context))
+	, bHasActiveItem(Other.bHasActiveItem)
 	, DrawEvent(std::move(Other.DrawEvent))
 	, InputState(std::move(Other.InputState))
 	, DrawLists(std::move(Other.DrawLists))
@@ -50,6 +51,7 @@ FImGuiContextProxy& FImGuiContextProxy::operator=(FImGuiContextProxy&& Other)
 {
 	Context = std::move(Other.Context);
 	Other.Context = nullptr;
+	bHasActiveItem = Other.bHasActiveItem;
 	DrawEvent = std::move(Other.DrawEvent);
 	InputState = std::move(Other.InputState);
 	DrawLists = std::move(Other.DrawLists);
@@ -91,6 +93,9 @@ void FImGuiContextProxy::Tick(float DeltaSeconds)
 
 	// Begin a new frame and set the context back to a state in which it allows to draw controls.
 	BeginFrame(DeltaSeconds);
+
+	// Update context information.
+	bHasActiveItem = ImGui::IsAnyItemActive();
 }
 
 void FImGuiContextProxy::BeginFrame(float DeltaTime)

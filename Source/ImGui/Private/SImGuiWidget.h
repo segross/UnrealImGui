@@ -86,6 +86,10 @@ private:
 	FORCEINLINE void CopyModifierKeys(const FInputEvent& InputEvent);
 	FORCEINLINE void CopyModifierKeys(const FPointerEvent& MouseEvent);
 
+	bool IsConsoleOpened() const;
+
+	bool IgnoreKeyEvent(const FKeyEvent& KeyEvent) const;
+
 	void ResetInputState();
 
 	// Update visibility based on input enabled state.
