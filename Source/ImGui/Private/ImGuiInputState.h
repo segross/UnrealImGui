@@ -76,6 +76,13 @@ public:
 	// @param Position - New mouse position
 	void SetMousePosition(const FVector2D& Position) { MousePosition = Position; }
 
+	// Check whether input has active mouse pointer.
+	bool HasMousePointer() const { return bHasMousePointer; }
+
+	// Set whether input has active mouse pointer.
+	// @param bHasPointer - True, if input has active mouse pointer
+	void SetMousePointer(bool bHasPointer) { bHasMousePointer = bHasPointer; }
+
 	// Get Control down state.
 	bool IsControlDown() const { return bIsControlDown; }
 
@@ -131,6 +138,8 @@ private:
 
 	FKeysArray KeysDown;
 	FKeysIndexRange KeysUpdateRange;
+
+	bool bHasMousePointer = false;
 
 	bool bIsControlDown = false;
 	bool bIsShiftDown = false;

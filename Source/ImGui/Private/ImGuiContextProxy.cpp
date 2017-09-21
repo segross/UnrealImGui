@@ -25,9 +25,19 @@ FImGuiContextProxy::FImGuiContextProxy()
 	// Use pre-defined canvas size.
 	IO.DisplaySize = { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT };
 
-	// Load texture atlas.
+	// When GetTexData is called for the first time it builds atlas texture and copies mouse cursor data to context.
+	// When multiple contexts share atlas then only the first one will get mouse data. A simple workaround is to use
+	// a temporary atlas if shared one is already built.
 	unsigned char* Pixels;
-	IO.Fonts->GetTexDataAsRGBA32(&Pixels, nullptr, nullptr);
+	const bool bIsAltasBuilt = IO.Fonts->TexPixelsAlpha8 != nullptr;
+	if (bIsAltasBuilt)
+	{
+		ImFontAtlas().GetTexDataAsRGBA32(&Pixels, nullptr, nullptr);
+	}
+	else
+	{
+		IO.Fonts->GetTexDataAsRGBA32(&Pixels, nullptr, nullptr);
+	}
 
 	// Initialize key mapping, so context can correctly interpret input state.
 	ImGuiInterops::SetUnrealKeyMap(IO);

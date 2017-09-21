@@ -20,7 +20,11 @@ constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
 
 DEFINE_LOG_CATEGORY_STATIC(LogImGuiWidget, Warning, All);
 
-#define TEXT_INPUT_MODE(Val) ((Val) == EInputMode::MouseAndKeyboard ? TEXT("MouseAndKeyboard") : (Val) == EInputMode::MouseOnly ? TEXT("MouseOnly") : TEXT("None"))
+#define TEXT_INPUT_MODE(Val) (\
+	(Val) == EInputMode::MouseAndKeyboard ? TEXT("MouseAndKeyboard") :\
+	(Val) == EInputMode::MousePointerOnly ? TEXT("MousePointerOnly") :\
+	TEXT("None"))
+
 #define TEXT_BOOL(Val) ((Val) ? TEXT("true") : TEXT("false"))
 
 
@@ -46,6 +50,9 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 
 	ModuleManager = InArgs._ModuleManager;
 	ContextIndex = InArgs._ContextIndex;
+
+	// Disable mouse cursor over this widget as we will use ImGui to draw it.
+	SetCursor(EMouseCursor::None);
 
 	// Sync visibility with default input enabled state.
 	SetVisibilityFromInputEnabled();
@@ -92,6 +99,8 @@ void SImGuiWidget::AttachToViewport(UGameViewportClient* InGameViewport, bool bR
 void SImGuiWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
 {
 	Super::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
+
+	UpdateMouseStatus();
 
 	// Note: Moving that update to console variable sink or callback might seem like a better alternative but input
 	// setup in this function is better handled here.
@@ -177,6 +186,9 @@ FReply SImGuiWidget::OnMouseMove(const FGeometry& MyGeometry, const FPointerEven
 	InputState.SetMousePosition(MouseEvent.GetScreenSpacePosition() - MyGeometry.AbsolutePosition);
 	CopyModifierKeys(MouseEvent);
 
+	// This event is called in every frame when we have a mouse, so we can use it to raise notifications.
+	NotifyMouseEvent();
+
 	return FReply::Handled();
 }
 
@@ -188,7 +200,7 @@ FReply SImGuiWidget::OnFocusReceived(const FGeometry& MyGeometry, const FFocusEv
 
 	// If widget has a keyboard focus we always maintain mouse input. Technically, if mouse is outside of the widget
 	// area it won't generate events but we freeze its state until it either comes back or input is completely lost.
-	UpdateInputMode(true, true);
+	UpdateInputMode(true, IsDirectlyHovered());
 
 	FSlateApplication::Get().ResetToDefaultPointerInputSettings();
 	return FReply::Handled();
@@ -200,7 +212,7 @@ void SImGuiWidget::OnFocusLost(const FFocusEvent& FocusEvent)
 
 	UE_LOG(LogImGuiWidget, VeryVerbose, TEXT("ImGui Widget %d - Focus Lost."), ContextIndex);
 
-	UpdateInputMode(false, IsHovered());
+	UpdateInputMode(false, IsDirectlyHovered());
 }
 
 void SImGuiWidget::OnMouseEnter(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
@@ -240,7 +252,7 @@ void SImGuiWidget::CopyModifierKeys(const FInputEvent& InputEvent)
 
 void SImGuiWidget::CopyModifierKeys(const FPointerEvent& MouseEvent)
 {
-	if (InputMode == EInputMode::MouseOnly)
+	if (InputMode == EInputMode::MousePointerOnly)
 	{
 		CopyModifierKeys(static_cast<const FInputEvent&>(MouseEvent));
 	}
@@ -330,11 +342,11 @@ void SImGuiWidget::UpdateInputEnabled()
 	}
 }
 
-void SImGuiWidget::UpdateInputMode(bool bNeedKeyboard, bool bNeedMouse)
+void SImGuiWidget::UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer)
 {
 	const EInputMode NewInputMode =
-		bNeedKeyboard ? EInputMode::MouseAndKeyboard :
-		bNeedMouse ? EInputMode::MouseOnly :
+		bHasKeyboardFocus ? EInputMode::MouseAndKeyboard :
+		bHasMousePointer ? EInputMode::MousePointerOnly :
 		EInputMode::None;
 
 	if (InputMode != NewInputMode)
@@ -354,6 +366,26 @@ void SImGuiWidget::UpdateInputMode(bool bNeedKeyboard, bool bNeedMouse)
 		}
 
 		InputMode = NewInputMode;
+
+		ClearMouseEventNotification();
+	}
+
+	InputState.SetMousePointer(bHasMousePointer);
+}
+
+void SImGuiWidget::UpdateMouseStatus()
+{
+	// Note: Mouse leave events can get lost if other viewport takes mouse capture (for instance console is opened by
+	// different viewport when this widget is hovered). With that we lose a chance to cleanup and hide ImGui pointer.
+	// We could either update ImGui pointer in every frame or like below, use mouse events to catch when mouse is lost.
+
+	if (InputMode == EInputMode::MousePointerOnly)
+	{
+		if (!HasMouseEventNotification())
+		{
+			UpdateInputMode(false, IsDirectlyHovered());
+		}
+		ClearMouseEventNotification();
 	}
 }
 
@@ -447,7 +479,7 @@ void SImGuiWidget::OnDebugDraw()
 	bool bDebug = CVars::DebugWidget.GetValueOnGameThread() > 0;
 	if (bDebug)
 	{
-		ImGui::SetNextWindowSize(ImVec2(380, 320), ImGuiSetCond_Once);
+		ImGui::SetNextWindowSize(ImVec2(380, 340), ImGuiSetCond_Once);
 		if (ImGui::Begin("ImGui Widget Debug", &bDebug))
 		{
 			ImGui::Columns(2, nullptr, false);
@@ -459,6 +491,7 @@ void SImGuiWidget::OnDebugDraw()
 
 			TwoColumns::Value("Input Enabled", bInputEnabled);
 			TwoColumns::Value("Input Mode", TEXT_INPUT_MODE(InputMode));
+			TwoColumns::Value("Input Has Mouse Pointer", InputState.HasMousePointer());
 
 			ImGui::Separator();
 

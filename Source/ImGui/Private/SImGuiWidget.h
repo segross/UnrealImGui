@@ -79,7 +79,9 @@ private:
 	enum class EInputMode : uint8
 	{
 		None,
-		MouseOnly,
+		// Mouse pointer only without user focus
+		MousePointerOnly,
+		// Full input with user focus
 		MouseAndKeyboard
 	};
 
@@ -98,8 +100,14 @@ private:
 	// Update input enabled state from console variable.
 	void UpdateInputEnabled();
 
-	// Determine new input mode based on requirement hints.
-	void UpdateInputMode(bool bNeedKeyboard, bool bNeedMouse);
+	// Determine new input mode based on hints.
+	void UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer);
+
+	void UpdateMouseStatus();
+
+	FORCEINLINE bool HasMouseEventNotification() const { return bReceivedMouseEvent; }
+	FORCEINLINE void NotifyMouseEvent() { bReceivedMouseEvent = true; }
+	FORCEINLINE void ClearMouseEventNotification() { bReceivedMouseEvent = false; }
 
 	void OnPostImGuiUpdate();
 
@@ -119,6 +127,7 @@ private:
 
 	EInputMode InputMode = EInputMode::None;
 	bool bInputEnabled = false;
+	bool bReceivedMouseEvent = false;
 
 	FImGuiInputState InputState;
 

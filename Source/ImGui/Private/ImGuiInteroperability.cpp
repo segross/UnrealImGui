@@ -146,6 +146,9 @@ namespace ImGuiInterops
 		static const uint32 LeftAlt = GetKeyIndex(EKeys::LeftAlt);
 		static const uint32 RightAlt = GetKeyIndex(EKeys::RightAlt);
 
+		// Check whether we need to draw cursor.
+		IO.MouseDrawCursor = InputState.HasMousePointer();
+
 		// Copy mouse position.
 		IO.MousePos.x = InputState.GetMousePosition().X;
 		IO.MousePos.y = InputState.GetMousePosition().Y;
