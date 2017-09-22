@@ -65,8 +65,8 @@ namespace ImGuiInterops
 	FORCEINLINE FColor UnpackImU32Color(ImU32 Color)
 	{
 		// We use IM_COL32_R/G/B/A_SHIFT macros to support different ImGui configurations.
-		return FColor{ ((Color >> IM_COL32_R_SHIFT) & 0xFF), ((Color >> IM_COL32_G_SHIFT) & 0xFF),
-			((Color >> IM_COL32_B_SHIFT) & 0xFF), ((Color >> IM_COL32_A_SHIFT) & 0xFF) };
+		return FColor{ (uint8)((Color >> IM_COL32_R_SHIFT) & 0xFF), (uint8)((Color >> IM_COL32_G_SHIFT) & 0xFF),
+			(uint8)((Color >> IM_COL32_B_SHIFT) & 0xFF), (uint8)((Color >> IM_COL32_A_SHIFT) & 0xFF) };
 	}
 
 	// Convert from ImVec4 rectangle to FSlateRect.

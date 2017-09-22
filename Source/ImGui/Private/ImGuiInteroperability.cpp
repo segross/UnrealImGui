@@ -25,7 +25,7 @@ namespace
 
 	// Copy subrange of source array to destination array of the same size.
 	template<typename TArray, typename SizeType>
-	void Copy(const TArray& Src, TArray& Dst, const Utilities::TArrayIndexRange<typename TArray, typename SizeType>& Range)
+	void Copy(const TArray& Src, TArray& Dst, const Utilities::TArrayIndexRange<TArray, SizeType>& Range)
 	{
 		using std::copy;
 		using std::begin;

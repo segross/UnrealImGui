@@ -4,6 +4,8 @@
 
 #include "ImGuiInputState.h"
 
+#include <algorithm>
+
 
 FImGuiInputState::FImGuiInputState()
 {
