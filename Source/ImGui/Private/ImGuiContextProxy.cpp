@@ -11,7 +11,29 @@
 static constexpr float DEFAULT_CANVAS_WIDTH = 3840.f;
 static constexpr float DEFAULT_CANVAS_HEIGHT = 2160.f;
 
-FImGuiContextProxy::FImGuiContextProxy()
+
+namespace
+{
+	FString GetSaveDirectory()
+	{
+		FString Directory = FPaths::Combine(*FPaths::GameSavedDir(), TEXT("ImGui"));
+
+		// Make sure that directory is created.
+		IPlatformFile::GetPlatformPhysical().CreateDirectory(*Directory);
+
+		return Directory;
+	}
+
+	FString GetIniFile(const FString& Name)
+	{
+		static FString SaveDirectory = GetSaveDirectory();
+		return FPaths::Combine(SaveDirectory, Name + TEXT(".ini"));
+	}
+}
+
+FImGuiContextProxy::FImGuiContextProxy(const FString& InName)
+	: Name(InName)
+	, IniFilename(TCHAR_TO_ANSI(*GetIniFile(InName)))
 {
 	// Create context.
 	Context = ImGui::CreateContext();
@@ -21,6 +43,9 @@ FImGuiContextProxy::FImGuiContextProxy()
 
 	// Start initialization.
 	ImGuiIO& IO = ImGui::GetIO();
+
+	// Set session data storage.
+	IO.IniFilename = IniFilename.c_str();
 
 	// Use pre-defined canvas size.
 	IO.DisplaySize = { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT };
@@ -53,18 +78,26 @@ FImGuiContextProxy::FImGuiContextProxy(FImGuiContextProxy&& Other)
 	, DrawEvent(std::move(Other.DrawEvent))
 	, InputState(std::move(Other.InputState))
 	, DrawLists(std::move(Other.DrawLists))
+	, Name(std::move(Other.Name))
+	, IniFilename(std::move(Other.IniFilename))
 {
 	Other.Context = nullptr;
 }
 
 FImGuiContextProxy& FImGuiContextProxy::operator=(FImGuiContextProxy&& Other)
 {
-	Context = std::move(Other.Context);
-	Other.Context = nullptr;
+	// Swapping context so it can be destroyed with the other object.
+	using std::swap;	
+	swap(Context, Other.Context);
+
+	// Just moving remaining data that doesn't affect cleanup.
 	bHasActiveItem = Other.bHasActiveItem;
 	DrawEvent = std::move(Other.DrawEvent);
 	InputState = std::move(Other.InputState);
 	DrawLists = std::move(Other.DrawLists);
+	Name = std::move(Other.Name);
+	IniFilename = std::move(Other.IniFilename);
+
 	return *this;
 }
 
@@ -75,14 +108,12 @@ FImGuiContextProxy::~FImGuiContextProxy()
 		// Set this context in ImGui for de-initialization (any de-allocations will be tracked in this context).
 		SetAsCurrent();
 
-		// Shutdown to save data etc.
-		ImGui::Shutdown();
-
-		// Destroy the context.
+		// Save context data and destroy.
+		ImGuiImplementation::SaveCurrentContextIniSettings(IniFilename.c_str());
 		ImGui::DestroyContext(Context);
 
 		// Set default context in ImGui to keep global context pointer valid.
-		ImGui::SetCurrentContext(&GetDefaultContext());
+		ImGui::SetCurrentContext(&ImGuiImplementation::GetDefaultContext());
 	}
 }
 

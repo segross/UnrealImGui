@@ -47,9 +47,15 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SImGuiWidget::Construct(const FArguments& InArgs)
 {
 	checkf(InArgs._ModuleManager, TEXT("Null Module Manager argument"));
+	checkf(InArgs._GameViewport, TEXT("Null Game Viewport argument"));
 
 	ModuleManager = InArgs._ModuleManager;
+	GameViewport = InArgs._GameViewport;
 	ContextIndex = InArgs._ContextIndex;
+
+	// NOTE: We could allow null game viewports (for instance to attach to non-viewport widgets) but we would need
+	// to modify a few functions that assume valid viewport pointer.
+	GameViewport->AddViewportWidgetContent(SharedThis(this), IMGUI_WIDGET_Z_ORDER);
 
 	// Disable mouse cursor over this widget as we will use ImGui to draw it.
 	SetCursor(EMouseCursor::None);
@@ -60,10 +66,11 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 	// Register to get post-update notifications, so we can clean frame updates.
 	ModuleManager->OnPostImGuiUpdate().AddRaw(this, &SImGuiWidget::OnPostImGuiUpdate);
 
-	// Register self-debug function.
+	// Bind this widget to its context proxy.
 	auto* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex);
 	checkf(ContextProxy, TEXT("Missing context during widget construction: ContextIndex = %d"), ContextIndex);
 	ContextProxy->OnDraw().AddRaw(this, &SImGuiWidget::OnDebugDraw);
+	ContextProxy->SetInputState(&InputState);
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -73,27 +80,20 @@ SImGuiWidget::~SImGuiWidget()
 	if (auto* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex))
 	{
 		ContextProxy->OnDraw().RemoveAll(this);
+		ContextProxy->RemoveInputState(&InputState);
 	}
 
 	// Unregister from post-update notifications.
 	ModuleManager->OnPostImGuiUpdate().RemoveAll(this);
 }
 
-void SImGuiWidget::AttachToViewport(UGameViewportClient* InGameViewport, bool bResetInput)
+void SImGuiWidget::Detach()
 {
-	checkf(InGameViewport, TEXT("Null InGameViewport"));
-	checkf(!GameViewport.IsValid() || GameViewport.Get() == InGameViewport,
-		TEXT("Widget is attached to another game viewport and will be available for reuse only after this session ")
-		TEXT("ends. ContextIndex = %d, CurrentGameViewport = %s, InGameViewport = %s"),
-		ContextIndex, *GameViewport->GetName(), InGameViewport->GetName());
-
-	if (bResetInput)
+	if (GameViewport.IsValid())
 	{
-		ResetInputState();
+		GameViewport->RemoveViewportWidgetContent(SharedThis(this));
+		GameViewport.Reset();
 	}
-
-	GameViewport = InGameViewport;
-	GameViewport->AddViewportWidgetContent(SNew(SWeakWidget).PossiblyNullContent(SharedThis(this)), IMGUI_WIDGET_Z_ORDER);
 }
 
 void SImGuiWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
@@ -284,13 +284,6 @@ bool SImGuiWidget::IgnoreKeyEvent(const FKeyEvent& KeyEvent) const
 	return false;
 }
 
-void SImGuiWidget::ResetInputState()
-{
-	bInputEnabled = false;
-	SetVisibilityFromInputEnabled();
-	UpdateInputMode(false, false);
-}
-
 void SImGuiWidget::SetVisibilityFromInputEnabled()
 {
 	// If we don't use input disable hit test to make this widget invisible for cursors hit detection.
@@ -479,12 +472,14 @@ void SImGuiWidget::OnDebugDraw()
 	bool bDebug = CVars::DebugWidget.GetValueOnGameThread() > 0;
 	if (bDebug)
 	{
-		ImGui::SetNextWindowSize(ImVec2(380, 340), ImGuiSetCond_Once);
+		ImGui::SetNextWindowSize(ImVec2(380, 360), ImGuiSetCond_Once);
 		if (ImGui::Begin("ImGui Widget Debug", &bDebug))
 		{
 			ImGui::Columns(2, nullptr, false);
 
 			TwoColumns::Value("Context Index", ContextIndex);
+			FImGuiContextProxy* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex);
+			TwoColumns::Value("Context Name", ContextProxy ? *ContextProxy->GetName() : TEXT("< Null >"));
 			TwoColumns::Value("Game Viewport", *GameViewport->GetName());
 
 			ImGui::Separator();

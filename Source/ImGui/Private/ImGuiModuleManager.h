@@ -61,8 +61,8 @@ private:
 	// Manager for textures resources.
 	FTextureManager TextureManager;
 
-	// Slate widgets that we attach to game viewports.
-	TMap<int32, TSharedPtr<SImGuiWidget>> ViewportWidgets;
+	// Slate widgets that we created.
+	TArray<TWeakPtr<SImGuiWidget>> Widgets;
 
 	FDelegateHandle TickDelegateHandle;
 	FDelegateHandle ViewportCreatedHandle;

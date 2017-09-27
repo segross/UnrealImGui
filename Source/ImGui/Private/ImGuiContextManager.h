@@ -4,7 +4,6 @@
 
 #include "ImGuiContextProxy.h"
 #include "ImGuiDemo.h"
-#include "Utilities/WorldContextIndex.h"
 
 
 // Manages ImGui context proxies.
@@ -20,17 +19,20 @@ public:
 	FImGuiContextManager(FImGuiContextManager&&) = delete;
 	FImGuiContextManager& operator=(FImGuiContextManager&&) = delete;
 
-	// Get or create default ImGui context proxy. In editor this is the editor context proxy and in standalone game
-	// context proxy for the only world and the same value as returned from GetWorldContextProxy.
-	//
-	// If proxy doesn't exist then it will be created and initialized.
-	FImGuiContextProxy& GetDefaultContextProxy() { return FindOrAddContextData(Utilities::DEFAULT_CONTEXT_INDEX).ContextProxy; }
+	~FImGuiContextManager();
+
+#if WITH_EDITOR
+	// Get or create editor ImGui context proxy.
+	FORCEINLINE FImGuiContextProxy& GetEditorContextProxy() { return GetEditorContextData().ContextProxy; }
+#endif
+
+#if !WITH_EDITOR
+	// Get or create standalone game ImGui context proxy.
+	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy() { return GetStandaloneWorldContextData().ContextProxy; }
+#endif
 
 	// Get or create ImGui context proxy for given world.
-	//
-	// If proxy doesn't yet exist then it will be created and initialized. If proxy already exists then associated
-	// world data will be updated.
-	FImGuiContextProxy& GetWorldContextProxy(UWorld& World);
+	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy(const UWorld& World) { return GetWorldContextData(World).ContextProxy; }
 
 	// Get context proxy by index, or null if context with that index doesn't exist.
 	FORCEINLINE FImGuiContextProxy* GetContextProxy(int32 ContextIndex)
@@ -43,13 +45,49 @@ public:
 
 private:
 
+#if WITH_EDITOR
+
 	struct FContextData
 	{
-		TWeakObjectPtr<UWorld> World;
+		FContextData(const FString& ContextName, FImGuiDemo& Demo, int32 InPIEInstance = -1)
+			: PIEInstance(InPIEInstance)
+			, ContextProxy(ContextName)
+		{
+			ContextProxy.OnDraw().AddRaw(&Demo, &FImGuiDemo::DrawControls);
+		}
+
+		FORCEINLINE bool CanTick() const { return PIEInstance < 0 || GEngine->GetWorldContextFromPIEInstance(PIEInstance); }
+
+		int32 PIEInstance = -1;
 		FImGuiContextProxy ContextProxy;
 	};
 
-	FContextData& FindOrAddContextData(int32 Index);
+#else
+
+	struct FContextData
+	{
+		FContextData(const FString& ContextName, FImGuiDemo& Demo)
+			: ContextProxy(ContextName)
+		{
+			ContextProxy.OnDraw().AddRaw(&Demo, &FImGuiDemo::DrawControls);
+		}
+
+		FORCEINLINE bool CanTick() const { return true; }
+
+		FImGuiContextProxy ContextProxy;
+	};
+
+#endif // WITH_EDITOR
+
+#if WITH_EDITOR
+	FContextData& GetEditorContextData();
+#endif
+
+#if !WITH_EDITOR
+	FContextData& GetStandaloneWorldContextData();
+#endif
+
+	FContextData& GetWorldContextData(const UWorld& World);
 
 	TMap<int32, FContextData> Contexts;
 

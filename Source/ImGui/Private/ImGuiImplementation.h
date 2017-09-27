@@ -5,5 +5,12 @@
 #include <imgui.h>
 
 
-// Get default context created by ImGui framework.
-ImGuiContext& GetDefaultContext();
+// Gives access to selected ImGui implementation features.
+namespace ImGuiImplementation
+{
+	// Get default context created by ImGui framework.
+	ImGuiContext& GetDefaultContext();
+
+	// Save current context settings.
+	void SaveCurrentContextIniSettings(const char* Filename);
+}

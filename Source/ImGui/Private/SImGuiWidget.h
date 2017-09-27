@@ -19,6 +19,7 @@ public:
 	SLATE_BEGIN_ARGS(SImGuiWidget)
 	{}
 	SLATE_ARGUMENT(FImGuiModuleManager*, ModuleManager)
+	SLATE_ARGUMENT(UGameViewportClient*, GameViewport)
 	SLATE_ARGUMENT(int32, ContextIndex)
 	SLATE_END_ARGS()
 
@@ -35,12 +36,8 @@ public:
 	// Get the game viewport to which this widget is attached.
 	const TWeakObjectPtr<UGameViewportClient>& GetGameViewport() const { return GameViewport; }
 
-	// Attach this widget to a target game viewport.
-	// Widget can be attached to only one viewport at a time but can be reused after its last viewport becomes invalid
-	// at the end of a session. Widgets are weakly attached, so once destroyed they are automatically removed.
-	// @param InGameViewport - Target game viewport
-	// @param bResetInput - If true (default), input will be reset back to a default state
-	void AttachToViewport(UGameViewportClient* InGameViewport, bool bResetInput = true);
+	// Detach widget from viewport assigned during construction (effectively allowing to dispose this widget). 
+	void Detach();
 
 	//----------------------------------------------------------------------------------------------------
 	// SWidget overrides
@@ -91,8 +88,6 @@ private:
 	bool IsConsoleOpened() const;
 
 	bool IgnoreKeyEvent(const FKeyEvent& KeyEvent) const;
-
-	void ResetInputState();
 
 	// Update visibility based on input enabled state.
 	void SetVisibilityFromInputEnabled();

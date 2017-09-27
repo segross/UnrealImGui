@@ -6,6 +6,8 @@
 
 #include <imgui.h>
 
+#include <string>
+
 
 class FImGuiInputState;
 
@@ -15,7 +17,7 @@ class FImGuiContextProxy
 {
 public:
 
-	FImGuiContextProxy();
+	FImGuiContextProxy(const FString& Name);
 	~FImGuiContextProxy();
 
 	FImGuiContextProxy(const FImGuiContextProxy&) = delete;
@@ -23,6 +25,9 @@ public:
 
 	FImGuiContextProxy(FImGuiContextProxy&& Other);
 	FImGuiContextProxy& operator=(FImGuiContextProxy&& Other);
+
+	// Get the name of this context.
+	const FString& GetName() const { return Name; }
 
 	// Get draw data from the last frame.
 	const TArray<FImGuiDrawList>& GetDrawData() const { return DrawLists; }
@@ -32,6 +37,9 @@ public:
 
 	// Set input state to be used by this context.
 	void SetInputState(const FImGuiInputState* SourceInputState) { InputState = SourceInputState; }
+
+	// If context is currently using input state to remove then remove that binding.
+	void RemoveInputState(const FImGuiInputState* InputStateToRemove) { if (InputState == InputStateToRemove) InputState = nullptr; }
 
 	// Is this context the current ImGui context.
 	bool IsCurrentContext() const { return ImGui::GetCurrentContext() == Context; }
@@ -63,4 +71,7 @@ private:
 	const FImGuiInputState* InputState = nullptr;
 
 	TArray<FImGuiDrawList> DrawLists;
+
+	FString Name;
+	std::string IniFilename;
 };

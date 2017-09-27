@@ -5,15 +5,13 @@
 #include "ImGuiModuleManager.h"
 
 #include "ImGuiInteroperability.h"
+#include "Utilities/WorldContextIndex.h"
 
 #include <imgui.h>
 
 
 FImGuiModuleManager::FImGuiModuleManager()
 {
-	// Make sure that default ImGui context is setup.
-	ContextManager.GetDefaultContextProxy();
-
 	// Typically we will use viewport created events to add widget to new game viewports.
 	ViewportCreatedHandle = UGameViewportClient::OnViewportCreated().AddRaw(this, &FImGuiModuleManager::OnViewportCreated);
 
@@ -35,6 +33,15 @@ FImGuiModuleManager::~FImGuiModuleManager()
 	{
 		UGameViewportClient::OnViewportCreated().Remove(ViewportCreatedHandle);
 		ViewportCreatedHandle.Reset();
+	}
+
+	// Remove still active widgets (important during hot-reloading).
+	for (auto& Widget : Widgets)
+	{
+		if (Widget.IsValid())
+		{
+			Widget.Pin()->Detach();
+		}
 	}
 
 	// Deactivate this manager.
@@ -141,24 +148,21 @@ void FImGuiModuleManager::AddWidgetToViewport(UGameViewportClient* GameViewport)
 	checkf(GameViewport, TEXT("Null game viewport."));
 	checkf(FSlateApplication::IsInitialized(), TEXT("Slate should be initialized before we can add widget to game viewports."));
 
-	const int32 ContextIndex = Utilities::GetWorldContextIndex(GameViewport);
-
 	// This makes sure that context for this world is created.
 	auto& Proxy = ContextManager.GetWorldContextProxy(*GameViewport->GetWorld());
 
-	// Get widget for this world.
-	auto& ViewportWidget = ViewportWidgets.FindOrAdd(ContextIndex);
-	if (!ViewportWidget.IsValid())
+	TSharedPtr<SImGuiWidget> Widget;
+	SAssignNew(Widget, SImGuiWidget).ModuleManager(this).GameViewport(GameViewport)
+		.ContextIndex(Utilities::GetWorldContextIndex(GameViewport));
+
+	if (TWeakPtr<SImGuiWidget>* Slot = Widgets.FindByPredicate([](auto& Widget) { return !Widget.IsValid(); }))
 	{
-		SAssignNew(ViewportWidget, SImGuiWidget).ModuleManager(this).ContextIndex(ContextIndex);
-		check(ViewportWidget.IsValid());
+		*Slot = Widget;
 	}
-
-	// Bind widget's input to context for this world.
-	Proxy.SetInputState(&ViewportWidget->GetInputState());
-
-	// We should always have one viewport per context index at a time (this will be validated by widget).
-	ViewportWidget->AttachToViewport(GameViewport);
+	else
+	{
+		Widgets.Emplace(Widget);
+	}
 }
 
 void FImGuiModuleManager::AddWidgetToAllViewports()
