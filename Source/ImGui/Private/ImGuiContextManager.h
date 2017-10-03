@@ -34,12 +34,19 @@ public:
 	// Get or create ImGui context proxy for given world.
 	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy(const UWorld& World) { return GetWorldContextData(World).ContextProxy; }
 
+	// Get or create ImGui context proxy for given world. Additionally get context index for that proxy.
+	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy(const UWorld& World, int32& OutContextIndex) { return GetWorldContextData(World, &OutContextIndex).ContextProxy; }
+
 	// Get context proxy by index, or null if context with that index doesn't exist.
 	FORCEINLINE FImGuiContextProxy* GetContextProxy(int32 ContextIndex)
 	{
 		FContextData* Data = Contexts.Find(ContextIndex);
 		return Data ? &(Data->ContextProxy) : nullptr;
 	}
+
+	// Delegate called for all contexts in manager, right after calling context specific draw event. Allows listeners
+	// draw the same content to multiple contexts.
+	FSimpleMulticastDelegate& OnDrawMultiContext() { return DrawMultiContextEvent; }
 
 	void Tick(float DeltaSeconds);
 
@@ -87,9 +94,11 @@ private:
 	FContextData& GetStandaloneWorldContextData();
 #endif
 
-	FContextData& GetWorldContextData(const UWorld& World);
+	FContextData& GetWorldContextData(const UWorld& World, int32* OutContextIndex = nullptr);
 
 	TMap<int32, FContextData> Contexts;
 
 	FImGuiDemo ImGuiDemo;
+
+	FSimpleMulticastDelegate DrawMultiContextEvent;
 };

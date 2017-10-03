@@ -53,7 +53,8 @@ public:
 	FSimpleMulticastDelegate& OnDraw() { return DrawEvent; }
 
 	// Tick to advance context to the next frame.
-	void Tick(float DeltaSeconds);
+	// @param SharedDrawEvent - Shared draw event provided from outside to be called right after context own event 
+	void Tick(float DeltaSeconds, FSimpleMulticastDelegate* SharedDrawEvent = nullptr);
 
 private:
 

@@ -72,7 +72,7 @@ void FImGuiContextManager::Tick(float DeltaSeconds)
 		if (ContextData.CanTick())
 		{
 			ContextData.ContextProxy.SetAsCurrent();
-			ContextData.ContextProxy.Tick(DeltaSeconds);
+			ContextData.ContextProxy.Tick(DeltaSeconds, &DrawMultiContextEvent);
 		}
 	}
 }
@@ -105,7 +105,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetStandaloneWorldCont
 }
 #endif // !WITH_EDITOR
 
-FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(const UWorld& World)
+FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(const UWorld& World, int32* OutIndex)
 {
 	using namespace Utilities;
 
@@ -140,5 +140,9 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 	}
 #endif
 
+	if (OutIndex)
+	{
+		*OutIndex = Index;
+	}
 	return *Data;
 }

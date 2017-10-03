@@ -117,7 +117,7 @@ FImGuiContextProxy::~FImGuiContextProxy()
 	}
 }
 
-void FImGuiContextProxy::Tick(float DeltaSeconds)
+void FImGuiContextProxy::Tick(float DeltaSeconds, FSimpleMulticastDelegate* SharedDrawEvent)
 {
 	if (bIsFrameStarted)
 	{
@@ -125,6 +125,10 @@ void FImGuiContextProxy::Tick(float DeltaSeconds)
 		if (DrawEvent.IsBound())
 		{
 			DrawEvent.Broadcast();
+		}
+		if (SharedDrawEvent && SharedDrawEvent->IsBound())
+		{
+			SharedDrawEvent->Broadcast();
 		}
 
 		// Ending frame will produce render output that we capture and store for later use. This also puts context to
