@@ -55,8 +55,19 @@ namespace
 #endif // WITH_EDITOR
 }
 
+FImGuiContextManager::FImGuiContextManager()
+{
+#if WITH_EDITOR
+	FWorldDelegates::OnWorldTickStart.AddRaw(this, &FImGuiContextManager::OnWorldTickStart);
+#endif
+}
+
 FImGuiContextManager::~FImGuiContextManager()
 {
+#if WITH_EDITOR
+	// Order matters because contexts can be created during World Tick Start events.
+	FWorldDelegates::OnWorldTickStart.RemoveAll(this);
+#endif
 	Contexts.Empty();
 	ImGui::Shutdown();
 }
@@ -76,6 +87,16 @@ void FImGuiContextManager::Tick(float DeltaSeconds)
 		}
 	}
 }
+
+#if WITH_EDITOR
+void FImGuiContextManager::OnWorldTickStart(ELevelTick TickType, float DeltaSeconds)
+{
+	if (GWorld)
+	{
+		GetWorldContextProxy(*GWorld).SetAsCurrent();
+	}
+}
+#endif // WITH_EDITOR
 
 #if WITH_EDITOR
 FImGuiContextManager::FContextData& FImGuiContextManager::GetEditorContextData()
@@ -108,6 +129,18 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetStandaloneWorldCont
 FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(const UWorld& World, int32* OutIndex)
 {
 	using namespace Utilities;
+
+#if WITH_EDITOR
+	if (World.WorldType == EWorldType::Editor)
+	{
+		if (OutIndex)
+		{
+			*OutIndex = Utilities::EDITOR_CONTEXT_INDEX;
+		}
+
+		return GetEditorContextData();
+	}
+#endif
 
 	const FWorldContext* WorldContext = GetWorldContext(World);
 	const int32 Index = GetWorldContextIndex(*WorldContext);

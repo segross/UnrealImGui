@@ -11,7 +11,7 @@ class FImGuiContextManager
 {
 public:
 
-	FImGuiContextManager() = default;
+	FImGuiContextManager();
 
 	FImGuiContextManager(const FImGuiContextManager&) = delete;
 	FImGuiContextManager& operator=(const FImGuiContextManager&) = delete;
@@ -85,6 +85,10 @@ private:
 	};
 
 #endif // WITH_EDITOR
+
+#if WITH_EDITOR
+	void OnWorldTickStart(ELevelTick TickType, float DeltaSeconds);
+#endif
 
 #if WITH_EDITOR
 	FContextData& GetEditorContextData();

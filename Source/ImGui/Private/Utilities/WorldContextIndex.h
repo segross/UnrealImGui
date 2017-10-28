@@ -38,7 +38,22 @@ namespace Utilities
 		// In single-PIE with dedicated server or multi-PIE sessions worlds have PIEInstance starting from 1 for server
 		// and 2+ for clients, what maps directly to our index.
 
-		return WorldContext.WorldType == EWorldType::PIE ? FMath::Max(WorldContext.PIEInstance, 1) : STANDALONE_GAME_CONTEXT_INDEX;
+		switch (WorldContext.WorldType)
+		{
+		case EWorldType::PIE:
+			return FMath::Max(WorldContext.PIEInstance, 1);
+		case EWorldType::Game:
+			return STANDALONE_GAME_CONTEXT_INDEX;
+		case EWorldType::Editor:
+			return EDITOR_CONTEXT_INDEX;
+		default:
+			return INVALID_CONTEXT_INDEX;
+		}
+	}
+
+	int32 GetWorldContextIndex(const UWorld& World)
+	{
+		return (World.WorldType == EWorldType::Editor) ? EDITOR_CONTEXT_INDEX : GetWorldContextIndex(World.GetGameInstance());
 	}
 
 #else
