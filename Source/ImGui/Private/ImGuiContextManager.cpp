@@ -146,12 +146,12 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 	const int32 Index = GetWorldContextIndex(*WorldContext);
 
 	checkf(Index != Utilities::INVALID_CONTEXT_INDEX, TEXT("Couldn't find context index for world %s: WorldType = %d"),
-		*World.GetName(), World.WorldType);
+		*World.GetName(), static_cast<int32>(World.WorldType));
 
 #if WITH_EDITOR
 	checkf(!GEngine->IsEditor() || Index != Utilities::EDITOR_CONTEXT_INDEX,
 		TEXT("Context index %d is reserved for editor and cannot be used for world %s: WorldType = %d, NetMode = %d"),
-		Index, *World.GetName(), World.WorldType, World.GetNetMode());
+		Index, *World.GetName(), static_cast<int32>(World.WorldType), static_cast<int32>(World.GetNetMode()));
 #endif
 
 	FContextData* Data = Contexts.Find(Index);

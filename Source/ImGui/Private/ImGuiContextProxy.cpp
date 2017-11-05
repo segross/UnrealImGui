@@ -7,6 +7,8 @@
 #include "ImGuiImplementation.h"
 #include "ImGuiInteroperability.h"
 
+#include <Runtime/Launch/Resources/Version.h>
+
 
 static constexpr float DEFAULT_CANVAS_WIDTH = 3840.f;
 static constexpr float DEFAULT_CANVAS_HEIGHT = 2160.f;
@@ -16,7 +18,13 @@ namespace
 {
 	FString GetSaveDirectory()
 	{
-		FString Directory = FPaths::Combine(*FPaths::GameSavedDir(), TEXT("ImGui"));
+#if (ENGINE_MAJOR_VERSION > 4 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 18))
+		const FString SavedDir = FPaths::ProjectSavedDir();
+#else
+		const FString SavedDir = FPaths::GameSavedDir();
+#endif
+
+		FString Directory = FPaths::Combine(*SavedDir, TEXT("ImGui"));
 
 		// Make sure that directory is created.
 		IPlatformFile::GetPlatformPhysical().CreateDirectory(*Directory);
@@ -87,7 +95,7 @@ FImGuiContextProxy::FImGuiContextProxy(FImGuiContextProxy&& Other)
 FImGuiContextProxy& FImGuiContextProxy::operator=(FImGuiContextProxy&& Other)
 {
 	// Swapping context so it can be destroyed with the other object.
-	using std::swap;	
+	using std::swap;
 	swap(Context, Other.Context);
 
 	// Just moving remaining data that doesn't affect cleanup.
