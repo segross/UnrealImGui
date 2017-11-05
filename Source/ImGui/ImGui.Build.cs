@@ -5,7 +5,11 @@ using UnrealBuildTool;
 
 public class ImGui : ModuleRules
 {
+#if WITH_FORWARDED_MODULE_RULES_CTOR
+	public ImGui(ReadOnlyTargetRules Target) : base(Target)
+#else
 	public ImGui(TargetInfo Target)
+#endif
 	{
 		
 		PublicIncludePaths.AddRange(
