@@ -8,18 +8,24 @@ Unreal ImGui is an Unreal Engine 4 plug-in which integrates [Dear ImGui](https:/
 Dear ImGui simplifies and helps with creation of quality visualisation and debugging tools for your Unreal projects.
 
 
+Status
+------
+Supported engine version: 4.18*
+
+\* *Plugin has been updated to compile and work with at least this version of the engine. Commits updating plugin to newer version of the engine are tagged with this version's number. If newer engine version doesn't require any change then it want be tagged, so there is a chance that plugin works with version newer than officially supported. As long as possible I will try to maintain backward compatibility when updating to newer engine version (but not necessarily when adding new features). Right now plugin should be at least backward compatible to engine version 4.15.*
+
 About
 -----
 
 This plug-in adds to Unreal project ImGui module. Adding it as as a dependency to other modules enables them to use Dear ImGui framework.
 
-The base aim of the project is to provide a basic integration of Dear ImGui, without imposing any patters how it should be used in projects. Right now it doesn't extend ImGui API for Unreal types, but that will change in near future.
+The base aim of the project is to provide a basic integration of Dear ImGui, without imposing any patters how it should be used in projects.
 
-This is a work in progress but it supports key Unreal features, like Multi-PIE sessions etc. When running Multi-PIE session, each world gets its own ImGui context where world specific data can be visualised.
+This is a work in progress but it supports key Unreal features, like Multi-PIE sessions etc.
 
-The upcoming feature is the ability to invisibly switch contexts when calling ImGui functions from different worlds.
+When running Multi-PIE session, each world gets its own ImGui context where world specific data can be visualised. When world update begins contexts are switched automatically, so using ImGui during objects update should be as easy as calling ImGui API functions.
 
-After that I plan to add more usability features, better documentation and integration of Remote ImGui which enables using ImGui from a browser and to investigate possibility of opening ImGui for Blueprints.
+For scenarios where automatic context switching above is not enough I'm planning to add mechanism allowing to explicitly select contexts. After that I plan to add example project, more usability features, better documentation and integration of Remote ImGui which enables using ImGui from a browser and to investigate possibility of opening ImGui for Blueprints.
 
 
 How to use it
@@ -31,12 +37,12 @@ Content of this repository needs to be placed in *Plugins* directory under proje
 
 To use that in other modules you will need to declare it as a public or private dependency in those modules' Build.cs files:
 
-```c#
+```
 PublicDependencyModuleNames.AddRange(new string[] { "ImGui" });
 ```
 or
 
-```c#
+```
 PrivateDependencyModuleNames.AddRange(new string[] { "ImGui" });
 ```
 
