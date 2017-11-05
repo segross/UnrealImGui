@@ -4,10 +4,15 @@
 
 #include "ImGuiInteroperability.h"
 
+#include <Runtime/Launch/Resources/Version.h>
 #include <SlateCore.h>
 
 #include <imgui.h>
 
+
+// Starting from version 4.17 Slate doesn't have per-vertex clipping rectangle and GSlateScissorRect. Use this to
+// support older engine versions.
+#define WITH_OBSOLETE_CLIPPING_API		(ENGINE_MAJOR_VERSION < 4 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION < 17))
 
 // ImGui draw command data transformed for Slate.
 struct FImGuiDrawCommand
@@ -34,16 +39,23 @@ public:
 		return{ ImGuiCommand.ElemCount, ImGuiInterops::ToSlateRect(ImGuiCommand.ClipRect), ImGuiInterops::ToTextureIndex(ImGuiCommand.TextureId) };
 	}
 
+#if WITH_OBSOLETE_CLIPPING_API
 	// Transform and copy vertex data to target buffer (old data in the target buffer are replaced).
 	// @param OutVertexBuffer - Destination buffer
 	// @param VertexPositionOffset - Position offset added to every vertex to transform it to different space
 	// @param VertexClippingRect - Clipping rectangle for Slate vertices
 	void CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const FVector2D VertexPositionOffset, const FSlateRotatedRect& VertexClippingRect) const;
+#else
+	// Transform and copy vertex data to target buffer (old data in the target buffer are replaced).
+	// @param OutVertexBuffer - Destination buffer
+	// @param VertexPositionOffset - Position offset added to every vertex to transform it to different space
+	void CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const FVector2D VertexPositionOffset) const;
+#endif // WITH_OBSOLETE_CLIPPING_API
 
 	// Transform and copy index data to target buffer (old data in the target buffer are replaced).
 	// Internal index buffer contains enough data to match the sum of NumElements from all draw commands.
 	// @param OutIndexBuffer - Destination buffer
-	// @param StartIndex - Start copying source data starting from this index 
+	// @param StartIndex - Start copying source data starting from this index
 	// @param NumElements - How many elements we want to copy
 	void CopyIndexData(TArray<SlateIndex>& OutIndexBuffer, const int32 StartIndex, const int32 NumElements) const;
 

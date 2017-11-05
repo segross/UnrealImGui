@@ -403,12 +403,15 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 
 		for (const auto& DrawList : ContextProxy->GetDrawData())
 		{
+#if WITH_OBSOLETE_CLIPPING_API
 			DrawList.CopyVertexData(VertexBuffer, VertexPositionOffset, VertexClippingRect);
 
 			// Get access to the Slate scissor rectangle defined in Slate Core API, so we can customize elements drawing.
 			extern SLATECORE_API TOptional<FShortRect> GSlateScissorRect;
-
 			auto GSlateScissorRectSaver = ScopeGuards::MakeStateSaver(GSlateScissorRect);
+#else
+			DrawList.CopyVertexData(VertexBuffer, VertexPositionOffset);
+#endif // WITH_OBSOLETE_CLIPPING_API
 
 			int IndexBufferOffset = 0;
 			for (int CommandNb = 0; CommandNb < DrawList.NumCommands(); CommandNb++)
@@ -423,11 +426,21 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 				// Get texture resource handle for this draw command (null index will be also mapped to a valid texture).
 				const FSlateResourceHandle& Handle = ModuleManager->GetTextureManager().GetTextureHandle(DrawCommand.TextureId);
 
-				// Transform clipping rectangle to screen space and set in Slate, to apply it to elements that we draw.
-				GSlateScissorRect = FShortRect{ DrawCommand.ClippingRect.OffsetBy(MyClippingRect.GetTopLeft()).IntersectionWith(MyClippingRect) };
+				// Transform clipping rectangle to screen space and apply to elements that we draw.
+				const FSlateRect ClippingRect = DrawCommand.ClippingRect.OffsetBy(MyClippingRect.GetTopLeft()).IntersectionWith(MyClippingRect);
+
+#if WITH_OBSOLETE_CLIPPING_API
+				GSlateScissorRect = FShortRect{ ClippingRect };
+#else
+				OutDrawElements.PushClip(FSlateClippingZone{ ClippingRect });
+#endif // WITH_OBSOLETE_CLIPPING_API
 
 				// Add elements to the list.
 				FSlateDrawElement::MakeCustomVerts(OutDrawElements, LayerId, Handle, VertexBuffer, IndexBuffer, nullptr, 0, 0);
+
+#if !WITH_OBSOLETE_CLIPPING_API
+				OutDrawElements.PopClip();
+#endif // WITH_OBSOLETE_CLIPPING_API
 			}
 		}
 	}
