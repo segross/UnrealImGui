@@ -5,10 +5,16 @@
 #include "ImGuiContextManager.h"
 
 #include "ImGuiImplementation.h"
+#include "Utilities/ScopeGuards.h"
 #include "Utilities/WorldContext.h"
 #include "Utilities/WorldContextIndex.h"
 
 #include <imgui.h>
+
+
+// Index of the currently updated context. Only valid during context manager tick.
+// TODO: Move to public interface (but probably as a current world/viewport etc.)
+int32 CurrentContextIndex = Utilities::INVALID_CONTEXT_INDEX;
 
 
 namespace
@@ -79,6 +85,8 @@ void FImGuiContextManager::Tick(float DeltaSeconds)
 
 	for (auto& Pair : Contexts)
 	{
+		auto ContextIndexSave = ScopeGuards::MakeStateSaver(CurrentContextIndex);
+		CurrentContextIndex = Pair.Key;
 		auto& ContextData = Pair.Value;
 		if (ContextData.CanTick())
 		{

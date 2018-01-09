@@ -16,7 +16,6 @@ private:
 
 	ImVec4 ClearColor = ImColor{ 114, 144, 154 };
 
-	bool bShowDemo = false;
-	bool bDemoShowTestWindow = true;
-	bool bDemoShowAnotherTestWindow = false;
+	int32 ShowDemoWindowMask = 0;
+	int32 ShowAnotherWindowMask = 0;
 };
