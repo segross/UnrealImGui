@@ -12,6 +12,12 @@
 #define LOCTEXT_NAMESPACE "FImGuiModule"
 
 
+namespace CVars
+{
+	extern TAutoConsoleVariable<int32> InputEnabled;
+	extern TAutoConsoleVariable<int32> ShowDemo;
+}
+
 struct EDelegateCategory
 {
 	enum
@@ -98,6 +104,38 @@ void FImGuiModule::ShutdownModule()
 	// Before we shutdown we need to delete manager that will do all necessary cleanup.
 	delete ModuleManager;
 	ModuleManager = nullptr;
+}
+
+bool FImGuiModule::IsInputMode() const
+{
+	return CVars::InputEnabled.GetValueOnAnyThread() > 0;
+}
+
+void FImGuiModule::SetInputMode(bool bEnabled)
+{
+	// This function is for supporting shortcut or subsitiute for console command, so we are using the same priority.
+	CVars::InputEnabled->Set(bEnabled ? 1 : 0, ECVF_SetByConsole);
+}
+
+void FImGuiModule::ToggleInputMode()
+{
+	SetInputMode(!IsInputMode());
+}
+
+bool FImGuiModule::IsShowingDemo() const
+{
+	return CVars::ShowDemo.GetValueOnAnyThread() > 0;
+}
+
+void FImGuiModule::SetShowDemo(bool bShow)
+{
+	// This function is for supporting shortcut or subsitiute for console command, so we are using the same priority.
+	CVars::ShowDemo->Set(bShow ? 1 : 0, ECVF_SetByConsole);
+}
+
+void FImGuiModule::ToggleShowDemo()
+{
+	SetShowDemo(!IsShowingDemo());
 }
 
 #undef LOCTEXT_NAMESPACE
