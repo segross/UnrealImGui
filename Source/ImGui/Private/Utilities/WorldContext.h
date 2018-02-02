@@ -10,6 +10,11 @@
 
 namespace Utilities
 {
+	FORCEINLINE const FWorldContext* GetWorldContext(const UGameInstance& GameInstance)
+	{
+		return GameInstance.GetWorldContext();
+	}
+
 	template<typename T>
 	FORCEINLINE const FWorldContext* GetWorldContext(const TWeakObjectPtr<T>& Obj)
 	{
@@ -20,11 +25,6 @@ namespace Utilities
 	FORCEINLINE const FWorldContext* GetWorldContext(const T* Obj)
 	{
 		return Obj ? GetWorldContext(*Obj) : nullptr;
-	}
-
-	FORCEINLINE const FWorldContext* GetWorldContext(const UGameInstance& GameInstance)
-	{
-		return GameInstance.GetWorldContext();
 	}
 
 	FORCEINLINE const FWorldContext* GetWorldContext(const UGameViewportClient& GameViewportClient)

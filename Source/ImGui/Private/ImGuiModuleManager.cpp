@@ -151,17 +151,17 @@ void FImGuiModuleManager::AddWidgetToViewport(UGameViewportClient* GameViewport)
 	// This makes sure that context for this world is created.
 	auto& Proxy = ContextManager.GetWorldContextProxy(*GameViewport->GetWorld());
 
-	TSharedPtr<SImGuiWidget> Widget;
-	SAssignNew(Widget, SImGuiWidget).ModuleManager(this).GameViewport(GameViewport)
+	TSharedPtr<SImGuiWidget> SharedWidget;
+	SAssignNew(SharedWidget, SImGuiWidget).ModuleManager(this).GameViewport(GameViewport)
 		.ContextIndex(Utilities::GetWorldContextIndex(GameViewport));
 
 	if (TWeakPtr<SImGuiWidget>* Slot = Widgets.FindByPredicate([](auto& Widget) { return !Widget.IsValid(); }))
 	{
-		*Slot = Widget;
+		*Slot = SharedWidget;
 	}
 	else
 	{
-		Widgets.Emplace(Widget);
+		Widgets.Emplace(SharedWidget);
 	}
 }
 
