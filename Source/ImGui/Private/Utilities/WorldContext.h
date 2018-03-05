@@ -10,6 +10,9 @@
 
 namespace Utilities
 {
+	template<typename T>
+	FORCEINLINE const FWorldContext* GetWorldContext(const T* Obj);
+
 	FORCEINLINE const FWorldContext* GetWorldContext(const UGameInstance& GameInstance)
 	{
 		return GameInstance.GetWorldContext();
@@ -21,12 +24,6 @@ namespace Utilities
 		return Obj.IsValid() ? GetWorldContext(*Obj.Get()) : nullptr;
 	}
 
-	template<typename T>
-	FORCEINLINE const FWorldContext* GetWorldContext(const T* Obj)
-	{
-		return Obj ? GetWorldContext(*Obj) : nullptr;
-	}
-
 	FORCEINLINE const FWorldContext* GetWorldContext(const UGameViewportClient& GameViewportClient)
 	{
 		return GetWorldContext(GameViewportClient.GetGameInstance());
@@ -35,6 +32,12 @@ namespace Utilities
 	FORCEINLINE const FWorldContext* GetWorldContext(const UWorld& World)
 	{
 		return GetWorldContext(World.GetGameInstance());
+	}
+
+	template<typename T>
+	FORCEINLINE const FWorldContext* GetWorldContext(const T* Obj)
+	{
+		return Obj ? GetWorldContext(*Obj) : nullptr;
 	}
 
 	const FWorldContext* GetWorldContextFromNetMode(ENetMode NetMode);
