@@ -22,13 +22,6 @@ namespace Utilities
 	// Editor context index.
 	static constexpr int32 EDITOR_CONTEXT_INDEX = 0;
 
-	template<typename T>
-	FORCEINLINE int32 GetWorldContextIndex(const T& Obj)
-	{
-		const FWorldContext* WorldContext = GetWorldContext(Obj);
-		return WorldContext ? GetWorldContextIndex(*WorldContext) : INVALID_CONTEXT_INDEX;
-	}
-
 	FORCEINLINE int32 GetWorldContextIndex(const FWorldContext& WorldContext)
 	{
 		// In standalone game (WorldType = Game) we have only one context with index 0 (see GAME_CONTEXT_INDEX).
@@ -49,6 +42,13 @@ namespace Utilities
 		default:
 			return INVALID_CONTEXT_INDEX;
 		}
+	}
+
+	template<typename T>
+	FORCEINLINE int32 GetWorldContextIndex(const T& Obj)
+	{
+		const FWorldContext* WorldContext = GetWorldContext(Obj);
+		return WorldContext ? GetWorldContextIndex(*WorldContext) : INVALID_CONTEXT_INDEX;
 	}
 
 	int32 GetWorldContextIndex(const UWorld& World)
