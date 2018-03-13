@@ -144,11 +144,13 @@ void FImGuiContextProxy::Tick(float DeltaSeconds, FSimpleMulticastDelegate* Shar
 		EndFrame();
 	}
 
+	// Update context information (some data, like mouse cursor, may be cleaned in new frame, so we should collect it
+	// beforehand).
+	bHasActiveItem = ImGui::IsAnyItemActive();
+	MouseCursor = ImGuiInterops::ToSlateMouseCursor(ImGui::GetMouseCursor());
+
 	// Begin a new frame and set the context back to a state in which it allows to draw controls.
 	BeginFrame(DeltaSeconds);
-
-	// Update context information.
-	bHasActiveItem = ImGui::IsAnyItemActive();
 }
 
 void FImGuiContextProxy::BeginFrame(float DeltaTime)

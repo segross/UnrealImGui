@@ -33,21 +33,27 @@ DEFINE_LOG_CATEGORY_STATIC(LogImGuiWidget, Warning, All);
 namespace CVars
 {
 	TAutoConsoleVariable<int> InputEnabled(TEXT("ImGui.InputEnabled"), 0,
-		TEXT("Allows to enable or disable ImGui input mode.\n")
+		TEXT("Enable or disable ImGui input mode.\n")
 		TEXT("0: disabled (default)\n")
-		TEXT("1: enabled, input is routed to ImGui and with a few exceptions is consumed."),
+		TEXT("1: enabled, input is routed to ImGui and with a few exceptions is consumed"),
+		ECVF_Default);
+
+	TAutoConsoleVariable<int> DrawMouseCursor(TEXT("ImGui.DrawMouseCursor"), 0,
+		TEXT("Whether or not mouse cursor in input mode should be drawn by ImGui.\n")
+		TEXT("0: disabled, hardware cursor will be used (default)\n")
+		TEXT("1: enabled, ImGui will take care for drawing mouse cursor"),
 		ECVF_Default);
 
 	TAutoConsoleVariable<int> DebugWidget(TEXT("ImGui.Debug.Widget"), 0,
 		TEXT("Show debug for SImGuiWidget.\n")
 		TEXT("0: disabled (default)\n")
-		TEXT("1: enabled."),
+		TEXT("1: enabled"),
 		ECVF_Default);
 
 	TAutoConsoleVariable<int> DebugInput(TEXT("ImGui.Debug.Input"), 0,
 		TEXT("Show debug for input state.\n")
 		TEXT("0: disabled (default)\n")
-		TEXT("1: enabled."),
+		TEXT("1: enabled"),
 		ECVF_Default);
 }
 
@@ -187,6 +193,20 @@ FReply SImGuiWidget::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEve
 	CopyModifierKeys(MouseEvent);
 
 	return FReply::Handled();
+}
+
+FCursorReply SImGuiWidget::OnCursorQuery(const FGeometry& MyGeometry, const FPointerEvent& CursorEvent) const
+{
+	EMouseCursor::Type MouseCursor = EMouseCursor::None;
+	if (CVars::DrawMouseCursor.GetValueOnGameThread() <= 0)
+	{
+		if (FImGuiContextProxy* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex))
+		{
+			MouseCursor = ContextProxy->GetMouseCursor();
+		}
+	}
+
+	return FCursorReply::Cursor(MouseCursor);
 }
 
 FReply SImGuiWidget::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
@@ -381,7 +401,7 @@ void SImGuiWidget::UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer
 		ClearMouseEventNotification();
 	}
 
-	InputState.SetMousePointer(bHasMousePointer);
+	InputState.SetMousePointer(bHasMousePointer && CVars::DrawMouseCursor.GetValueOnGameThread() > 0);
 }
 
 void SImGuiWidget::UpdateMouseStatus()

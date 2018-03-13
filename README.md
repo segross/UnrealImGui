@@ -23,7 +23,7 @@ The base aim of the project is to provide a basic integration of Dear ImGui, wit
 
 This is a work in progress but it supports key Unreal features, like Multi-PIE sessions etc.
 
-When running Multi-PIE session, each world gets its own ImGui context where world specific data can be visualised. When world update begins contexts are switched automatically, so using ImGui during objects update should be as easy as calling ImGui API functions.
+When running Multi-PIE session, each world gets its own ImGui context to draw world specific data. When world update begins contexts are switched automatically, so using ImGui during objects update should be as easy as calling ImGui API functions.
 
 For scenarios where automatic context switching above is not enough I'm planning to add mechanism allowing to explicitly select contexts. After that I plan to add example project, more usability features, better documentation and integration of Remote ImGui which enables using ImGui from a browser and to investigate possibility of opening ImGui for Blueprints.
 
@@ -51,7 +51,8 @@ You should now be able to use ImGui.
 
 *Console variables:*
 
-- **ImGui.InputEnabled** - Allows to enable or disable ImGui input mode. 0: disabled (default); 1: enabled, input is routed to ImGui and with a few exceptions is consumed. Note: this is going to be supported by a keyboard short-cut, but in the meantime ImGui input can be enabled/disabled using console.
+- **ImGui.InputEnabled** - Enable or disable ImGui input mode. 0: disabled (default); 1: enabled, input is routed to ImGui and with a few exceptions is consumed. Note: this is going to be supported by a keyboard short-cut, but in the meantime ImGui input can be enabled/disabled using console.
+- **ImGui.DrawMouseCursor** - Whether or not mouse cursor in input mode should be drawn by ImGui. 0: disabled, hardware cursor will be used (default); 1: enabled, ImGui will take care for drawing mouse cursor.
 - **ImGui.ShowDemo** - Show ImGui demo. 0: disabled (default); 1: enabled.
 - **ImGui.Debug.Widget** - Show self-debug for the widget that renders ImGui output. 0: disabled (default); 1: enabled.
 

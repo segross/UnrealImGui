@@ -133,6 +133,30 @@ namespace ImGuiInterops
 		return -1;
 	}
 
+	EMouseCursor::Type ToSlateMouseCursor(ImGuiMouseCursor MouseCursor)
+	{
+		switch (MouseCursor)
+		{
+		case ImGuiMouseCursor_Arrow:
+			return EMouseCursor::Default;
+		case ImGuiMouseCursor_TextInput:
+			return EMouseCursor::TextEditBeam;
+		case ImGuiMouseCursor_Move:
+			return EMouseCursor::CardinalCross;
+		case ImGuiMouseCursor_ResizeNS:
+			return  EMouseCursor::ResizeUpDown;
+		case ImGuiMouseCursor_ResizeEW:
+			return  EMouseCursor::ResizeLeftRight;
+		case ImGuiMouseCursor_ResizeNESW:
+			return  EMouseCursor::ResizeSouthWest;
+		case ImGuiMouseCursor_ResizeNWSE:
+			return  EMouseCursor::ResizeSouthEast;
+		case ImGuiMouseCursor_None:
+		default:
+			return EMouseCursor::None;
+		}
+	}
+
 	//====================================================================================================
 	// Input State Copying
 	//====================================================================================================

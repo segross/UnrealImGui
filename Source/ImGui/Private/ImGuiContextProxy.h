@@ -4,6 +4,8 @@
 
 #include "ImGuiDrawData.h"
 
+#include <ICursor.h>
+
 #include <imgui.h>
 
 #include <string>
@@ -49,6 +51,8 @@ public:
 
 	bool HasActiveItem() const { return bHasActiveItem; }
 
+	EMouseCursor::Type GetMouseCursor() const { return MouseCursor;  }
+
 	// Delegate called right before ending the frame to allows listeners draw their controls.
 	FSimpleMulticastDelegate& OnDraw() { return DrawEvent; }
 
@@ -66,6 +70,7 @@ private:
 	ImGuiContext* Context = nullptr;
 
 	bool bHasActiveItem = false;
+	EMouseCursor::Type MouseCursor = EMouseCursor::None;
 
 	bool bIsFrameStarted = false;
 	FSimpleMulticastDelegate DrawEvent;

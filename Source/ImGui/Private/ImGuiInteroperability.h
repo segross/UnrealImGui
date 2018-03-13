@@ -4,6 +4,8 @@
 
 #include "TextureManager.h"
 
+#include <ICursor.h>
+
 #include <imgui.h>
 
 
@@ -51,6 +53,8 @@ namespace ImGuiInterops
 	{
 		return GetMouseIndex(MouseEvent.GetEffectingButton());
 	}
+
+	EMouseCursor::Type ToSlateMouseCursor(ImGuiMouseCursor MouseCursor);
 
 
 	//====================================================================================================
