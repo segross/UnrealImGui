@@ -19,14 +19,14 @@ class FImGuiContextProxy
 {
 public:
 
-	FImGuiContextProxy(const FString& Name);
+	FImGuiContextProxy(const FString& Name, FSimpleMulticastDelegate* InSharedDrawEvent);
 	~FImGuiContextProxy();
 
 	FImGuiContextProxy(const FImGuiContextProxy&) = delete;
 	FImGuiContextProxy& operator=(const FImGuiContextProxy&) = delete;
 
-	FImGuiContextProxy(FImGuiContextProxy&& Other);
-	FImGuiContextProxy& operator=(FImGuiContextProxy&& Other);
+	FImGuiContextProxy(FImGuiContextProxy&& Other) = default;
+	FImGuiContextProxy& operator=(FImGuiContextProxy&& Other) = default;
 
 	// Get the name of this context.
 	const FString& GetName() const { return Name; }
@@ -44,10 +44,10 @@ public:
 	void RemoveInputState(const FImGuiInputState* InputStateToRemove) { if (InputState == InputStateToRemove) InputState = nullptr; }
 
 	// Is this context the current ImGui context.
-	bool IsCurrentContext() const { return ImGui::GetCurrentContext() == Context; }
+	bool IsCurrentContext() const { return ImGui::GetCurrentContext() == Context.Get(); }
 
 	// Set this context as current ImGui context.
-	void SetAsCurrent() { ImGui::SetCurrentContext(Context); }
+	void SetAsCurrent() { ImGui::SetCurrentContext(Context.Get()); }
 
 	bool HasActiveItem() const { return bHasActiveItem; }
 
@@ -56,9 +56,12 @@ public:
 	// Delegate called right before ending the frame to allows listeners draw their controls.
 	FSimpleMulticastDelegate& OnDraw() { return DrawEvent; }
 
-	// Tick to advance context to the next frame.
-	// @param SharedDrawEvent - Shared draw event provided from outside to be called right after context own event 
-	void Tick(float DeltaSeconds, FSimpleMulticastDelegate* SharedDrawEvent = nullptr);
+	// Call draw events to allow listeners draw their widgets. Only one call per frame is processed. If it is not
+	// called manually before, then it will be called from the Tick function.
+	void Draw();
+
+	// Tick to advance context to the next frame. Only one call per frame will be processed.
+	void Tick(float DeltaSeconds);
 
 private:
 
@@ -67,13 +70,18 @@ private:
 
 	void UpdateDrawData(ImDrawData* DrawData);
 
-	ImGuiContext* Context = nullptr;
+	TUniquePtr<ImGuiContext> Context;
 
-	bool bHasActiveItem = false;
 	EMouseCursor::Type MouseCursor = EMouseCursor::None;
+	bool bHasActiveItem = false;
 
 	bool bIsFrameStarted = false;
 	FSimpleMulticastDelegate DrawEvent;
+	FSimpleMulticastDelegate* SharedDrawEvent = nullptr;
+
+	uint32 LastTickFrameNumber = 0;
+	uint32 LastDrawFrameNumber = 0;
+
 	const FImGuiInputState* InputState = nullptr;
 
 	TArray<FImGuiDrawList> DrawLists;

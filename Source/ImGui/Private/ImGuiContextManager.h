@@ -56,11 +56,11 @@ private:
 
 	struct FContextData
 	{
-		FContextData(const FString& ContextName, FImGuiDemo& Demo, int32 InPIEInstance = -1)
+		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, FImGuiDemo& Demo, int32 InPIEInstance = -1)
 			: PIEInstance(InPIEInstance)
-			, ContextProxy(ContextName)
+			, ContextProxy(ContextName, &SharedDrawEvent)
 		{
-			ContextProxy.OnDraw().AddRaw(&Demo, &FImGuiDemo::DrawControls);
+			ContextProxy.OnDraw().AddLambda([&Demo, ContextIndex]() { Demo.DrawControls(ContextIndex); });
 		}
 
 		FORCEINLINE bool CanTick() const { return PIEInstance < 0 || GEngine->GetWorldContextFromPIEInstance(PIEInstance); }
@@ -73,10 +73,10 @@ private:
 
 	struct FContextData
 	{
-		FContextData(const FString& ContextName, FImGuiDemo& Demo)
-			: ContextProxy(ContextName)
+		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, FImGuiDemo& Demo)
+			: ContextProxy(ContextName, &SharedDrawEvent)
 		{
-			ContextProxy.OnDraw().AddRaw(&Demo, &FImGuiDemo::DrawControls);
+			ContextProxy.OnDraw().AddLambda([&Demo, ContextIndex]() { Demo.DrawControls(ContextIndex); });
 		}
 
 		FORCEINLINE bool CanTick() const { return true; }

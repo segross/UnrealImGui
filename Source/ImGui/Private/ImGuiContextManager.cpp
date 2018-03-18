@@ -12,11 +12,6 @@
 #include <imgui.h>
 
 
-// Index of the currently updated context. Only valid during context manager tick.
-// TODO: Move to public interface (but probably as a current world/viewport etc.)
-int32 CurrentContextIndex = Utilities::INVALID_CONTEXT_INDEX;
-
-
 namespace
 {
 #if WITH_EDITOR
@@ -85,13 +80,10 @@ void FImGuiContextManager::Tick(float DeltaSeconds)
 
 	for (auto& Pair : Contexts)
 	{
-		auto ContextIndexSave = ScopeGuards::MakeStateSaver(CurrentContextIndex);
-		CurrentContextIndex = Pair.Key;
 		auto& ContextData = Pair.Value;
 		if (ContextData.CanTick())
 		{
-			ContextData.ContextProxy.SetAsCurrent();
-			ContextData.ContextProxy.Tick(DeltaSeconds, &DrawMultiContextEvent);
+			ContextData.ContextProxy.Tick(DeltaSeconds);
 		}
 	}
 }
@@ -113,7 +105,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetEditorContextData()
 
 	if (UNLIKELY(!Data))
 	{
-		Data = &Contexts.Emplace(Utilities::EDITOR_CONTEXT_INDEX, FContextData{ GetEditorContextName(), ImGuiDemo });
+		Data = &Contexts.Emplace(Utilities::EDITOR_CONTEXT_INDEX, FContextData{ GetEditorContextName(), Utilities::EDITOR_CONTEXT_INDEX, DrawMultiContextEvent, ImGuiDemo, -1 });
 	}
 
 	return *Data;
@@ -127,7 +119,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetStandaloneWorldCont
 
 	if (UNLIKELY(!Data))
 	{
-		Data = &Contexts.Emplace(Utilities::STANDALONE_GAME_CONTEXT_INDEX, FContextData{ GetWorldContextName(), ImGuiDemo });
+		Data = &Contexts.Emplace(Utilities::STANDALONE_GAME_CONTEXT_INDEX, FContextData{ GetWorldContextName(), Utilities::STANDALONE_GAME_CONTEXT_INDEX, DrawMultiContextEvent, ImGuiDemo });
 	}
 
 	return *Data;
@@ -167,7 +159,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 #if WITH_EDITOR
 	if (UNLIKELY(!Data))
 	{
-		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), ImGuiDemo, WorldContext->PIEInstance });
+		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, DrawMultiContextEvent, ImGuiDemo, WorldContext->PIEInstance });
 	}
 	else
 	{
@@ -177,7 +169,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 #else
 	if (UNLIKELY(!Data))
 	{
-		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), ImGuiDemo });
+		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, DrawMultiContextEvent, ImGuiDemo });
 	}
 #endif
 

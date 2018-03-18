@@ -17,13 +17,11 @@ namespace CVars
 }
 
 // Demo copied (with minor modifications) from ImGui examples. See https://github.com/ocornut/imgui.
-void FImGuiDemo::DrawControls()
+void FImGuiDemo::DrawControls(int32 ContextIndex)
 {
 	if (CVars::ShowDemo.GetValueOnGameThread() > 0)
 	{
-		// TODO: This should be part of a public interface.
-		extern int32 CurrentContextIndex;
-		const int32 ContextBit = CurrentContextIndex < 0 ? 0 : 1 << CurrentContextIndex;
+		const int32 ContextBit = ContextIndex < 0 ? 0 : 1 << ContextIndex;
 
 		// 1. Show a simple window
 		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
@@ -53,13 +51,28 @@ void FImGuiDemo::DrawControls()
 		// 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
 		if (ShowDemoWindowMask & ContextBit)
 		{
-			// Display warning about running ImGui examples in multiple contexts.
-			if (ShowDemoWindowMask != ContextBit)
+			// If more than one demo window is opened display warning about running ImGui examples in multiple contexts.
+
+			// For everything, but the first windows in this frame we assume warning.
+			bool bWarning = true;
+			if (GFrameNumber > LastDemoWindowFrameNumber)
+			{
+				// If this is the first window in this frame, then we need to look at the last frame to see whether
+				// there were more than one windows. Higher frame distance automatically means that there were not.
+				bWarning = ((GFrameNumber - LastDemoWindowFrameNumber) == 1) && (DemoWindowCounter > 1);
+	
+				LastDemoWindowFrameNumber = GFrameNumber;
+				DemoWindowCounter = 0;
+			}
+
+			DemoWindowCounter++;
+
+			if (bWarning)
 			{
 				ImGui::Spacing();
 
 				ImGui::PushStyleColor(ImGuiCol_Text, { 1.f, 1.f, 0.5f, 1.f });				
-				ImGui::TextWrapped("Demo Window is opend in more than one context, some of the ImGui examples may not work correctly.");
+				ImGui::TextWrapped("Demo Window is opened in more than one context, some of the ImGui examples may not work correctly.");
 				ImGui::PopStyleColor();
 
 				if (ImGui::IsItemHovered())
@@ -70,6 +83,8 @@ void FImGuiDemo::DrawControls()
 						"If you have a problem with an example try to run it in one context only.");
 				}
 			}
+
+			// Draw demo window.
 			ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
 			ImGui::ShowDemoWindow();
 		}

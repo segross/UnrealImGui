@@ -39,12 +39,13 @@ namespace
 	}
 }
 
-FImGuiContextProxy::FImGuiContextProxy(const FString& InName)
+FImGuiContextProxy::FImGuiContextProxy(const FString& InName, FSimpleMulticastDelegate* InSharedDrawEvent)
 	: Name(InName)
+	, SharedDrawEvent(InSharedDrawEvent)
 	, IniFilename(TCHAR_TO_ANSI(*GetIniFile(InName)))
 {
 	// Create context.
-	Context = ImGui::CreateContext();
+	Context = TUniquePtr<ImGuiContext>(ImGui::CreateContext());
 
 	// Set this context in ImGui for initialization (any allocations will be tracked in this context).
 	SetAsCurrent();
@@ -80,35 +81,6 @@ FImGuiContextProxy::FImGuiContextProxy(const FString& InName)
 	BeginFrame();
 }
 
-FImGuiContextProxy::FImGuiContextProxy(FImGuiContextProxy&& Other)
-	: Context(std::move(Other.Context))
-	, bHasActiveItem(Other.bHasActiveItem)
-	, DrawEvent(std::move(Other.DrawEvent))
-	, InputState(std::move(Other.InputState))
-	, DrawLists(std::move(Other.DrawLists))
-	, Name(std::move(Other.Name))
-	, IniFilename(std::move(Other.IniFilename))
-{
-	Other.Context = nullptr;
-}
-
-FImGuiContextProxy& FImGuiContextProxy::operator=(FImGuiContextProxy&& Other)
-{
-	// Swapping context so it can be destroyed with the other object.
-	using std::swap;
-	swap(Context, Other.Context);
-
-	// Just moving remaining data that doesn't affect cleanup.
-	bHasActiveItem = Other.bHasActiveItem;
-	DrawEvent = std::move(Other.DrawEvent);
-	InputState = std::move(Other.InputState);
-	DrawLists = std::move(Other.DrawLists);
-	Name = std::move(Other.Name);
-	IniFilename = std::move(Other.IniFilename);
-
-	return *this;
-}
-
 FImGuiContextProxy::~FImGuiContextProxy()
 {
 	if (Context)
@@ -118,39 +90,64 @@ FImGuiContextProxy::~FImGuiContextProxy()
 
 		// Save context data and destroy.
 		ImGuiImplementation::SaveCurrentContextIniSettings(IniFilename.c_str());
-		ImGui::DestroyContext(Context);
+		ImGui::DestroyContext(Context.Release());
 
 		// Set default context in ImGui to keep global context pointer valid.
 		ImGui::SetCurrentContext(&ImGuiImplementation::GetDefaultContext());
 	}
 }
 
-void FImGuiContextProxy::Tick(float DeltaSeconds, FSimpleMulticastDelegate* SharedDrawEvent)
+void FImGuiContextProxy::Draw()
 {
-	if (bIsFrameStarted)
+	// Comparing to LastTickFrameNumber rather than GFrameNumber to make sure that this is driven by our own update cycle.
+	if (LastDrawFrameNumber < LastTickFrameNumber)
 	{
-		// Broadcast draw event to allow listeners to draw their controls to this context.
-		if (DrawEvent.IsBound())
-		{
-			DrawEvent.Broadcast();
-		}
-		if (SharedDrawEvent && SharedDrawEvent->IsBound())
-		{
-			SharedDrawEvent->Broadcast();
-		}
+		LastDrawFrameNumber = LastTickFrameNumber;
 
-		// Ending frame will produce render output that we capture and store for later use. This also puts context to
-		// state in which it does not allow to draw controls, so we want to immediately start a new frame.
-		EndFrame();
+		if (bIsFrameStarted)
+		{
+			SetAsCurrent();
+
+			// Broadcast draw event to allow listeners to draw their controls to this context.
+			if (DrawEvent.IsBound())
+			{
+				DrawEvent.Broadcast();
+			}
+			if (SharedDrawEvent && SharedDrawEvent->IsBound())
+			{
+				SharedDrawEvent->Broadcast();
+			}
+		}
 	}
+}
 
-	// Update context information (some data, like mouse cursor, may be cleaned in new frame, so we should collect it
-	// beforehand).
-	bHasActiveItem = ImGui::IsAnyItemActive();
-	MouseCursor = ImGuiInterops::ToSlateMouseCursor(ImGui::GetMouseCursor());
+void FImGuiContextProxy::Tick(float DeltaSeconds)
+{
+	// Making sure that we tick only once per frame.
+	if (LastTickFrameNumber < GFrameNumber)
+	{
+		LastTickFrameNumber = GFrameNumber;
 
-	// Begin a new frame and set the context back to a state in which it allows to draw controls.
-	BeginFrame(DeltaSeconds);
+		SetAsCurrent();
+
+		if (bIsFrameStarted)
+		{
+			// Make sure that draw events are called before the end of the frame.
+			Draw();
+
+			// Ending frame will produce render output that we capture and store for later use. This also puts context to
+			// state in which it does not allow to draw controls, so we want to immediately start a new frame.
+			EndFrame();
+		}
+
+		// Update context information (some data, like mouse cursor, may be cleaned in new frame, so we should collect it
+		// beforehand).
+		bHasActiveItem = ImGui::IsAnyItemActive();
+		MouseCursor = ImGuiInterops::ToSlateMouseCursor(ImGui::GetMouseCursor());
+
+		// Begin a new frame and set the context back to a state in which it allows to draw controls.
+		BeginFrame(DeltaSeconds);
+	}
 }
 
 void FImGuiContextProxy::BeginFrame(float DeltaTime)

@@ -433,6 +433,10 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 {
 	if (FImGuiContextProxy* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex))
 	{
+		// Manually update ImGui context to minimise lag between creating and rendering ImGui output. This will also
+		// keep frame tearing at minimum because it is executed at the very end of the frame.
+		ContextProxy->Tick(FSlateApplication::Get().GetDeltaTime());
+
 		// Calculate offset that will transform vertex positions to screen space - rounded to avoid half pixel offsets.
 		const FVector2D VertexPositionOffset{ FMath::RoundToFloat(MyClippingRect.Left), FMath::RoundToFloat(MyClippingRect.Top) };
 

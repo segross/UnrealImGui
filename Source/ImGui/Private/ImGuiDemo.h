@@ -10,7 +10,7 @@ class FImGuiDemo
 {
 public:
 
-	void DrawControls();
+	void DrawControls(int32 ContextIndex);
 
 private:
 
@@ -18,4 +18,7 @@ private:
 
 	int32 ShowDemoWindowMask = 0;
 	int32 ShowAnotherWindowMask = 0;
+
+	int32 DemoWindowCounter = 0;
+	uint32 LastDemoWindowFrameNumber = 0;
 };
