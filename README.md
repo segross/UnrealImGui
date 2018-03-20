@@ -14,6 +14,9 @@ Supported engine version: 4.18*
 
 \* *Plugin has been updated to compile and work with at least this version of the engine. Commits updating plugin to newer version of the engine are tagged with this version's number. If newer engine version doesn't require any change then it want be tagged, so there is a chance that plugin works with version newer than officially supported. As long as possible I will try to maintain backward compatibility when updating to newer engine version (but not necessarily when adding new features). Right now plugin should be at least backward compatible to engine version 4.15.*
 
+### Usability changing updates
+In recent commits I changed default behaviour from software to hardware cursor *(commit f18e1f0b6862ebc319b38a908e82c37d513ab99d)* and moved ImGui draw events to be called during world tick start rather than post-tick *(commit 052ae0a201590b024291130317f7e3a096542bed)*. Those changes may have some usability implications and so the old behaviour can be restored by using `ImGui.DrawMouseCursor` and `ImGui.DebugDrawOnWorldTick` console variables. There are good reason for those changes, but if they cause any issues, please raise them in the forum.
+
 About
 -----
 
