@@ -76,11 +76,12 @@ private:
 	bool bHasActiveItem = false;
 
 	bool bIsFrameStarted = false;
+	bool bIsDrawCalled = false;
+
+	uint32 LastFrameNumber = 0;
+
 	FSimpleMulticastDelegate DrawEvent;
 	FSimpleMulticastDelegate* SharedDrawEvent = nullptr;
-
-	uint32 LastTickFrameNumber = 0;
-	uint32 LastDrawFrameNumber = 0;
 
 	const FImGuiInputState* InputState = nullptr;
 

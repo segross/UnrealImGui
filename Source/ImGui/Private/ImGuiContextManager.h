@@ -86,9 +86,7 @@ private:
 
 #endif // WITH_EDITOR
 
-#if WITH_EDITOR
 	void OnWorldTickStart(ELevelTick TickType, float DeltaSeconds);
-#endif
 
 #if WITH_EDITOR
 	FContextData& GetEditorContextData();

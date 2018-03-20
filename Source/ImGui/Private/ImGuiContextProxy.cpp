@@ -14,6 +14,11 @@ static constexpr float DEFAULT_CANVAS_WIDTH = 3840.f;
 static constexpr float DEFAULT_CANVAS_HEIGHT = 2160.f;
 
 
+namespace CVars
+{
+	extern TAutoConsoleVariable<int> DebugDrawOnWorldTick;
+}
+
 namespace
 {
 	FString GetSaveDirectory()
@@ -99,24 +104,26 @@ FImGuiContextProxy::~FImGuiContextProxy()
 
 void FImGuiContextProxy::Draw()
 {
-	// Comparing to LastTickFrameNumber rather than GFrameNumber to make sure that this is driven by our own update cycle.
-	if (LastDrawFrameNumber < LastTickFrameNumber)
+	if (bIsFrameStarted && !bIsDrawCalled)
 	{
-		LastDrawFrameNumber = LastTickFrameNumber;
+		bIsDrawCalled = true;
 
-		if (bIsFrameStarted)
+		SetAsCurrent();
+
+		const bool bSharedFirst = (CVars::DebugDrawOnWorldTick.GetValueOnGameThread() > 0);
+
+		// Broadcast draw event to allow listeners to draw their controls to this context.
+		if (bSharedFirst && SharedDrawEvent && SharedDrawEvent->IsBound())
 		{
-			SetAsCurrent();
-
-			// Broadcast draw event to allow listeners to draw their controls to this context.
-			if (DrawEvent.IsBound())
-			{
-				DrawEvent.Broadcast();
-			}
-			if (SharedDrawEvent && SharedDrawEvent->IsBound())
-			{
-				SharedDrawEvent->Broadcast();
-			}
+			SharedDrawEvent->Broadcast();
+		}
+		if (DrawEvent.IsBound())
+		{
+			DrawEvent.Broadcast();
+		}
+		if (!bSharedFirst && SharedDrawEvent && SharedDrawEvent->IsBound())
+		{
+			SharedDrawEvent->Broadcast();
 		}
 	}
 }
@@ -124,9 +131,9 @@ void FImGuiContextProxy::Draw()
 void FImGuiContextProxy::Tick(float DeltaSeconds)
 {
 	// Making sure that we tick only once per frame.
-	if (LastTickFrameNumber < GFrameNumber)
+	if (LastFrameNumber < GFrameNumber)
 	{
-		LastTickFrameNumber = GFrameNumber;
+		LastFrameNumber = GFrameNumber;
 
 		SetAsCurrent();
 
@@ -165,6 +172,7 @@ void FImGuiContextProxy::BeginFrame(float DeltaTime)
 		ImGui::NewFrame();
 
 		bIsFrameStarted = true;
+		bIsDrawCalled = false;
 	}
 }
 
