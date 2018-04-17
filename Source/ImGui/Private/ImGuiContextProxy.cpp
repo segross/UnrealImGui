@@ -63,6 +63,7 @@ FImGuiContextProxy::FImGuiContextProxy(const FString& InName, FSimpleMulticastDe
 
 	// Use pre-defined canvas size.
 	IO.DisplaySize = { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT };
+	DisplaySize = ImGuiInterops::ToVector2D(IO.DisplaySize);
 
 	// When GetTexData is called for the first time it builds atlas texture and copies mouse cursor data to context.
 	// When multiple contexts share atlas then only the first one will get mouse data. A simple workaround is to use
@@ -151,6 +152,7 @@ void FImGuiContextProxy::Tick(float DeltaSeconds)
 		// beforehand).
 		bHasActiveItem = ImGui::IsAnyItemActive();
 		MouseCursor = ImGuiInterops::ToSlateMouseCursor(ImGui::GetMouseCursor());
+		DisplaySize = ImGuiInterops::ToVector2D(ImGui::GetIO().DisplaySize);
 
 		// Begin a new frame and set the context back to a state in which it allows to draw controls.
 		BeginFrame(DeltaSeconds);
