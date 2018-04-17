@@ -443,22 +443,25 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 		// Convert clipping rectangle to format required by Slate vertex.
 		const FSlateRotatedRect VertexClippingRect{ MyClippingRect };
 
+		// Scale -> CanvasOffset in Screen Space
+		const FTransform2D Transform{ VertexPositionOffset };
+
 		for (const auto& DrawList : ContextProxy->GetDrawData())
 		{
 #if WITH_OBSOLETE_CLIPPING_API
-			DrawList.CopyVertexData(VertexBuffer, VertexPositionOffset, VertexClippingRect);
+			DrawList.CopyVertexData(VertexBuffer, Transform, VertexClippingRect);
 
 			// Get access to the Slate scissor rectangle defined in Slate Core API, so we can customize elements drawing.
 			extern SLATECORE_API TOptional<FShortRect> GSlateScissorRect;
 			auto GSlateScissorRectSaver = ScopeGuards::MakeStateSaver(GSlateScissorRect);
 #else
-			DrawList.CopyVertexData(VertexBuffer, VertexPositionOffset);
+			DrawList.CopyVertexData(VertexBuffer, Transform);
 #endif // WITH_OBSOLETE_CLIPPING_API
 
 			int IndexBufferOffset = 0;
 			for (int CommandNb = 0; CommandNb < DrawList.NumCommands(); CommandNb++)
 			{
-				const auto& DrawCommand = DrawList.GetCommand(CommandNb);
+				const auto& DrawCommand = DrawList.GetCommand(CommandNb, Transform);
 
 				DrawList.CopyIndexData(IndexBuffer, IndexBufferOffset, DrawCommand.NumElements);
 
@@ -469,7 +472,7 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 				const FSlateResourceHandle& Handle = ModuleManager->GetTextureManager().GetTextureHandle(DrawCommand.TextureId);
 
 				// Transform clipping rectangle to screen space and apply to elements that we draw.
-				const FSlateRect ClippingRect = DrawCommand.ClippingRect.OffsetBy(MyClippingRect.GetTopLeft()).IntersectionWith(MyClippingRect);
+				const FSlateRect ClippingRect = DrawCommand.ClippingRect.IntersectionWith(MyClippingRect);
 
 #if WITH_OBSOLETE_CLIPPING_API
 				GSlateScissorRect = FShortRect{ ClippingRect };
@@ -534,7 +537,7 @@ static TArray<FKey> GetImGuiMappedKeys()
 	return Keys;
 }
 
-// Column layout unitlities.
+// Column layout utilities.
 namespace Columns
 {
 	template<typename FunctorType>

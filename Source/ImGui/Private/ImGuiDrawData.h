@@ -32,24 +32,26 @@ public:
 
 	// Get the draw command by number.
 	// @param CommandNb - Number of draw command
+	// @param Transform - Transform to apply to clipping rectangle
 	// @returns Draw command data
-	FORCEINLINE FImGuiDrawCommand GetCommand(int CommandNb) const
+	FImGuiDrawCommand GetCommand(int CommandNb, const FTransform2D& Transform) const
 	{
 		const ImDrawCmd& ImGuiCommand = ImGuiCommandBuffer[CommandNb];
-		return{ ImGuiCommand.ElemCount, ImGuiInterops::ToSlateRect(ImGuiCommand.ClipRect), ImGuiInterops::ToTextureIndex(ImGuiCommand.TextureId) };
+		return { ImGuiCommand.ElemCount, TransformRect(Transform, ImGuiInterops::ToSlateRect(ImGuiCommand.ClipRect)),
+			ImGuiInterops::ToTextureIndex(ImGuiCommand.TextureId) };
 	}
 
 #if WITH_OBSOLETE_CLIPPING_API
 	// Transform and copy vertex data to target buffer (old data in the target buffer are replaced).
 	// @param OutVertexBuffer - Destination buffer
-	// @param VertexPositionOffset - Position offset added to every vertex to transform it to different space
-	// @param VertexClippingRect - Clipping rectangle for Slate vertices
-	void CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const FVector2D VertexPositionOffset, const FSlateRotatedRect& VertexClippingRect) const;
+	// @param Transform - Transform to apply to all vertices
+	// @param VertexClippingRect - Clipping rectangle for transformed Slate vertices
+	void CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const FTransform2D& Transform, const FSlateRotatedRect& VertexClippingRect) const;
 #else
 	// Transform and copy vertex data to target buffer (old data in the target buffer are replaced).
 	// @param OutVertexBuffer - Destination buffer
-	// @param VertexPositionOffset - Position offset added to every vertex to transform it to different space
-	void CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const FVector2D VertexPositionOffset) const;
+	// @param Transform - Transform to apply to all vertices
+	void CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const FTransform2D& Transform) const;
 #endif // WITH_OBSOLETE_CLIPPING_API
 
 	// Transform and copy index data to target buffer (old data in the target buffer are replaced).

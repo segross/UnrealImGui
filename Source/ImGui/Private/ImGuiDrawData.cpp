@@ -6,9 +6,9 @@
 
 
 #if WITH_OBSOLETE_CLIPPING_API
-void FImGuiDrawList::CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const FVector2D VertexPositionOffset, const FSlateRotatedRect& VertexClippingRect) const
+void FImGuiDrawList::CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const FTransform2D& Transform, const FSlateRotatedRect& VertexClippingRect) const
 #else
-void FImGuiDrawList::CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const FVector2D VertexPositionOffset) const
+void FImGuiDrawList::CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const FTransform2D& Transform) const
 #endif // WITH_OBSOLETE_CLIPPING_API
 {
 	// Reset and reserve space in destination buffer.
@@ -25,13 +25,13 @@ void FImGuiDrawList::CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const
 		SlateVertex.TexCoords[1] = ImGuiVertex.uv.y;
 		SlateVertex.TexCoords[2] = SlateVertex.TexCoords[3] = 1.f;
 
-		// Copy ImGui position and add offset.
-		SlateVertex.Position[0] = ImGuiVertex.pos.x + VertexPositionOffset.X;
-		SlateVertex.Position[1] = ImGuiVertex.pos.y + VertexPositionOffset.Y;
-
 #if WITH_OBSOLETE_CLIPPING_API
-		// Set clipping rectangle.
+		const FVector2D VertexPosition = Transform.TransformPoint(ImGuiInterops::ToVector2D(ImGuiVertex.pos));
+		SlateVertex.Position[0] = VertexPosition.X;
+		SlateVertex.Position[1] = VertexPosition.Y;
 		SlateVertex.ClipRect = VertexClippingRect;
+#else
+		SlateVertex.Position = Transform.TransformPoint(ImGuiInterops::ToVector2D(ImGuiVertex.pos));
 #endif // WITH_OBSOLETE_CLIPPING_API
 
 		// Unpack ImU32 color.

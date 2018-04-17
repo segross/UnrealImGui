@@ -85,6 +85,12 @@ namespace ImGuiInterops
 		return FSlateRect{ ImGuiRect.x, ImGuiRect.y, ImGuiRect.z, ImGuiRect.w };
 	}
 
+	// Convert from ImVec2 rectangle to FVector2D.
+	FORCEINLINE FVector2D ToVector2D(const ImVec2& ImGuiVector)
+	{
+		return FVector2D{ ImGuiVector.x, ImGuiVector.y };
+	}
+
 	// Convert from ImGui Texture Id to Texture Index that we use for texture resources.
 	FORCEINLINE TextureIndex ToTextureIndex(ImTextureID Index)
 	{
