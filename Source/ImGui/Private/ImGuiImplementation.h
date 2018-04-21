@@ -13,4 +13,7 @@ namespace ImGuiImplementation
 
 	// Save current context settings.
 	void SaveCurrentContextIniSettings(const char* Filename);
+
+	// Get specific cursor data.
+	bool GetCursorData(int CursorType, FVector2D& OutSize, FVector2D& OutUVMin, FVector2D& OutUVMax, FVector2D& OutOutlineUVMin, FVector2D& OutOutlineUVMax);
 }

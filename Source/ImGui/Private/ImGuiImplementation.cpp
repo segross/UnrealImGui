@@ -28,6 +28,8 @@
 #endif // PLATFORM_WINDOWS
 
 
+#include "ImGuiInteroperability.h"
+
 namespace ImGuiImplementation
 {
 	// This is exposing ImGui default context for the whole module.
@@ -40,5 +42,24 @@ namespace ImGuiImplementation
 	void SaveCurrentContextIniSettings(const char* Filename)
 	{
 		SaveIniSettingsToDisk(Filename);
+	}
+
+	bool GetCursorData(int CursorType, FVector2D& OutSize, FVector2D& OutUVMin, FVector2D& OutUVMax, FVector2D& OutOutlineUVMin, FVector2D& OutOutlineUVMax)
+	{
+		if (static_cast<unsigned>(CursorType) < static_cast<unsigned>(ImGuiMouseCursor_Count_))
+		{
+			using namespace ImGuiInterops;
+			ImGuiMouseCursorData& CursorData = GImGui->MouseCursorData[CursorType];
+			OutSize = ToVector2D(CursorData.Size);
+			OutUVMin = ToVector2D(CursorData.TexUvMin[0]);
+			OutUVMax = ToVector2D(CursorData.TexUvMax[0]);
+			OutOutlineUVMin = ToVector2D(CursorData.TexUvMin[1]);
+			OutOutlineUVMax = ToVector2D(CursorData.TexUvMax[1]);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 }
