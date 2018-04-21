@@ -52,12 +52,24 @@ PrivateDependencyModuleNames.AddRange(new string[] { "ImGui" });
 You should now be able to use ImGui.
 
 
-*Console variables:*
+### Console variables
 
 - **ImGui.InputEnabled** - Enable or disable ImGui input mode. 0: disabled (default); 1: enabled, input is routed to ImGui and with a few exceptions is consumed. Note: this is going to be supported by a keyboard short-cut, but in the meantime ImGui input can be enabled/disabled using console.
 - **ImGui.DrawMouseCursor** - Whether or not mouse cursor in input mode should be drawn by ImGui. 0: disabled, hardware cursor will be used (default); 1: enabled, ImGui will take care for drawing mouse cursor.
 - **ImGui.ShowDemo** - Show ImGui demo. 0: disabled (default); 1: enabled.
 - **ImGui.Debug.Widget** - Show self-debug for the widget that renders ImGui output. 0: disabled (default); 1: enabled.
+
+
+### Canvas Map Mode
+
+When input mode is enabled, it is possible to activate *Canvas Map Mode* (better name welcomed) by pressing and holding `Left Shift` + `Left Alt` keys. In this mode it is possible to drag ImGui canvas and change its scale. It can be helpful to temporarily reach areas of canvas that otherwise would be inaccessible and to change what part of the canvas should be visible in normal mode.
+
+In canvas map mode:
+- **Mouse Wheel** - to zoom in and out.
+- **Right Mouse Button** - to drag ImGui canvas (not available at maximum zoom out).
+- **Middle Mouse Button** - to drag frame that represents part of the ImGui canvas that is visible in normal mode (only available after zooming out). To start dragging mouse needs to be in the centre of that frame.
+- It is still possible to use remaining keys and gestures to use ImGui, but primary goal is to select part of the canvas visible in normal mode.
+- Releasing `Left Shift` and/or `Left Alt` key switches back to normal mode and automatically sets scale to 1.
 
 
 See also

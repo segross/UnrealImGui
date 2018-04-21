@@ -73,7 +73,7 @@ void FImGuiModuleManager::LoadTextures()
 	checkf(FSlateApplication::IsInitialized(), TEXT("Slate should be initialized before we can create textures."));
 
 	// Create an empty texture at index 0. We will use it for ImGui outputs with null texture id.
-	TextureManager.CreatePlainTexture(FName{ "ImGuiModule_Null" }, 2, 2, FColor::White);
+	TextureManager.CreatePlainTexture(FName{ "ImGuiModule_Plain" }, 2, 2, FColor::White);
 
 	// Create a font atlas texture.
 	ImFontAtlas* Fonts = ImGui::GetIO().Fonts;
