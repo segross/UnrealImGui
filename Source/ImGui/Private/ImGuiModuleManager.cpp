@@ -76,17 +76,16 @@ void FImGuiModuleManager::LoadTextures()
 	TextureManager.CreatePlainTexture(FName{ "ImGuiModule_Plain" }, 2, 2, FColor::White);
 
 	// Create a font atlas texture.
-	ImFontAtlas* Fonts = ImGui::GetIO().Fonts;
-	checkf(Fonts, TEXT("Invalid font atlas."));
+	ImFontAtlas& Fonts = ContextManager.GetFontAtlas();
 
 	unsigned char* Pixels;
 	int Width, Height, Bpp;
-	Fonts->GetTexDataAsRGBA32(&Pixels, &Width, &Height, &Bpp);
+	Fonts.GetTexDataAsRGBA32(&Pixels, &Width, &Height, &Bpp);
 
 	TextureIndex FontsTexureIndex = TextureManager.CreateTexture(FName{ "ImGuiModule_FontAtlas" }, Width, Height, Bpp, Pixels, false);
 
 	// Set font texture index in ImGui.
-	Fonts->TexID = ImGuiInterops::ToImTextureID(FontsTexureIndex);
+	Fonts.TexID = ImGuiInterops::ToImTextureID(FontsTexureIndex);
 }
 
 void FImGuiModuleManager::RegisterTick()

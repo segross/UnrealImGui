@@ -141,7 +141,7 @@ namespace ImGuiInterops
 			return EMouseCursor::Default;
 		case ImGuiMouseCursor_TextInput:
 			return EMouseCursor::TextEditBeam;
-		case ImGuiMouseCursor_Move:
+		case ImGuiMouseCursor_ResizeAll:
 			return EMouseCursor::CardinalCross;
 		case ImGuiMouseCursor_ResizeNS:
 			return  EMouseCursor::ResizeUpDown;

@@ -692,7 +692,7 @@ bool SImGuiWidget::InFrameGrabbingRange(const FVector2D& Position, float Scale, 
 
 	// Get the grab range based on cursor shape.
 	FVector2D Size, UVMin, UVMax, OutlineUVMin, OutlineUVMax;
-	const float Range = ImGuiImplementation::GetCursorData(ImGuiMouseCursor_Move, Size, UVMin, UVMax, OutlineUVMin, OutlineUVMax)
+	const float Range = ImGuiImplementation::GetCursorData(ImGuiMouseCursor_ResizeAll, Size, UVMin, UVMax, OutlineUVMin, OutlineUVMax)
 		? Size.GetMax() * 0.5f + 5.f : 25.f;
 
 	return (Position - ViewportCenter).GetAbsMax() <= Range;
@@ -887,7 +887,7 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 
 				// Draw a movement gizmo (using ImGui move cursor).
 				FVector2D Size, UVMin, UVMax, OutlineUVMin, OutlineUVMax;
-				if (ImGuiImplementation::GetCursorData(ImGuiMouseCursor_Move, Size, UVMin, UVMax, OutlineUVMin, OutlineUVMax))
+				if (ImGuiImplementation::GetCursorData(ImGuiMouseCursor_ResizeAll, Size, UVMin, UVMax, OutlineUVMin, OutlineUVMax))
 				{
 					const TextureIndex FontAtlasIndex = ModuleManager->GetTextureManager().FindTextureIndex(FName{ FontAtlasTextureName });
 					if (FontAtlasIndex != INDEX_NONE)

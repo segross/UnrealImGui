@@ -44,13 +44,13 @@ namespace
 	}
 }
 
-FImGuiContextProxy::FImGuiContextProxy(const FString& InName, FSimpleMulticastDelegate* InSharedDrawEvent)
+FImGuiContextProxy::FImGuiContextProxy(const FString& InName, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas)
 	: Name(InName)
 	, SharedDrawEvent(InSharedDrawEvent)
 	, IniFilename(TCHAR_TO_ANSI(*GetIniFile(InName)))
 {
 	// Create context.
-	Context = TUniquePtr<ImGuiContext>(ImGui::CreateContext());
+	Context = TUniquePtr<ImGuiContext>(ImGui::CreateContext(InFontAtlas));
 
 	// Set this context in ImGui for initialization (any allocations will be tracked in this context).
 	SetAsCurrent();
@@ -65,20 +65,6 @@ FImGuiContextProxy::FImGuiContextProxy(const FString& InName, FSimpleMulticastDe
 	IO.DisplaySize = { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT };
 	DisplaySize = ImGuiInterops::ToVector2D(IO.DisplaySize);
 
-	// When GetTexData is called for the first time it builds atlas texture and copies mouse cursor data to context.
-	// When multiple contexts share atlas then only the first one will get mouse data. A simple workaround is to use
-	// a temporary atlas if shared one is already built.
-	unsigned char* Pixels;
-	const bool bIsAltasBuilt = IO.Fonts->TexPixelsAlpha8 != nullptr;
-	if (bIsAltasBuilt)
-	{
-		ImFontAtlas().GetTexDataAsRGBA32(&Pixels, nullptr, nullptr);
-	}
-	else
-	{
-		IO.Fonts->GetTexDataAsRGBA32(&Pixels, nullptr, nullptr);
-	}
-
 	// Initialize key mapping, so context can correctly interpret input state.
 	ImGuiInterops::SetUnrealKeyMap(IO);
 
@@ -91,15 +77,12 @@ FImGuiContextProxy::~FImGuiContextProxy()
 {
 	if (Context)
 	{
-		// Set this context in ImGui for de-initialization (any de-allocations will be tracked in this context).
+		// Setting this as a current context is still required in the current framework version to properly shutdown
+		// and save data.
 		SetAsCurrent();
 
 		// Save context data and destroy.
-		ImGuiImplementation::SaveCurrentContextIniSettings(IniFilename.c_str());
 		ImGui::DestroyContext(Context.Release());
-
-		// Set default context in ImGui to keep global context pointer valid.
-		ImGui::SetCurrentContext(&ImGuiImplementation::GetDefaultContext());
 	}
 }
 

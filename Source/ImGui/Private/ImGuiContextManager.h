@@ -21,6 +21,10 @@ public:
 
 	~FImGuiContextManager();
 
+	ImFontAtlas& GetFontAtlas() { return FontAtlas; }
+	const ImFontAtlas& GetFontAtlas() const { return FontAtlas; }
+
+
 #if WITH_EDITOR
 	// Get or create editor ImGui context proxy.
 	FORCEINLINE FImGuiContextProxy& GetEditorContextProxy() { return GetEditorContextData().ContextProxy; }
@@ -56,9 +60,9 @@ private:
 
 	struct FContextData
 	{
-		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, FImGuiDemo& Demo, int32 InPIEInstance = -1)
+		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas, FImGuiDemo& Demo, int32 InPIEInstance = -1)
 			: PIEInstance(InPIEInstance)
-			, ContextProxy(ContextName, &SharedDrawEvent)
+			, ContextProxy(ContextName, &SharedDrawEvent, &FontAtlas)
 		{
 			ContextProxy.OnDraw().AddLambda([&Demo, ContextIndex]() { Demo.DrawControls(ContextIndex); });
 		}
@@ -73,8 +77,8 @@ private:
 
 	struct FContextData
 	{
-		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, FImGuiDemo& Demo)
-			: ContextProxy(ContextName, &SharedDrawEvent)
+		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas, FImGuiDemo& Demo)
+			: ContextProxy(ContextName, &SharedDrawEvent, &FontAtlas)
 		{
 			ContextProxy.OnDraw().AddLambda([&Demo, ContextIndex]() { Demo.DrawControls(ContextIndex); });
 		}
@@ -103,4 +107,6 @@ private:
 	FImGuiDemo ImGuiDemo;
 
 	FSimpleMulticastDelegate DrawMultiContextEvent;
+
+	ImFontAtlas FontAtlas;
 };
