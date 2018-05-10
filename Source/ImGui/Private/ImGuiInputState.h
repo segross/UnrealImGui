@@ -117,6 +117,13 @@ public:
 	// about dirty parts of keys or mouse buttons arrays.
 	void ClearUpdateState();
 
+	// Check whether keyboard navigation is enabled.
+	bool IsKeyboardNavigationEnabled() const { return bKeyboardNavigationEnabled;  }
+
+	// Set whether keyboard navigation is enabled.
+	// @param bEnabled - True, if navigation is enabled
+	void SetKeyboardNavigationEnabled(bool bEnabled) { bKeyboardNavigationEnabled = bEnabled; }
+
 private:
 
 	void Reset(bool bKeyboard, bool bMouse);
@@ -144,4 +151,6 @@ private:
 	bool bIsControlDown = false;
 	bool bIsShiftDown = false;
 	bool bIsAltDown = false;
+
+	bool bKeyboardNavigationEnabled = false;
 };

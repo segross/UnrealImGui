@@ -65,8 +65,10 @@ namespace ImGuiInterops
 				KeyMap[ImGuiKey_PageDown] = GetKeyIndex(EKeys::PageDown);
 				KeyMap[ImGuiKey_Home] = GetKeyIndex(EKeys::Home);
 				KeyMap[ImGuiKey_End] = GetKeyIndex(EKeys::End);
+				KeyMap[ImGuiKey_Insert] = GetKeyIndex(EKeys::Insert);
 				KeyMap[ImGuiKey_Delete] = GetKeyIndex(EKeys::Delete);
 				KeyMap[ImGuiKey_Backspace] = GetKeyIndex(EKeys::BackSpace);
+				KeyMap[ImGuiKey_Space] = GetKeyIndex(EKeys::SpaceBar);
 				KeyMap[ImGuiKey_Enter] = GetKeyIndex(EKeys::Enter);
 				KeyMap[ImGuiKey_Escape] = GetKeyIndex(EKeys::Escape);
 				KeyMap[ImGuiKey_A] = GetKeyIndex(EKeys::A);
@@ -161,6 +163,12 @@ namespace ImGuiInterops
 	// Input State Copying
 	//====================================================================================================
 
+	template<typename TFlags, typename TFlag>
+	static inline constexpr void SetFlag(TFlags& Flags, TFlag Flag, bool bSet)
+	{
+		Flags = bSet ? Flags | Flag : Flags & ~Flag;
+	}
+
 	void CopyInput(ImGuiIO& IO, const FImGuiInputState& InputState)
 	{
 		static const uint32 LeftControl = GetKeyIndex(EKeys::LeftControl);
@@ -201,5 +209,7 @@ namespace ImGuiInterops
 		{
 			Copy(InputState.GetCharacters(), IO.InputCharacters);
 		}
+
+		SetFlag(IO.ConfigFlags, ImGuiConfigFlags_NavEnableKeyboard, InputState.IsKeyboardNavigationEnabled());
 	}
 }

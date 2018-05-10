@@ -51,6 +51,12 @@ namespace CVars
 		TEXT("1: enabled, input is routed to ImGui and with a few exceptions is consumed"),
 		ECVF_Default);
 
+	TAutoConsoleVariable<int> InputNavigation(TEXT("ImGui.InputNavigation"), 0,
+		TEXT("[EXPERIMENTAL, WIP] Set ImGui navigation mode.\n")
+		TEXT("0: navigation is disabled\n")
+		TEXT("1: keyboard navigation"),
+		ECVF_Default);
+
 	TAutoConsoleVariable<int> DrawMouseCursor(TEXT("ImGui.DrawMouseCursor"), 0,
 		TEXT("Whether or not mouse cursor in input mode should be drawn by ImGui.\n")
 		TEXT("0: disabled, hardware cursor will be used (default)\n")
@@ -438,6 +444,8 @@ void SImGuiWidget::UpdateInputEnabled()
 	{
 		UpdateInputMode(false, IsDirectlyHovered());
 	}
+
+	InputState.SetKeyboardNavigationEnabled(CVars::InputNavigation.GetValueOnGameThread() > 0);
 }
 
 void SImGuiWidget::UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer)
