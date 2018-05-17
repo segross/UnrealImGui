@@ -53,6 +53,8 @@ public:
 
 	virtual FReply OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent) override;
 
+	virtual FReply OnAnalogValueChanged(const FGeometry& MyGeometry, const FAnalogInputEvent& AnalogInputEvent) override;
+
 	virtual FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
 	virtual FReply OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
@@ -80,8 +82,8 @@ private:
 		None,
 		// Mouse pointer only without user focus
 		MousePointerOnly,
-		// Full input with user focus
-		MouseAndKeyboard
+		// Full input with user focus (mouse, keyboard and depending on navigation mode gamepad)
+		Full
 	};
 
 	// If needed, add to event reply a mouse lock or unlock request.

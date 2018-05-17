@@ -82,7 +82,7 @@ void FImGuiInputState::SetMouseDown(uint32 MouseIndex, bool bIsDown)
 	}
 }
 
-void FImGuiInputState::Reset(bool bKeyboard, bool bMouse)
+void FImGuiInputState::Reset(bool bKeyboard, bool bMouse, bool bNavigation)
 {
 	if (bKeyboard)
 	{
@@ -99,6 +99,11 @@ void FImGuiInputState::Reset(bool bKeyboard, bool bMouse)
 	if (bKeyboard && bMouse)
 	{
 		ClearModifierKeys();
+	}
+
+	if (bNavigation)
+	{
+		ClearNavigationInputs();
 	}
 }
 
@@ -152,3 +157,10 @@ void FImGuiInputState::ClearModifierKeys()
 	bIsShiftDown = false;
 	bIsAltDown = false;
 }
+
+void FImGuiInputState::ClearNavigationInputs()
+{
+	using std::fill;
+	fill(NavigationInputs, &NavigationInputs[Utilities::GetArraySize(NavigationInputs)], 0.f);
+}
+

@@ -25,7 +25,7 @@ constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
 DEFINE_LOG_CATEGORY_STATIC(LogImGuiWidget, Warning, All);
 
 #define TEXT_INPUT_MODE(Val) (\
-	(Val) == EInputMode::MouseAndKeyboard ? TEXT("MouseAndKeyboard") :\
+	(Val) == EInputMode::Full ? TEXT("Full") :\
 	(Val) == EInputMode::MousePointerOnly ? TEXT("MousePointerOnly") :\
 	TEXT("None"))
 
@@ -52,9 +52,11 @@ namespace CVars
 		ECVF_Default);
 
 	TAutoConsoleVariable<int> InputNavigation(TEXT("ImGui.InputNavigation"), 0,
-		TEXT("[EXPERIMENTAL, WIP] Set ImGui navigation mode.\n")
+		TEXT("EXPERIMENTAL Set ImGui navigation mode.\n")
 		TEXT("0: navigation is disabled\n")
-		TEXT("1: keyboard navigation"),
+		TEXT("1: keyboard navigation\n")
+		TEXT("2: gamepad navigation (gamepad input is consumed)\n")
+		TEXT("3: keyboard and gamepad navigation (gamepad input is consumed)"),
 		ECVF_Default);
 
 	TAutoConsoleVariable<int> DrawMouseCursor(TEXT("ImGui.DrawMouseCursor"), 0,
@@ -154,35 +156,81 @@ FReply SImGuiWidget::OnKeyChar(const FGeometry& MyGeometry, const FCharacterEven
 
 FReply SImGuiWidget::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent)
 {
-	if (IsConsoleOpened() || IgnoreKeyEvent(KeyEvent))
+	if (KeyEvent.GetKey().IsGamepadKey())
 	{
-		return FReply::Unhandled();
+		if (InputState.IsGamepadNavigationEnabled())
+		{
+			InputState.SetGamepadNavigationKey(KeyEvent, true);
+
+			return FReply::Handled();
+		}
+		else
+		{
+			return Super::OnKeyDown(MyGeometry, KeyEvent);
+		}
 	}
+	else
+	{
+		if (IsConsoleOpened() || IgnoreKeyEvent(KeyEvent))
+		{
+			return FReply::Unhandled();
+		}
 
-	InputState.SetKeyDown(ImGuiInterops::GetKeyIndex(KeyEvent), true);
-	CopyModifierKeys(KeyEvent);
+		InputState.SetKeyDown(KeyEvent, true);
+		CopyModifierKeys(KeyEvent);
 
-	UpdateCanvasMapMode(KeyEvent);
+		UpdateCanvasMapMode(KeyEvent);
 
-	return WithMouseLockRequests(FReply::Handled());
+		return WithMouseLockRequests(FReply::Handled());
+	}
 }
 
 FReply SImGuiWidget::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& KeyEvent)
 {
-	// Even if we don't send new keystrokes to ImGui, we still handle key up events, to make sure that we clear keys
-	// pressed before suppressing keyboard input.
-	InputState.SetKeyDown(ImGuiInterops::GetKeyIndex(KeyEvent), false);
-	CopyModifierKeys(KeyEvent);
+	if (KeyEvent.GetKey().IsGamepadKey())
+	{
+		if (InputState.IsGamepadNavigationEnabled())
+		{
+			InputState.SetGamepadNavigationKey(KeyEvent, false);
 
-	UpdateCanvasMapMode(KeyEvent);
+			return FReply::Handled();
+		}
+		else
+		{
+			return Super::OnKeyUp(MyGeometry, KeyEvent);
+		}
+	}
+	else
+	{
+		// Even if we don't send new keystrokes to ImGui, we still handle key up events, to make sure that we clear keys
+		// pressed before suppressing keyboard input.
+		InputState.SetKeyDown(KeyEvent, false);
+		CopyModifierKeys(KeyEvent);
 
-	// If console is opened we notify key change but we also let event trough, so it can be handled by console.
-	return IsConsoleOpened() ? FReply::Unhandled() : WithMouseLockRequests(FReply::Handled());
+		UpdateCanvasMapMode(KeyEvent);
+
+		// If console is opened we notify key change but we also let event trough, so it can be handled by console.
+		return IsConsoleOpened() ? FReply::Unhandled() : WithMouseLockRequests(FReply::Handled());
+	}
+}
+
+FReply SImGuiWidget::OnAnalogValueChanged(const FGeometry& MyGeometry, const FAnalogInputEvent& AnalogInputEvent)
+{
+	if (AnalogInputEvent.GetKey().IsGamepadKey() && InputState.IsGamepadNavigationEnabled())
+	{
+		InputState.SetGamepadNavigationAxis(AnalogInputEvent, AnalogInputEvent.GetAnalogValue());
+
+		return FReply::Handled();
+	}
+	else
+	{
+		return Super::OnAnalogValueChanged(MyGeometry, AnalogInputEvent);
+	}
 }
 
 FReply SImGuiWidget::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	InputState.SetMouseDown(ImGuiInterops::GetMouseIndex(MouseEvent), true);
+	InputState.SetMouseDown(MouseEvent, true);
 	CopyModifierKeys(MouseEvent);
 
 	UpdateCanvasMapMode(MouseEvent);
@@ -193,7 +241,7 @@ FReply SImGuiWidget::OnMouseButtonDown(const FGeometry& MyGeometry, const FPoint
 
 FReply SImGuiWidget::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	InputState.SetMouseDown(ImGuiInterops::GetMouseIndex(MouseEvent), true);
+	InputState.SetMouseDown(MouseEvent, true);
 	CopyModifierKeys(MouseEvent);
 
 	UpdateCanvasMapMode(MouseEvent);
@@ -204,7 +252,7 @@ FReply SImGuiWidget::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const
 
 FReply SImGuiWidget::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	InputState.SetMouseDown(ImGuiInterops::GetMouseIndex(MouseEvent), false);
+	InputState.SetMouseDown(MouseEvent, false);
 	CopyModifierKeys(MouseEvent);
 
 	UpdateCanvasMapMode(MouseEvent);
@@ -299,7 +347,7 @@ void SImGuiWidget::OnMouseEnter(const FGeometry& MyGeometry, const FPointerEvent
 	{
 		for (const FKey& Button : { EKeys::LeftMouseButton, EKeys::MiddleMouseButton, EKeys::RightMouseButton, EKeys::ThumbMouseButton, EKeys::ThumbMouseButton2 })
 		{
-			InputState.SetMouseDown(ImGuiInterops::GetMouseIndex(Button), MouseEvent.IsMouseButtonDown(Button));
+			InputState.SetMouseDown(Button, MouseEvent.IsMouseButtonDown(Button));
 		}
 	}
 
@@ -440,18 +488,24 @@ void SImGuiWidget::UpdateInputEnabled()
 	// We don't get any events when application loses focus (we get OnMouseLeave but not always) but we fix it with
 	// this manual check. We still allow the above code to run, even if we need to suppress keyboard input right after
 	// that.
-	if (bInputEnabled && !GameViewport->Viewport->IsForegroundWindow() && InputMode == EInputMode::MouseAndKeyboard)
+	if (bInputEnabled && !GameViewport->Viewport->IsForegroundWindow() && InputMode == EInputMode::Full)
 	{
 		UpdateInputMode(false, IsDirectlyHovered());
 	}
 
-	InputState.SetKeyboardNavigationEnabled(CVars::InputNavigation.GetValueOnGameThread() > 0);
+	if (bInputEnabled)
+	{
+		InputState.SetKeyboardNavigationEnabled(CVars::InputNavigation.GetValueOnGameThread() & 1);
+		InputState.SetGamepadNavigationEnabled(CVars::InputNavigation.GetValueOnGameThread() & 2);
+		const auto& Application = FSlateApplication::Get().GetPlatformApplication();
+		InputState.SetGamepad(Application.IsValid() && Application->IsGamepadAttached());
+	}
 }
 
 void SImGuiWidget::UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer)
 {
 	const EInputMode NewInputMode =
-		bHasKeyboardFocus ? EInputMode::MouseAndKeyboard :
+		bHasKeyboardFocus ? EInputMode::Full :
 		bHasMousePointer ? EInputMode::MousePointerOnly :
 		EInputMode::None;
 
@@ -466,16 +520,17 @@ void SImGuiWidget::UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer
 		{
 			InputState.ResetState();
 		}
-		else if (InputMode == EInputMode::MouseAndKeyboard)
+		else if (InputMode == EInputMode::Full)
 		{
 			InputState.ResetKeyboardState();
+			InputState.ResetNavigationState();
 		}
 
 		InputMode = NewInputMode;
 
 		ClearMouseEventNotification();
 
-		if (InputMode != EInputMode::MouseAndKeyboard)
+		if (InputMode != EInputMode::Full)
 		{
 			SetCanvasMapMode(false);
 		}

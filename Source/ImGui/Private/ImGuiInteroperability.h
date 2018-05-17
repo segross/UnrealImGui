@@ -22,6 +22,7 @@ namespace ImGuiInterops
 	{
 		using FMouseButtonsArray = decltype(ImGuiIO::MouseDown);
 		using FKeysArray = decltype(ImGuiIO::KeysDown);
+		using FNavInputArray = decltype(ImGuiIO::NavInputs);
 
 		using FInputCharactersBuffer = decltype(ImGuiIO::InputCharacters);
 
@@ -54,7 +55,20 @@ namespace ImGuiInterops
 		return GetMouseIndex(MouseEvent.GetEffectingButton());
 	}
 
+	// Convert from ImGuiMouseCursor type to EMouseCursor.
 	EMouseCursor::Type ToSlateMouseCursor(ImGuiMouseCursor MouseCursor);
+
+	// Set in the target array navigation input corresponding to gamepad key.
+	// @param NavInputs - Target array
+	// @param Key - Gamepad key mapped to navigation input (non-mapped keys will be ignored)
+	// @param bIsDown - True, if key is down 
+	void SetGamepadNavigationKey(ImGuiTypes::FNavInputArray& NavInputs, const FKey& Key, bool bIsDown);
+
+	// Set in the target array navigation input corresponding to gamepad axis.
+	// @param NavInputs - Target array
+	// @param Key - Gamepad axis key mapped to navigation input (non-axis or non-mapped inputs will be ignored)
+	// @param Value - Axis value (-1..1 values from Unreal are mapped to separate ImGui axes with values in range 0..1)
+	void SetGamepadNavigationAxis(ImGuiTypes::FNavInputArray& NavInputs, const FKey& Key, float Value);
 
 
 	//====================================================================================================

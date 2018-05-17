@@ -159,6 +159,77 @@ namespace ImGuiInterops
 		}
 	}
 
+	namespace
+	{
+		inline void UpdateKey(const FKey& Key, const FKey& KeyCondition, float& Value, bool bIsDown)
+		{
+			if (Key == KeyCondition)
+			{
+				Value = (bIsDown) ? 1.f : 0.f;
+			}
+		}
+
+		inline void UpdateAxisValues(float& Axis, float& Opposite, float Value)
+		{
+			constexpr float AxisInputThreshold = 0.166f;
+
+			// Filter out small values to avoid false positives (helpful in case of worn controllers).
+			Axis = FMath::Max(0.f, Value - AxisInputThreshold);
+			Opposite = 0.f;
+		}
+
+		inline void UpdateSymmetricAxis(const FKey& Key, const FKey& KeyCondition, float& Negative, float& Positive, float Value)
+		{
+			if (Key == KeyCondition)
+			{
+				if (Value < 0.f)
+				{
+					UpdateAxisValues(Negative, Positive, -Value);
+				}
+				else
+				{
+					UpdateAxisValues(Positive, Negative, Value);
+				}
+			}
+		}
+	}
+
+	void SetGamepadNavigationKey(ImGuiTypes::FNavInputArray& NavInputs, const FKey& Key, bool bIsDown)
+	{
+#define MAP_KEY(KeyCondition, NavIndex) UpdateKey(Key, KeyCondition, NavInputs[NavIndex], bIsDown)
+
+		if (Key.IsGamepadKey())
+		{
+			MAP_KEY(EKeys::Gamepad_FaceButton_Bottom, ImGuiNavInput_Activate);
+			MAP_KEY(EKeys::Gamepad_FaceButton_Right, ImGuiNavInput_Cancel);
+			MAP_KEY(EKeys::Gamepad_FaceButton_Top, ImGuiNavInput_Input);
+			MAP_KEY(EKeys::Gamepad_FaceButton_Left, ImGuiNavInput_Menu);
+			MAP_KEY(EKeys::Gamepad_DPad_Left, ImGuiNavInput_DpadLeft);
+			MAP_KEY(EKeys::Gamepad_DPad_Right, ImGuiNavInput_DpadRight);
+			MAP_KEY(EKeys::Gamepad_DPad_Up, ImGuiNavInput_DpadUp);
+			MAP_KEY(EKeys::Gamepad_DPad_Down, ImGuiNavInput_DpadDown);
+			MAP_KEY(EKeys::Gamepad_LeftShoulder, ImGuiNavInput_FocusPrev);
+			MAP_KEY(EKeys::Gamepad_RightShoulder, ImGuiNavInput_FocusNext);
+			MAP_KEY(EKeys::Gamepad_LeftShoulder, ImGuiNavInput_TweakSlow);
+			MAP_KEY(EKeys::Gamepad_RightShoulder, ImGuiNavInput_TweakFast);
+		}
+
+#undef MAP_KEY
+	}
+
+	void SetGamepadNavigationAxis(ImGuiTypes::FNavInputArray& NavInputs, const FKey& Key, float Value)
+	{
+#define MAP_SYMMETRIC_AXIS(KeyCondition, NegNavIndex, PosNavIndex) UpdateSymmetricAxis(Key, KeyCondition, NavInputs[NegNavIndex], NavInputs[PosNavIndex], Value)
+
+		if (Key.IsGamepadKey())
+		{
+			MAP_SYMMETRIC_AXIS(EKeys::Gamepad_LeftX, ImGuiNavInput_LStickLeft, ImGuiNavInput_LStickRight);
+			MAP_SYMMETRIC_AXIS(EKeys::Gamepad_LeftY, ImGuiNavInput_LStickDown, ImGuiNavInput_LStickUp);
+		}
+
+#undef MAP_SYMMETRIC_AXIS
+	}
+
 	//====================================================================================================
 	// Input State Copying
 	//====================================================================================================
@@ -210,6 +281,13 @@ namespace ImGuiInterops
 			Copy(InputState.GetCharacters(), IO.InputCharacters);
 		}
 
+		if (InputState.IsGamepadNavigationEnabled() && InputState.HasGamepad())
+		{
+			Copy(InputState.GetNavigationInputs(), IO.NavInputs);
+		}
+
 		SetFlag(IO.ConfigFlags, ImGuiConfigFlags_NavEnableKeyboard, InputState.IsKeyboardNavigationEnabled());
+		SetFlag(IO.ConfigFlags, ImGuiConfigFlags_NavEnableGamepad, InputState.IsGamepadNavigationEnabled());
+		SetFlag(IO.BackendFlags, ImGuiBackendFlags_HasGamepad, InputState.HasGamepad());
 	}
 }
