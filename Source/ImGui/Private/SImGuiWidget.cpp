@@ -495,8 +495,8 @@ void SImGuiWidget::UpdateInputEnabled()
 
 	if (bInputEnabled)
 	{
-		InputState.SetKeyboardNavigationEnabled(CVars::InputNavigation.GetValueOnGameThread() & 1);
-		InputState.SetGamepadNavigationEnabled(CVars::InputNavigation.GetValueOnGameThread() & 2);
+		InputState.SetKeyboardNavigationEnabled((CVars::InputNavigation.GetValueOnGameThread() & 1) != 0);
+		InputState.SetGamepadNavigationEnabled((CVars::InputNavigation.GetValueOnGameThread() & 2) != 0);
 		const auto& Application = FSlateApplication::Get().GetPlatformApplication();
 		InputState.SetGamepad(Application.IsValid() && Application->IsGamepadAttached());
 	}
