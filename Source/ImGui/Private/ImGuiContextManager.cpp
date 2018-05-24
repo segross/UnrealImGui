@@ -72,6 +72,10 @@ namespace
 
 FImGuiContextManager::FImGuiContextManager()
 {
+	unsigned char* Pixels;
+	int Width, Height, Bpp;
+	FontAtlas.GetTexDataAsRGBA32(&Pixels, &Width, &Height, &Bpp);
+
 	FWorldDelegates::OnWorldTickStart.AddRaw(this, &FImGuiContextManager::OnWorldTickStart);
 }
 

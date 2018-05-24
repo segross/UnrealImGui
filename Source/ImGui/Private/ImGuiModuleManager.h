@@ -35,13 +35,14 @@ private:
 	FImGuiModuleManager(FImGuiModuleManager&&) = delete;
 	FImGuiModuleManager& operator=(FImGuiModuleManager&&) = delete;
 
-	void Initialize();
-	void Uninitialize();
-
 	void LoadTextures();
 
+	bool IsTickRegistered() { return TickDelegateHandle.IsValid(); }
 	void RegisterTick();
 	void UnregisterTick();
+
+	void CreateTickInitializer();
+	void ReleaseTickInitializer();
 
 	bool IsInUpdateThread();
 
@@ -50,7 +51,7 @@ private:
 	void OnViewportCreated();
 
 	void AddWidgetToViewport(UGameViewportClient* GameViewport);
-	void AddWidgetToAllViewports();
+	void AddWidgetsToActiveViewports();
 
 	// Event that we call after ImGui is updated.
 	FSimpleMulticastDelegate PostImGuiUpdateEvent;
@@ -64,8 +65,9 @@ private:
 	// Slate widgets that we created.
 	TArray<TWeakPtr<SImGuiWidget>> Widgets;
 
+	FDelegateHandle TickInitializerHandle;
 	FDelegateHandle TickDelegateHandle;
 	FDelegateHandle ViewportCreatedHandle;
 
-	bool bInitialized = false;
+	bool bTexturesLoaded = false;
 };
