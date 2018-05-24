@@ -10,7 +10,7 @@ Dear ImGui simplifies and helps with creation of quality visualisation and debug
 
 Status
 ------
-Supported engine version: 4.18*
+Supported engine version: 4.19.2*
 
 \* *Plugin has been updated to compile and work with at least this version of the engine. Commits updating plugin to newer version of the engine are tagged with this version's number. If newer engine version doesn't require any change then it want be tagged, so there is a chance that plugin works with version newer than officially supported. As long as possible I will try to maintain backward compatibility when updating to newer engine version (but not necessarily when adding new features). Right now plugin should be at least backward compatible to engine version 4.15.*
 
