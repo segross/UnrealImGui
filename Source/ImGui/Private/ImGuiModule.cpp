@@ -34,25 +34,25 @@ struct EDelegateCategory
 	};
 };
 
-static FImGuiModuleManager* ModuleManager = nullptr;
+static FImGuiModuleManager* ImGuiModuleManager = nullptr;
 
 #if WITH_EDITOR
-static FImGuiEditor* ModuleEditor = nullptr;
+static FImGuiEditor* ImGuiEditor = nullptr;
 #endif
 
 #if WITH_EDITOR
 FImGuiDelegateHandle FImGuiModule::AddEditorImGuiDelegate(const FImGuiDelegate& Delegate)
 {
-	checkf(ModuleManager, TEXT("Null pointer to internal module implementation. Is module available?"));
+	checkf(ImGuiModuleManager, TEXT("Null pointer to internal module implementation. Is module available?"));
 
-	return { ModuleManager->GetContextManager().GetEditorContextProxy().OnDraw().Add(Delegate),
+	return { ImGuiModuleManager->GetContextManager().GetEditorContextProxy().OnDraw().Add(Delegate),
 		EDelegateCategory::Default, Utilities::EDITOR_CONTEXT_INDEX };
 }
 #endif
 
 FImGuiDelegateHandle FImGuiModule::AddWorldImGuiDelegate(const FImGuiDelegate& Delegate)
 {
-	checkf(ModuleManager, TEXT("Null pointer to internal module implementation. Is module available?"));
+	checkf(ImGuiModuleManager, TEXT("Null pointer to internal module implementation. Is module available?"));
 
 #if WITH_EDITOR
 	checkf(GEngine, TEXT("Null GEngine. AddWorldImGuiDelegate should be only called with GEngine initialized."));
@@ -66,10 +66,10 @@ FImGuiDelegateHandle FImGuiModule::AddWorldImGuiDelegate(const FImGuiDelegate& D
 	checkf(WorldContext, TEXT("Couldn't find current world. AddWorldImGuiDelegate should be only called from a valid world."));
 
 	int32 Index;
-	FImGuiContextProxy& Proxy = ModuleManager->GetContextManager().GetWorldContextProxy(*WorldContext->World(), Index);
+	FImGuiContextProxy& Proxy = ImGuiModuleManager->GetContextManager().GetWorldContextProxy(*WorldContext->World(), Index);
 #else
 	const int32 Index = Utilities::STANDALONE_GAME_CONTEXT_INDEX;
-	FImGuiContextProxy& Proxy = ModuleManager->GetContextManager().GetWorldContextProxy();
+	FImGuiContextProxy& Proxy = ImGuiModuleManager->GetContextManager().GetWorldContextProxy();
 #endif
 
 	return{ Proxy.OnDraw().Add(Delegate), EDelegateCategory::Default, Index };
@@ -77,20 +77,20 @@ FImGuiDelegateHandle FImGuiModule::AddWorldImGuiDelegate(const FImGuiDelegate& D
 
 FImGuiDelegateHandle FImGuiModule::AddMultiContextImGuiDelegate(const FImGuiDelegate& Delegate)
 {
-	checkf(ModuleManager, TEXT("Null pointer to internal module implementation. Is module available?"));
+	checkf(ImGuiModuleManager, TEXT("Null pointer to internal module implementation. Is module available?"));
 
-	return { ModuleManager->GetContextManager().OnDrawMultiContext().Add(Delegate), EDelegateCategory::MultiContext };
+	return { ImGuiModuleManager->GetContextManager().OnDrawMultiContext().Add(Delegate), EDelegateCategory::MultiContext };
 }
 
 void FImGuiModule::RemoveImGuiDelegate(const FImGuiDelegateHandle& Handle)
 {
-	if (ModuleManager)
+	if (ImGuiModuleManager)
 	{
 		if (Handle.Category == EDelegateCategory::MultiContext)
 		{
-			ModuleManager->GetContextManager().OnDrawMultiContext().Remove(Handle.Handle);
+			ImGuiModuleManager->GetContextManager().OnDrawMultiContext().Remove(Handle.Handle);
 		}
-		else if (auto* Proxy = ModuleManager->GetContextManager().GetContextProxy(Handle.Index))
+		else if (auto* Proxy = ImGuiModuleManager->GetContextManager().GetContextProxy(Handle.Index))
 		{
 			Proxy->OnDraw().Remove(Handle.Handle);
 		}
@@ -101,12 +101,12 @@ void FImGuiModule::StartupModule()
 {
 	// Create managers that implements module logic.
 
-	checkf(!ModuleManager, TEXT("Instance of the Module Manager already exists. Instance should be created only during module startup."));
-	ModuleManager = new FImGuiModuleManager();
+	checkf(!ImGuiModuleManager, TEXT("Instance of the ImGui Module Manager already exists. Instance should be created only during module startup."));
+	ImGuiModuleManager = new FImGuiModuleManager();
 
 #if WITH_EDITOR
-	checkf(!ModuleEditor, TEXT("Instance of the Module Editor already exists. Instance should be created only during module startup."));
-	ModuleEditor = new FImGuiEditor();
+	checkf(!ImGuiEditor, TEXT("Instance of the ImGui Editor already exists. Instance should be created only during module startup."));
+	ImGuiEditor = new FImGuiEditor();
 #endif
 }
 
@@ -115,14 +115,14 @@ void FImGuiModule::ShutdownModule()
 	// Before we shutdown we need to delete managers that will do all the necessary cleanup.
 
 #if WITH_EDITOR
-	checkf(ModuleEditor, TEXT("Null Module Editor. Module editor instance should be deleted during module shutdown."));
-	delete ModuleEditor;
-	ModuleEditor = nullptr;
+	checkf(ImGuiEditor, TEXT("Null ImGui Editor. ImGui editor instance should be deleted during module shutdown."));
+	delete ImGuiEditor;
+	ImGuiEditor = nullptr;
 #endif
 
-	checkf(ModuleManager, TEXT("Null Module Manager. Module manager instance should be deleted during module shutdown."));
-	delete ModuleManager;
-	ModuleManager = nullptr;
+	checkf(ImGuiModuleManager, TEXT("Null ImGui Module Manager. Module manager instance should be deleted during module shutdown."));
+	delete ImGuiModuleManager;
+	ImGuiModuleManager = nullptr;
 }
 
 bool FImGuiModule::IsInputMode() const
