@@ -11,7 +11,13 @@ public class ImGui : ModuleRules
 	public ImGui(TargetInfo Target)
 #endif
 	{
-		
+
+#if WITH_FORWARDED_MODULE_RULES_CTOR
+		bool bBuildEditor = Target.bBuildEditor;
+#else
+		bool bBuildEditor = (Target.Type == TargetRules.TargetType.Editor);
+#endif
+
 		PublicIncludePaths.AddRange(
 			new string[] {
 				"ImGui/Public",
@@ -19,8 +25,8 @@ public class ImGui : ModuleRules
 				// ... add public include paths required here ...
 			}
 			);
-				
-		
+
+
 		PrivateIncludePaths.AddRange(
 			new string[] {
 				"ImGui/Private",
@@ -28,8 +34,8 @@ public class ImGui : ModuleRules
 				// ... add other private include paths required here ...
 			}
 			);
-			
-		
+
+
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
@@ -38,8 +44,8 @@ public class ImGui : ModuleRules
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
-			
-		
+
+
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
@@ -51,8 +57,19 @@ public class ImGui : ModuleRules
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
-		
-		
+
+
+		if (bBuildEditor)
+		{
+			PrivateDependencyModuleNames.AddRange(
+				new string[]
+				{
+					"Settings",
+				}
+				);
+		}
+
+
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{

@@ -8,6 +8,7 @@
 
 
 class FImGuiModuleManager;
+class UImGuiInputHandler;
 
 // Slate widget for rendering ImGui output and storing Slate inputs.
 class SImGuiWidget : public SLeafWidget
@@ -45,7 +46,7 @@ public:
 
 	virtual void Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime) override;
 
-	virtual bool SupportsKeyboardFocus() const override { return bInputEnabled; }
+	virtual bool SupportsKeyboardFocus() const override { return bInputEnabled && !IsConsoleOpened(); }
 
 	virtual FReply OnKeyChar(const FGeometry& MyGeometry, const FCharacterEvent& CharacterEvent) override;
 
@@ -63,8 +64,6 @@ public:
 
 	virtual FReply OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
-	virtual FCursorReply OnCursorQuery(const FGeometry& MyGeometry, const FPointerEvent& CursorEvent) const override;
-
 	virtual FReply OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
 	virtual FReply OnFocusReceived(const FGeometry& MyGeometry, const FFocusEvent& FocusEvent) override;
@@ -74,6 +73,8 @@ public:
 	virtual void OnMouseEnter(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 
 	virtual void OnMouseLeave(const FPointerEvent& MouseEvent) override;
+
+	virtual FCursorReply OnCursorQuery(const FGeometry& MyGeometry, const FPointerEvent& CursorEvent) const override;
 
 private:
 
@@ -86,6 +87,13 @@ private:
 		Full
 	};
 
+	void CreateInputHandler();
+	void ReleaseInputHandler();
+	void RecreateInputHandler();
+
+	void RegisterInputHandlerChangedDelegate();
+	void UnregisterInputHandlerChangedDelegate();
+
 	// If needed, add to event reply a mouse lock or unlock request.
 	FORCEINLINE FReply WithMouseLockRequests(FReply&& Reply);
 
@@ -93,8 +101,6 @@ private:
 	FORCEINLINE void CopyModifierKeys(const FPointerEvent& MouseEvent);
 
 	bool IsConsoleOpened() const;
-
-	bool IgnoreKeyEvent(const FKeyEvent& KeyEvent) const;
 
 	void SetMouseCursorOverride(EMouseCursor::Type InMouseCursorOverride);
 
@@ -147,6 +153,7 @@ private:
 
 	FImGuiModuleManager* ModuleManager = nullptr;
 	TWeakObjectPtr<UGameViewportClient> GameViewport;
+	TWeakObjectPtr<UImGuiInputHandler> InputHandler;
 
 	mutable TArray<FSlateVertex> VertexBuffer;
 	mutable TArray<SlateIndex> IndexBuffer;

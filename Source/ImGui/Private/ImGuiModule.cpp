@@ -6,6 +6,10 @@
 #include "Utilities/WorldContext.h"
 #include "Utilities/WorldContextIndex.h"
 
+#if WITH_EDITOR
+#include "Editor/ImGuiEditor.h"
+#endif
+
 #include <IPluginManager.h>
 
 
@@ -31,6 +35,10 @@ struct EDelegateCategory
 };
 
 static FImGuiModuleManager* ModuleManager = nullptr;
+
+#if WITH_EDITOR
+static FImGuiEditor* ModuleEditor = nullptr;
+#endif
 
 #if WITH_EDITOR
 FImGuiDelegateHandle FImGuiModule::AddEditorImGuiDelegate(const FImGuiDelegate& Delegate)
@@ -91,17 +99,28 @@ void FImGuiModule::RemoveImGuiDelegate(const FImGuiDelegateHandle& Handle)
 
 void FImGuiModule::StartupModule()
 {
-	checkf(!ModuleManager, TEXT("Instance of Module Manager already exists. Instance should be created only during module startup."));
+	// Create managers that implements module logic.
 
-	// Create module manager that implements modules logic.
+	checkf(!ModuleManager, TEXT("Instance of the Module Manager already exists. Instance should be created only during module startup."));
 	ModuleManager = new FImGuiModuleManager();
+
+#if WITH_EDITOR
+	checkf(!ModuleEditor, TEXT("Instance of the Module Editor already exists. Instance should be created only during module startup."));
+	ModuleEditor = new FImGuiEditor();
+#endif
 }
 
 void FImGuiModule::ShutdownModule()
 {
-	checkf(ModuleManager, TEXT("Null Module Manager. Manager instance should be deleted during module shutdown."));
+	// Before we shutdown we need to delete managers that will do all the necessary cleanup.
 
-	// Before we shutdown we need to delete manager that will do all necessary cleanup.
+#if WITH_EDITOR
+	checkf(ModuleEditor, TEXT("Null Module Editor. Module editor instance should be deleted during module shutdown."));
+	delete ModuleEditor;
+	ModuleEditor = nullptr;
+#endif
+
+	checkf(ModuleManager, TEXT("Null Module Manager. Module manager instance should be deleted during module shutdown."));
 	delete ModuleManager;
 	ModuleManager = nullptr;
 }
