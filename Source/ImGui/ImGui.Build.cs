@@ -65,6 +65,7 @@ public class ImGui : ModuleRules
 				new string[]
 				{
 					"Settings",
+					"UnrealEd",
 				}
 				);
 		}

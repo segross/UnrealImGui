@@ -15,6 +15,11 @@ struct FAnalogInputEvent;
 struct FCharacterEvent;
 struct FKeyEvent;
 
+#if WITH_EDITOR
+class FUICommandInfo;
+#endif // WITH_EDITOR
+
+
 /** Response used by ImGui Input Handler to communicate input handling requests. */
 struct IMGUI_API FImGuiInputResponse
 {
@@ -149,7 +154,29 @@ public:
 
 protected:
 
-	/** Checks whether corresponding ImGui context has an active item. */
+	/**
+	 * Checks whether this is a key event that can open console.
+	 *
+	 * @param KeyEvent - Key event to test.
+	 * @returns True, if this key event can open console. 
+	 */
+	bool IsConsoleEvent(const FKeyEvent& KeyEvent) const;
+
+#if WITH_EDITOR
+	/**
+	 * Checks whether this is a key event that can stop PIE session.
+	 *
+	 * @param KeyEvent - Key event to test.
+	 * @returns True, if this key event can stop PIE session.
+	 */
+	bool IsStopPlaySessionEvent(const FKeyEvent& KeyEvent) const;
+#endif
+
+	/**
+	 * Checks whether corresponding ImGui context has an active item (holding cursor focus).
+	 *
+	 * @returns True, if corresponding context has an active item.
+	 */
 	bool HasImGuiActiveItem() const;
 
 private:
@@ -163,6 +190,10 @@ private:
 	TWeakObjectPtr<UGameViewportClient> GameViewport;
 
 	int32 ContextIndex = -1;
+
+#if WITH_EDITOR
+	TSharedPtr<FUICommandInfo> StopPlaySessionCommandInfo;
+#endif
 
 	friend class FImGuiInputHandlerFactory;
 };
