@@ -158,7 +158,7 @@ protected:
 	 * Checks whether this is a key event that can open console.
 	 *
 	 * @param KeyEvent - Key event to test.
-	 * @returns True, if this key event can open console. 
+	 * @returns True, if this key event can open console.
 	 */
 	bool IsConsoleEvent(const FKeyEvent& KeyEvent) const;
 
@@ -171,6 +171,14 @@ protected:
 	 */
 	bool IsStopPlaySessionEvent(const FKeyEvent& KeyEvent) const;
 #endif
+
+	/**
+	 * Checks whether this key event can switch ImGui input mode (as defined in settings).
+	 *
+	 * @param KeyEvent - Key event to test.
+	 * @returns True, if this key is bound to 'ImGui.SwitchInputMode' command that switches ImGui input mode.
+	 */
+	bool IsSwitchInputModeEvent(const FKeyEvent& KeyEvent) const;
 
 	/**
 	 * Checks whether corresponding ImGui context has an active item (holding cursor focus).

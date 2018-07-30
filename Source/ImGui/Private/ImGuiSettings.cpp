@@ -3,6 +3,7 @@
 #include "ImGuiPrivatePCH.h"
 
 #include "ImGuiSettings.h"
+#include "Utilities/DebugExecBindings.h"
 
 
 UImGuiSettings::UImGuiSettings()
@@ -17,6 +18,21 @@ UImGuiSettings::~UImGuiSettings()
 #if WITH_EDITOR
 	UnregisterPropertyChangedDelegate();
 #endif
+}
+
+namespace Commands
+{
+	extern const TCHAR* SwitchInputMode;
+}
+
+void UImGuiSettings::PostInitProperties()
+{
+	Super::PostInitProperties();
+
+	// Instead of saving binding to input config, we manually update DebugExecBindings from here. This has an advantage
+	// that there is no ambiguity where settings are stored and more importantly, it works out of the box in packed
+	// and staged builds.  
+	DebugExecBindings::UpdatePlayerInputs(SwitchInputModeKey, Commands::SwitchInputMode);
 }
 
 #if WITH_EDITOR
@@ -38,12 +54,15 @@ void UImGuiSettings::OnPropertyChanged(class UObject* ObjectBeingModified, struc
 {
 	if (ObjectBeingModified == this)
 	{
-		static const FName ImGuiInputHandlerPropertyName = GET_MEMBER_NAME_CHECKED(UImGuiSettings, ImGuiInputHandlerClass);
-
 		const FName UpdatedPropertyName = PropertyChangedEvent.MemberProperty ? PropertyChangedEvent.MemberProperty->GetFName() : NAME_None;
-		if (UpdatedPropertyName == ImGuiInputHandlerPropertyName)
+
+		if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, ImGuiInputHandlerClass))
 		{
 			OnImGuiInputHandlerClassChanged.Broadcast();
+		}
+		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, SwitchInputModeKey))
+		{
+			DebugExecBindings::UpdatePlayerInputs(SwitchInputModeKey, Commands::SwitchInputMode);
 		}
 	}
 }

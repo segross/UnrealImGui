@@ -19,6 +19,31 @@
 #include "ImGuiSettings.generated.h"
 
 
+/**
+ * Struct containing key information that can be used for key binding. Using 'Undetermined' value for modifier keys
+ * means that those keys should be ignored when testing for a match.
+ */
+USTRUCT()
+struct FImGuiKeyInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	FKey Key;
+
+	UPROPERTY(EditAnywhere)
+	ECheckBoxState Shift = ECheckBoxState::Undetermined;
+
+	UPROPERTY(EditAnywhere)
+	ECheckBoxState Ctrl = ECheckBoxState::Undetermined;
+
+	UPROPERTY(EditAnywhere)
+	ECheckBoxState Alt = ECheckBoxState::Undetermined;
+
+	UPROPERTY(EditAnywhere)
+	ECheckBoxState Cmd = ECheckBoxState::Undetermined;
+};
+
 // Settings for ImGui module.
 UCLASS(config=ImGui, defaultconfig)
 class UImGuiSettings : public UObject
@@ -33,8 +58,13 @@ public:
 	// Path to custom implementation of ImGui Input Handler.
 	const FStringClassReference& GetImGuiInputHandlerClass() const { return ImGuiInputHandlerClass; }
 
+	// Get mapping for 'ImGui.SwitchInputMode' command.
+	const FImGuiKeyInfo& GetSwitchInputModeKey() const { return SwitchInputModeKey; }
+
 	// Delegate raised when ImGuiInputHandlerClass property has changed.
 	FSimpleMulticastDelegate OnImGuiInputHandlerClassChanged;
+
+	virtual void PostInitProperties() override;
 
 protected:
 
@@ -43,7 +73,15 @@ protected:
 	UPROPERTY(EditAnywhere, config, Category = "Input", meta = (MetaClass = "ImGuiInputHandler"))
 	FStringClassReference ImGuiInputHandlerClass;
 
+	// Define a custom key binding to 'ImGui.SwitchInputMode' command. Mapping will be only set if Key property in this
+	// structure is set to a valid key. Modifier keys can be either completely ignored (Undetermined), required to be
+	// pressed (Checked) or required to be not pressed (Unchecked).
+	UPROPERTY(EditAnywhere, config, Category = "Input")
+	FImGuiKeyInfo SwitchInputModeKey;
+
 private:
+
+	void UpdateSwitchInputModeBinding();
 
 #if WITH_EDITOR
 

@@ -22,6 +22,21 @@ namespace CVars
 	extern TAutoConsoleVariable<int32> ShowDemo;
 }
 
+namespace Commands
+{
+	const TCHAR* SwitchInputMode = TEXT("ImGui.SwitchInputMode");
+}
+
+void SwitchImGuiInputMode()
+{
+	FImGuiModule::Get().ToggleInputMode();
+}
+
+FAutoConsoleCommand SwitchInputModeCommand = FAutoConsoleCommand(
+	Commands::SwitchInputMode,
+	TEXT("Changes ImGui input mode."),
+	FConsoleCommandDelegate::CreateStatic(SwitchImGuiInputMode));
+
 struct EDelegateCategory
 {
 	enum

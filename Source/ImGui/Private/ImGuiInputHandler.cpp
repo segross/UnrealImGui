@@ -6,6 +6,7 @@
 
 #include "ImGuiContextProxy.h"
 #include "ImGuiModuleManager.h"
+#include "ImGuiSettings.h"
 
 #include <Engine/Console.h>
 #include <Input/Events.h>
@@ -25,6 +26,13 @@ DEFINE_LOG_CATEGORY_STATIC(LogImGuiInputHandler, Warning, All);
 
 FImGuiInputResponse UImGuiInputHandler::OnKeyDown(const FKeyEvent& KeyEvent)
 {
+	// If this is an input mode switch event then handle it here and consume.
+	if (IsSwitchInputModeEvent(KeyEvent))
+	{
+		FImGuiModule::Get().ToggleInputMode();
+		return FImGuiInputResponse().RequestConsume();
+	}
+
 	// Ignore console events, so we don't block it from opening.
 	if (IsConsoleEvent(KeyEvent))
 	{
@@ -67,6 +75,28 @@ bool UImGuiInputHandler::IsStopPlaySessionEvent(const FKeyEvent& KeyEvent) const
 	return false;
 }
 #endif // WITH_EDITOR
+
+namespace
+{
+	bool IsMatching(ECheckBoxState CheckBoxState, bool bValue)
+	{
+		return (CheckBoxState == ECheckBoxState::Undetermined) || ((CheckBoxState == ECheckBoxState::Checked) == bValue);
+	}
+
+	bool AreModifiersMatching(const FImGuiKeyInfo& KeyInfo, const FKeyEvent& KeyEvent)
+	{
+		return IsMatching(KeyInfo.Shift, KeyEvent.IsShiftDown())
+			&& IsMatching(KeyInfo.Ctrl, KeyEvent.IsControlDown())
+			&& IsMatching(KeyInfo.Alt, KeyEvent.IsAltDown())
+			&& IsMatching(KeyInfo.Cmd, KeyEvent.IsCommandDown());
+	}
+}
+
+bool UImGuiInputHandler::IsSwitchInputModeEvent(const FKeyEvent& KeyEvent) const
+{
+	const FImGuiKeyInfo KeyInfo = GetDefault<UImGuiSettings>()->GetSwitchInputModeKey();
+	return (KeyEvent.GetKey() == KeyInfo.Key) && AreModifiersMatching(KeyInfo, KeyEvent);
+}
 
 bool UImGuiInputHandler::HasImGuiActiveItem() const
 {
