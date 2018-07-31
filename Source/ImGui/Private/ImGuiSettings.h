@@ -70,18 +70,18 @@ protected:
 
 	// Path to own implementation of ImGui Input Handler allowing to customize handling of keyboard and gamepad input.
 	// If not set then default handler is used.
-	UPROPERTY(EditAnywhere, config, Category = "Input", meta = (MetaClass = "ImGuiInputHandler"))
+	UPROPERTY(EditAnywhere, config, Category = "Extensions", meta = (MetaClass = "ImGuiInputHandler"))
 	FStringClassReference ImGuiInputHandlerClass;
 
-	// Define a custom key binding to 'ImGui.SwitchInputMode' command. Mapping will be only set if Key property in this
-	// structure is set to a valid key. Modifier keys can be either completely ignored (Undetermined), required to be
-	// pressed (Checked) or required to be not pressed (Unchecked).
-	UPROPERTY(EditAnywhere, config, Category = "Input")
+	// Define a custom key binding to 'ImGui.SwitchInputMode' command. Binding is only set if key is valid.
+	// Note that modifier key properties can be set to one of the three values: undetermined means that state of the given
+	// modifier is not tested, checked means that it needs to be pressed and unchecked means that it cannot be pressed.
+	//
+	// This binding is using Player Input's DebugExecBindings which only works in non-shipment builds.
+	UPROPERTY(EditAnywhere, config, Category = "Keyboard Shortcuts")
 	FImGuiKeyInfo SwitchInputModeKey;
 
 private:
-
-	void UpdateSwitchInputModeBinding();
 
 #if WITH_EDITOR
 

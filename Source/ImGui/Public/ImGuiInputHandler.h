@@ -90,7 +90,7 @@ private:
  * Also note that input handler functions are only called when ImGui Widget is receiving input events, what can be for
  * instance suppressed by opening console.
  *
- * See @ Project Settings/Plugins/ImGui/Input/ImGuiInputHandlerClass property to set custom implementation.
+ * See @ Project Settings/Plugins/ImGui/Extensions/ImGuiInputHandlerClass property to set custom implementation.
  */
 UCLASS()
 class IMGUI_API UImGuiInputHandler : public UObject

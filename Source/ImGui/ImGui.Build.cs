@@ -64,6 +64,7 @@ public class ImGui : ModuleRules
 			PrivateDependencyModuleNames.AddRange(
 				new string[]
 				{
+					"EditorStyle",
 					"Settings",
 					"UnrealEd",
 				}

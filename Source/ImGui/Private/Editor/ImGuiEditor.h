@@ -14,7 +14,7 @@ public:
 
 private:
 
-	bool IsRegistrationCompleted() const { return bSettingsRegistered; }
+	bool IsRegistrationCompleted() const { return bSettingsRegistered && bCustomPropertyTypeLayoutsRegistered; }
 
 	void Register();
 	void Unregister();
@@ -25,6 +25,7 @@ private:
 	FDelegateHandle RegistratorHandle;
 
 	bool bSettingsRegistered = false;
+	bool bCustomPropertyTypeLayoutsRegistered = false;
 };
 
 #endif // WITH_EDITOR

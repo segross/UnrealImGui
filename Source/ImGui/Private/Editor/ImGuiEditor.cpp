@@ -6,6 +6,7 @@
 
 #include "ImGuiEditor.h"
 
+#include "ImGuiKeyInfoCustomization.h"
 #include "ImGuiSettings.h"
 
 #include <ISettingsModule.h>
@@ -21,6 +22,11 @@ namespace
 	ISettingsModule* GetSettingsModule()
 	{
 		return FModuleManager::GetModulePtr<ISettingsModule>("Settings");
+	}
+
+	FPropertyEditorModule* GetPropertyEditorModule()
+	{
+		return FModuleManager::GetModulePtr<FPropertyEditorModule>("PropertyEditor");
 	}
 }
 
@@ -56,6 +62,17 @@ void FImGuiEditor::Register()
 				GetMutableDefault<UImGuiSettings>());
 		}
 	}
+
+	if (!bCustomPropertyTypeLayoutsRegistered)
+	{
+		if (FPropertyEditorModule* PropertyModule = GetPropertyEditorModule())
+		{
+			bCustomPropertyTypeLayoutsRegistered = true;
+
+			PropertyModule->RegisterCustomPropertyTypeLayout("ImGuiKeyInfo",
+				FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FImGuiKeyInfoCustomization::MakeInstance));
+		}
+	}
 }
 
 void FImGuiEditor::Unregister()
@@ -67,6 +84,16 @@ void FImGuiEditor::Unregister()
 		if (ISettingsModule* SettingsModule = GetSettingsModule())
 		{
 			SettingsModule->UnregisterSettings(SETTINGS_CONTAINER);
+		}
+	}
+
+	if (bCustomPropertyTypeLayoutsRegistered)
+	{
+		bCustomPropertyTypeLayoutsRegistered = false;
+
+		if (FPropertyEditorModule* PropertyModule = GetPropertyEditorModule())
+		{
+			PropertyModule->UnregisterCustomPropertyTypeLayout("ImGuiKeyInfo");
 		}
 	}
 }
