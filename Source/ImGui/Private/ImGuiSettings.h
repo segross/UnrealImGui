@@ -7,10 +7,8 @@
 #include <Delegates/Delegate.h>
 #include <UObject/Object.h>
 
-// Select right soft class reference header to avoid warning (new header contains FSoftClassPath to FStringClassReference
-// typedef, so we will use that as a common denominator).
-#include <Runtime/Launch/Resources/Version.h>
-#if (ENGINE_MAJOR_VERSION < 4 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION < 18))
+// Select right soft class reference header to avoid warning.
+#if ENGINE_COMPATIBILITY_LEGACY_STRING_CLASS_REF
 #include <StringClassReference.h>
 #else
 #include <UObject/SoftObjectPath.h>

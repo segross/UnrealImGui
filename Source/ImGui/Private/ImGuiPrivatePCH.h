@@ -2,6 +2,7 @@
 
 // Module
 #include "ImGuiModule.h"
+#include "VersionCompatibility.h"
 
 // Engine
 #include <Core.h>

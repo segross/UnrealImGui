@@ -836,7 +836,7 @@ namespace
 			});
 	}
 
-#if WITH_OBSOLETE_CLIPPING_API
+#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 	void AddQuad(TArray<FSlateVertex>& OutVertexBuffer, TArray<SlateIndex>& OutIndexBuffer, const FVector2D& Position, const FVector2D& Size,
 		const FVector2D& UVMin, const FVector2D& UVMax, const FColor& Color, const FSlateRotatedClipRectType& InClipRect)
 	{
@@ -871,7 +871,7 @@ namespace
 
 		OutIndexBuffer.Append({ IndexOffset + 0U, IndexOffset + 1U, IndexOffset + 2U, IndexOffset + 0U, IndexOffset + 2U, IndexOffset + 3U });
 	}
-#endif // WITH_OBSOLETE_CLIPPING_API
+#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 }
 
 int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyClippingRect,
@@ -889,14 +889,14 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 		// Calculate transform between ImGui canvas ans screen space (scale and then offset in Screen Space).
 		const FTransform2D Transform{ ImGuiFrameCanvasScale, RoundToFloat(CanvasScreenSpacePosition) };
 
-#if WITH_OBSOLETE_CLIPPING_API
+#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 		// Convert clipping rectangle to format required by Slate vertex.
 		const FSlateRotatedRect VertexClippingRect{ MyClippingRect };
-#endif // WITH_OBSOLETE_CLIPPING_API
+#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 
 		for (const auto& DrawList : ContextProxy->GetDrawData())
 		{
-#if WITH_OBSOLETE_CLIPPING_API
+#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 			DrawList.CopyVertexData(VertexBuffer, Transform, VertexClippingRect);
 
 			// Get access to the Slate scissor rectangle defined in Slate Core API, so we can customize elements drawing.
@@ -904,7 +904,7 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 			auto GSlateScissorRectSaver = ScopeGuards::MakeStateSaver(GSlateScissorRect);
 #else
 			DrawList.CopyVertexData(VertexBuffer, Transform);
-#endif // WITH_OBSOLETE_CLIPPING_API
+#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 
 			int IndexBufferOffset = 0;
 			for (int CommandNb = 0; CommandNb < DrawList.NumCommands(); CommandNb++)
@@ -922,18 +922,18 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 				// Transform clipping rectangle to screen space and apply to elements that we draw.
 				const FSlateRect ClippingRect = DrawCommand.ClippingRect.IntersectionWith(MyClippingRect);
 
-#if WITH_OBSOLETE_CLIPPING_API
+#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 				GSlateScissorRect = FShortRect{ ClippingRect };
 #else
 				OutDrawElements.PushClip(FSlateClippingZone{ ClippingRect });
-#endif // WITH_OBSOLETE_CLIPPING_API
+#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 
 				// Add elements to the list.
 				FSlateDrawElement::MakeCustomVerts(OutDrawElements, LayerId, Handle, VertexBuffer, IndexBuffer, nullptr, 0, 0);
 
-#if !WITH_OBSOLETE_CLIPPING_API
+#if !ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 				OutDrawElements.PopClip();
-#endif // WITH_OBSOLETE_CLIPPING_API
+#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 			}
 		}
 
@@ -970,13 +970,13 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 					{
 						IndexBuffer.SetNum(0, false);
 						VertexBuffer.SetNum(0, false);
-#if WITH_OBSOLETE_CLIPPING_API
+#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 						AddQuad(VertexBuffer, IndexBuffer, DeadZoneScreenSpaceMin, MyClippingRect.GetBottomRight() - DeadZoneScreenSpaceMin,
 							FVector2D::ZeroVector, FVector2D::ZeroVector, CanvasFrameColor.WithAlpha(128), VertexClippingRect);
 #else
 						AddQuad(VertexBuffer, IndexBuffer, DeadZoneScreenSpaceMin, MyClippingRect.GetBottomRight() - DeadZoneScreenSpaceMin,
 							FVector2D::ZeroVector, FVector2D::ZeroVector, CanvasFrameColor.WithAlpha(128));
-#endif // WITH_OBSOLETE_CLIPPING_API
+#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 
 						const FSlateResourceHandle& Handle = ModuleManager->GetTextureManager().GetTextureHandle(PlainTextureIndex);
 						FSlateDrawElement::MakeCustomVerts(OutDrawElements, LayerId, Handle, VertexBuffer, IndexBuffer, nullptr, 0, 0);
@@ -985,13 +985,13 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 
 				// Draw a scaled canvas border.
 				AddLocalRectanglePoints(Points, AllottedGeometry, CanvasScreenSpacePosition, CanvasSizeScaled);
-#if WITH_OBSOLETE_CLIPPING_API
+#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 				FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), Points, MyClippingRect,
 					ESlateDrawEffect::None, FLinearColor{ CanvasFrameColor }, false);
 #else
 				FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), Points,
 					ESlateDrawEffect::None, FLinearColor{ CanvasFrameColor }, false);
-#endif // WITH_OBSOLETE_CLIPPING_API
+#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 
 				// Draw a movement gizmo (using ImGui move cursor).
 				FVector2D Size, UVMin, UVMax, OutlineUVMin, OutlineUVMax;
@@ -1002,13 +1002,13 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 					{
 						IndexBuffer.SetNum(0, false);
 						VertexBuffer.SetNum(0, false);
-#if WITH_OBSOLETE_CLIPPING_API
+#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 						AddQuad(VertexBuffer, IndexBuffer, ViewportScreenSpacePosition + ViewportSizeScaled * 0.5f - Size * 0.375f, Size * 0.75f,
 							UVMin, UVMax, FrameColor.WithAlpha(bCanvasDragging ? 32 : 128), VertexClippingRect);
 #else
 						AddQuad(VertexBuffer, IndexBuffer, ViewportScreenSpacePosition + ViewportSizeScaled * 0.5f - Size * 0.375f, Size * 0.75f,
 							UVMin, UVMax, FrameColor.WithAlpha(bCanvasDragging ? 32 : 128));
-#endif // WITH_OBSOLETE_CLIPPING_API
+#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 						const FSlateResourceHandle& Handle = ModuleManager->GetTextureManager().GetTextureHandle(FontAtlasIndex);
 						FSlateDrawElement::MakeCustomVerts(OutDrawElements, LayerId, Handle, VertexBuffer, IndexBuffer, nullptr, 0, 0);
 					}
@@ -1018,13 +1018,13 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 			// Draw frame representing area of the ImGui canvas that is visible when scale is 1.
 			Points.SetNum(0, false);
 			AddLocalRectanglePoints(Points, AllottedGeometry, ViewportScreenSpacePosition, ViewportSizeScaled);
-#if WITH_OBSOLETE_CLIPPING_API
+#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 				FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), Points, MyClippingRect,
 					ESlateDrawEffect::None, FLinearColor{ FrameColor }, false);
 #else
 				FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), Points,
 				ESlateDrawEffect::None, FLinearColor{ FrameColor }, false);
-#endif // WITH_OBSOLETE_CLIPPING_API
+#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 		}
 	}
 

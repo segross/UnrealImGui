@@ -10,10 +10,6 @@
 #include <imgui.h>
 
 
-// Starting from version 4.17 Slate doesn't have per-vertex clipping rectangle and GSlateScissorRect. Use this to
-// support older engine versions.
-#define WITH_OBSOLETE_CLIPPING_API		(ENGINE_MAJOR_VERSION < 4 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION < 17))
-
 // ImGui draw command data transformed for Slate.
 struct FImGuiDrawCommand
 {
@@ -41,7 +37,7 @@ public:
 			ImGuiInterops::ToTextureIndex(ImGuiCommand.TextureId) };
 	}
 
-#if WITH_OBSOLETE_CLIPPING_API
+#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 	// Transform and copy vertex data to target buffer (old data in the target buffer are replaced).
 	// @param OutVertexBuffer - Destination buffer
 	// @param Transform - Transform to apply to all vertices
@@ -52,7 +48,7 @@ public:
 	// @param OutVertexBuffer - Destination buffer
 	// @param Transform - Transform to apply to all vertices
 	void CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const FTransform2D& Transform) const;
-#endif // WITH_OBSOLETE_CLIPPING_API
+#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 
 	// Transform and copy index data to target buffer (old data in the target buffer are replaced).
 	// Internal index buffer contains enough data to match the sum of NumElements from all draw commands.

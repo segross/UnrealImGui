@@ -15,10 +15,6 @@
 #include <Commands/InputBindingManager.h>
 #include <Commands/InputChord.h>
 #include <DebuggerCommands.h>
-
-// Version 4.18 added support for dual key bindings.
-#include <Runtime/Launch/Resources/Version.h>
-#define WITH_SINGLE_KEY_BINDING		(ENGINE_MAJOR_VERSION < 4 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION < 18))
 #endif // WITH_EDITOR
 
 
@@ -64,7 +60,7 @@ bool UImGuiInputHandler::IsStopPlaySessionEvent(const FKeyEvent& KeyEvent) const
 	if (StopPlaySessionCommandInfo.IsValid())
 	{
 		const FInputChord InputChord(KeyEvent.GetKey(), KeyEvent.IsShiftDown(), KeyEvent.IsControlDown(), KeyEvent.IsAltDown(), KeyEvent.IsCommandDown());
-#if WITH_SINGLE_KEY_BINDING
+#if ENGINE_COMPATIBILITY_SINGLE_KEY_BINDING
 		const bool bHasActiveChord = (InputChord == StopPlaySessionCommandInfo->GetActiveChord().Get());
 #else
 		const bool bHasActiveChord = StopPlaySessionCommandInfo->HasActiveChord(InputChord);

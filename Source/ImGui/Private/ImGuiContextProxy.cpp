@@ -23,10 +23,10 @@ namespace
 {
 	FString GetSaveDirectory()
 	{
-#if (ENGINE_MAJOR_VERSION > 4 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 18))
-		const FString SavedDir = FPaths::ProjectSavedDir();
-#else
+#if ENGINE_COMPATIBILITY_LEGACY_SAVED_DIR
 		const FString SavedDir = FPaths::GameSavedDir();
+#else
+		const FString SavedDir = FPaths::ProjectSavedDir();
 #endif
 
 		FString Directory = FPaths::Combine(*SavedDir, TEXT("ImGui"));
