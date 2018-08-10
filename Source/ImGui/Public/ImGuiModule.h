@@ -110,4 +110,10 @@ public:
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+
+	private:
+
+#if WITH_EDITOR
+	virtual struct ImGuiContext** GetImGuiContextHandle();
+#endif
 };

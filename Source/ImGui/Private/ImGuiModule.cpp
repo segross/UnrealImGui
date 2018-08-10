@@ -7,6 +7,7 @@
 #include "Utilities/WorldContextIndex.h"
 
 #if WITH_EDITOR
+#include "ImGuiImplementation.h"
 #include "Editor/ImGuiEditor.h"
 #endif
 
@@ -138,7 +139,32 @@ void FImGuiModule::ShutdownModule()
 	checkf(ImGuiModuleManager, TEXT("Null ImGui Module Manager. Module manager instance should be deleted during module shutdown."));
 	delete ImGuiModuleManager;
 	ImGuiModuleManager = nullptr;
+
+#if WITH_EDITOR
+	// When shutting down we leave the global ImGui context pointer and handle pointing to resources that are already
+	// deleted. This can cause troubles after hot-reload when code in other modules calls ImGui interface functions
+	// which are statically bound to the obsolete module. To keep ImGui code functional we can redirect context handle
+	// to point to the new module.
+	FModuleManager::Get().OnModulesChanged().AddLambda([this](FName Name, EModuleChangeReason Reason)
+	{
+		if (Reason == EModuleChangeReason::ModuleLoaded && Name == "ImGui")
+		{
+			FImGuiModule& LoadedModule = FImGuiModule::Get();
+			if (&LoadedModule != this)
+			{
+				ImGuiImplementation::SetImGuiContextHandle(LoadedModule.GetImGuiContextHandle());
+			}
+		}
+	});
+#endif // WITH_EDITOR
 }
+
+#if WITH_EDITOR
+ImGuiContext** FImGuiModule::GetImGuiContextHandle()
+{
+	return ImGuiImplementation::GetImGuiContextHandle();
+}
+#endif
 
 bool FImGuiModule::IsInputMode() const
 {

@@ -15,6 +15,15 @@
 #define IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
 #endif // PLATFORM_XBOXONE
 
+#if WITH_EDITOR
+// Global ImGui context pointer.
+ImGuiContext* GImGuiContextPtr = nullptr;
+// Handle to the global ImGui context pointer.
+ImGuiContext** GImGuiContextPtrHandle = &GImGuiContextPtr;
+// Get the global ImGui context pointer (GImGui) indirectly to allow redirections in obsolete modules.
+#define GImGui (*GImGuiContextPtrHandle)
+#endif // WITH_EDITOR
+
 #if PLATFORM_WINDOWS
 #include <AllowWindowsPlatformTypes.h>
 #endif // PLATFORM_WINDOWS
@@ -51,4 +60,16 @@ namespace ImGuiImplementation
 			return false;
 		}
 	}
+
+#if WITH_EDITOR
+	ImGuiContext** GetImGuiContextHandle()
+	{
+		return GImGuiContextPtrHandle;
+	}
+
+	void SetImGuiContextHandle(ImGuiContext** Handle)
+	{
+		GImGuiContextPtrHandle = Handle;
+	}
+#endif // WITH_EDITOR
 }
