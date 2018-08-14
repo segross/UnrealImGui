@@ -86,7 +86,7 @@ private:
 		FTextureEntry& operator=(FTextureEntry&&) = delete;
 
 		FName Name = NAME_None;
-		UTexture2D* Texture = nullptr;
+		TWeakObjectPtr<UTexture2D> Texture;
 		FSlateBrush Brush;
 		FSlateResourceHandle ResourceHandle;
 	};

@@ -53,7 +53,7 @@ FTextureManager::FTextureEntry::FTextureEntry(const FName& InName, UTexture2D* I
 	Texture->AddToRoot();
 
 	// Create brush and resource handle for input texture.
-	Brush.SetResourceObject(Texture);
+	Brush.SetResourceObject(InTexture);
 	ResourceHandle = FSlateApplication::Get().GetRenderer()->GetResourceHandle(Brush);
 }
 
@@ -67,7 +67,7 @@ FTextureManager::FTextureEntry::~FTextureEntry()
 
 	// Remove texture from root to allow for garbage collection (it might be already invalid if this is application
 	// shutdown).
-	if (Texture && Texture->IsValidLowLevel())
+	if (Texture.IsValid())
 	{
 		Texture->RemoveFromRoot();
 	}
