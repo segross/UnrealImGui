@@ -72,7 +72,7 @@ void FImGuiModuleManager::LoadTextures()
 		int Width, Height, Bpp;
 		Fonts.GetTexDataAsRGBA32(&Pixels, &Width, &Height, &Bpp);
 
-		TextureIndex FontsTexureIndex = TextureManager.CreateTexture(FName{ "ImGuiModule_FontAtlas" }, Width, Height, Bpp, Pixels, false);
+		TextureIndex FontsTexureIndex = TextureManager.CreateTexture(FName{ "ImGuiModule_FontAtlas" }, Width, Height, Bpp, Pixels);
 
 		// Set font texture index in ImGui.
 		Fonts.TexID = ImGuiInterops::ToImTextureID(FontsTexureIndex);

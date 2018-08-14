@@ -57,9 +57,9 @@ public:
 	// @param Height - The texture height
 	// @param SrcBpp - The size in bytes of one pixel
 	// @param SrcData - The source data
-	// @param bDeleteSrcData - If true, we should delete source data after creating a texture
+	// @param SrcDataCleanup - Optional function called to release source data after texture is created (only needed, if data need to be released)
 	// @returns The index of a texture that was created
-	TextureIndex CreateTexture(const FName& Name, int32 Width, int32 Height, uint32 SrcBpp, uint8* SrcData, bool bDeleteSrc = false);
+	TextureIndex CreateTexture(const FName& Name, int32 Width, int32 Height, uint32 SrcBpp, uint8* SrcData, TFunction<void(uint8*)> SrcDataCleanup = [](uint8*) {});
 
 	// Create a plain texture. Throws exception if there is already a texture with that name.
 	// @param Name - The texture name

@@ -7,7 +7,7 @@
 #include <algorithm>
 
 
-TextureIndex FTextureManager::CreateTexture(const FName& Name, int32 Width, int32 Height, uint32 SrcBpp, uint8* SrcData, bool bDeleteSrcData)
+TextureIndex FTextureManager::CreateTexture(const FName& Name, int32 Width, int32 Height, uint32 SrcBpp, uint8* SrcData, TFunction<void(uint8*)> SrcDataCleanup)
 {
 	checkf(FindTextureIndex(Name) == INDEX_NONE, TEXT("Trying to create texture using resource name '%s' that is already registered."), *Name.ToString());
 
@@ -19,12 +19,9 @@ TextureIndex FTextureManager::CreateTexture(const FName& Name, int32 Width, int3
 
 	// Update texture data.
 	FUpdateTextureRegion2D* TextureRegion = new FUpdateTextureRegion2D(0, 0, 0, 0, Width, Height);
-	auto DataCleanup = [bDeleteSrcData](uint8* Data, const FUpdateTextureRegion2D* UpdateRegion)
+	auto DataCleanup = [SrcDataCleanup](uint8* Data, const FUpdateTextureRegion2D* UpdateRegion)
 	{
-		if (bDeleteSrcData)
-		{
-			delete Data;
-		}
+		SrcDataCleanup(Data);
 		delete UpdateRegion;
 	};
 	Texture->UpdateTextureRegions(0, 1u, TextureRegion, SrcBpp * Width, SrcBpp, SrcData, DataCleanup);
@@ -42,9 +39,10 @@ TextureIndex FTextureManager::CreatePlainTexture(const FName& Name, int32 Width,
 	const uint32 SizeInBytes = SizeInPixels * Bpp;
 	uint8* SrcData = new uint8[SizeInBytes];
 	std::fill(reinterpret_cast<uint32*>(SrcData), reinterpret_cast<uint32*>(SrcData) + SizeInPixels, ColorPacked);
+	auto SrcDataCleanup = [](uint8* Data) { delete[] Data; };
 
-	// Create new texture from raw data (we created the buffer, so mark it for delete).
-	return CreateTexture(Name, Width, Height, Bpp, SrcData, true);
+	// Create new texture from raw data.
+	return CreateTexture(Name, Width, Height, Bpp, SrcData, SrcDataCleanup);
 }
 
 FTextureManager::FTextureEntry::FTextureEntry(const FName& InName, UTexture2D* InTexture)
