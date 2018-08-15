@@ -3,6 +3,9 @@
 #include "ImGuiPrivatePCH.h"
 
 #include "ImGuiModuleManager.h"
+
+#include "ImGuiTextureHandle.h"
+#include "TextureManager.h"
 #include "Utilities/WorldContext.h"
 #include "Utilities/WorldContextIndex.h"
 
@@ -113,6 +116,26 @@ void FImGuiModule::RemoveImGuiDelegate(const FImGuiDelegateHandle& Handle)
 	}
 }
 
+FImGuiTextureHandle FImGuiModule::FindTextureHandle(const FName& Name)
+{
+	const TextureIndex Index = ImGuiModuleManager->GetTextureManager().FindTextureIndex(Name);
+	return (Index != INDEX_NONE) ? FImGuiTextureHandle{ Name, ImGuiInterops::ToImTextureID(Index) } : FImGuiTextureHandle{};
+}
+
+FImGuiTextureHandle FImGuiModule::RegisterTexture(const FName& Name, class UTexture2D* Texture, bool bMakeUnique)
+{
+	const TextureIndex Index = ImGuiModuleManager->GetTextureManager().CreateTextureResources(Name, Texture, bMakeUnique);
+	return FImGuiTextureHandle{ Name, ImGuiInterops::ToImTextureID(Index) };
+}
+
+void FImGuiModule::ReleaseTexture(const FImGuiTextureHandle& Handle)
+{
+	if (Handle.IsValid())
+	{
+		ImGuiModuleManager->GetTextureManager().ReleaseTextureResources(ImGuiInterops::ToTextureIndex(Handle.GetTextureId()));
+	}
+}
+
 void FImGuiModule::StartupModule()
 {
 	// Create managers that implements module logic.
@@ -197,6 +220,17 @@ void FImGuiModule::ToggleShowDemo()
 {
 	SetShowDemo(!IsShowingDemo());
 }
+
+//----------------------------------------------------------------------------------------------------
+// Partial implementations of other classes that needs access to ImGuiModuleManager
+//----------------------------------------------------------------------------------------------------
+
+bool FImGuiTextureHandle::HasValidEntry() const
+{
+	const TextureIndex Index = ImGuiInterops::ToTextureIndex(TextureId);
+	return Index != INDEX_NONE && ImGuiModuleManager && ImGuiModuleManager->GetTextureManager().GetTextureName(Index) == Name;
+}
+
 
 #undef LOCTEXT_NAMESPACE
 

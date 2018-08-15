@@ -62,6 +62,8 @@ void FImGuiModuleManager::LoadTextures()
 	{
 		bTexturesLoaded = true;
 
+		TextureManager.InitializeErrorTexture(FColor::Magenta);
+
 		// Create an empty texture at index 0. We will use it for ImGui outputs with null texture id.
 		TextureManager.CreatePlainTexture(FName{ "ImGuiModule_Plain" }, 2, 2, FColor::White);
 

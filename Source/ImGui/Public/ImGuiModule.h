@@ -3,6 +3,7 @@
 #pragma once
 
 #include "ImGuiDelegates.h"
+#include "ImGuiTextureHandle.h"
 
 #include <ModuleManager.h>
 
@@ -68,6 +69,39 @@ public:
 	 * @param Handle - Delegate handle that was returned by adding function
 	 */
 	virtual void RemoveImGuiDelegate(const FImGuiDelegateHandle& Handle);
+
+	/**
+	 * If it exists, get a handle to the texture with given resource name.
+	 *
+	 * @param Name - Resource name of a texture to find
+	 * @returns Handle to a registered texture or invalid handle if resources could not be found or were not valid
+	 */
+	virtual FImGuiTextureHandle FindTextureHandle(const FName& Name);
+
+	/**
+	 * Register texture and create its Slate resources. If texture with that name already exists then it may be updated
+	 * or if bMakeUnique is true, exception will be thrown. Throws exception, if name argument is NAME_None or texture
+	 * is null.
+	 *
+	 * Note, that updating texture resources doesn't invalidate already existing handles and returned handle will have
+	 * the same value.
+	 *
+	 * @param Name - Resource name for the texture that needs to be registered or updated
+	 * @param Texture - Texture for which we want to create or update Slate resources
+	 * @param bMakeUnique - If false then existing resources are updated/overwritten (default). If true, then stricter
+	 *     policy is applied and if resource with that name exists then exception is thrown.
+	 * @returns Handle to the texture resources, which can be used to release allocated resources and as an argument to
+	 *     relevant ImGui functions
+	 */
+	virtual FImGuiTextureHandle RegisterTexture(const FName& Name, class UTexture2D* Texture, bool bMakeUnique = false);
+
+	/**
+	 * Unregister texture and release its Slate resources. If handle is null or not valid, this function fails silently
+	 * (for definition of 'valid' look @ FImGuiTextureHandle).
+	 *
+	 * @returns ImGui Texture Handle to texture that needs to be unregistered
+	 */
+	virtual void ReleaseTexture(const FImGuiTextureHandle& Handle);
 
 	/**
 	 * Check whether Input Mode is enabled (tests ImGui.InputEnabled console variable).
