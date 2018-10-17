@@ -1,5 +1,6 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
+using System.Collections.Generic;
 using System.IO;
 using UnrealBuildTool;
 
@@ -17,6 +18,11 @@ public class ImGui : ModuleRules
 #else
 		bool bBuildEditor = (Target.Type == TargetRules.TargetType.Editor);
 #endif
+
+		// Developer modules are automatically loaded only in editor builds but can be stripped out from other builds.
+		// Enable runtime loader, if you want this module to be automatically loaded in runtime builds (monolithic).
+		bool bEnableRuntimeLoader = true;
+
 
 		PublicIncludePaths.AddRange(
 			new string[] {
@@ -78,5 +84,11 @@ public class ImGui : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
+
+
+#if !UE_4_19_OR_LATER
+		List<string> PrivateDefinitions = Definitions;
+#endif
+		PrivateDefinitions.Add(string.Format("RUNTIME_LOADER_ENABLED = {0}", bEnableRuntimeLoader ? 1 : 0));
 	}
 }

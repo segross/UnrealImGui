@@ -16,7 +16,7 @@
 	"Modules": [
 		{
 			"Name": "ImGui",
-			"Type": "RuntimeNoCommandlet",
+			"Type": "Developer",
 			"LoadingPhase": "PreDefault"
 		}
 	]

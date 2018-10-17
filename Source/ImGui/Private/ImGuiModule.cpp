@@ -221,6 +221,58 @@ void FImGuiModule::ToggleShowDemo()
 	SetShowDemo(!IsShowingDemo());
 }
 
+
+//----------------------------------------------------------------------------------------------------
+// Runtime loader
+//----------------------------------------------------------------------------------------------------
+
+#if !WITH_EDITOR && RUNTIME_LOADER_ENABLED
+
+class FImGuiModuleLoader
+{
+	FImGuiModuleLoader()
+	{
+		if (!Load())
+		{
+			FModuleManager::Get().OnModulesChanged().AddRaw(this, &FImGuiModuleLoader::LoadAndRelease);
+		}
+	}
+
+	// For different engine versions.
+	static FORCEINLINE bool IsValid(const TSharedPtr<IModuleInterface>& Ptr) { return Ptr.IsValid(); }
+	static FORCEINLINE bool IsValid(const IModuleInterface* const Ptr) { return Ptr != nullptr; }
+
+	bool Load()
+	{
+		return IsValid(FModuleManager::Get().LoadModule(ModuleName));
+	}
+
+	void LoadAndRelease(FName Name, EModuleChangeReason Reason)
+	{
+		// Avoid handling own load event.
+		if (Name != ModuleName)
+		{
+			// Try loading until success and then release.
+			if (Load())
+			{
+				FModuleManager::Get().OnModulesChanged().RemoveAll(this);
+			}
+		}
+	}
+
+	static FName ModuleName;
+
+	static FImGuiModuleLoader Instance;
+};
+
+FName FImGuiModuleLoader::ModuleName = "ImGui";
+
+// In monolithic builds this will start loading process.
+FImGuiModuleLoader FImGuiModuleLoader::Instance;
+
+#endif // !WITH_EDITOR && RUNTIME_LOADER_ENABLED
+
+
 //----------------------------------------------------------------------------------------------------
 // Partial implementations of other classes that needs access to ImGuiModuleManager
 //----------------------------------------------------------------------------------------------------
