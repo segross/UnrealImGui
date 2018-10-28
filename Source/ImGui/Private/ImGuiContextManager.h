@@ -92,6 +92,10 @@ private:
 
 	void OnWorldTickStart(ELevelTick TickType, float DeltaSeconds);
 
+#if DRAW_EVENTS_ON_POST_ACTOR_TICK
+	void OnWorldPostActorTick(UWorld* World, ELevelTick TickType, float DeltaSeconds);
+#endif
+
 #if WITH_EDITOR
 	FContextData& GetEditorContextData();
 #endif

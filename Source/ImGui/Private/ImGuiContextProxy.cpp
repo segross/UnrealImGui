@@ -14,11 +14,6 @@ static constexpr float DEFAULT_CANVAS_WIDTH = 3840.f;
 static constexpr float DEFAULT_CANVAS_HEIGHT = 2160.f;
 
 
-namespace CVars
-{
-	extern TAutoConsoleVariable<int> DebugDrawOnWorldTick;
-}
-
 namespace
 {
 	FString GetSaveDirectory()
@@ -94,21 +89,25 @@ void FImGuiContextProxy::Draw()
 
 		SetAsCurrent();
 
-		const bool bSharedFirst = (CVars::DebugDrawOnWorldTick.GetValueOnGameThread() > 0);
-
 		// Broadcast draw event to allow listeners to draw their controls to this context.
-		if (bSharedFirst && SharedDrawEvent && SharedDrawEvent->IsBound())
-		{
-			SharedDrawEvent->Broadcast();
-		}
+#if DRAW_EVENTS_ORDER_WORLD_BEFORE_MULTI_CONTEXT
 		if (DrawEvent.IsBound())
 		{
 			DrawEvent.Broadcast();
 		}
-		if (!bSharedFirst && SharedDrawEvent && SharedDrawEvent->IsBound())
+#endif // DRAW_EVENTS_ORDER_WORLD_BEFORE_MULTI_CONTEXT
+
+		if (SharedDrawEvent && SharedDrawEvent->IsBound())
 		{
 			SharedDrawEvent->Broadcast();
 		}
+
+#if !DRAW_EVENTS_ORDER_WORLD_BEFORE_MULTI_CONTEXT
+		if (DrawEvent.IsBound())
+		{
+			DrawEvent.Broadcast();
+		}
+#endif // !DRAW_EVENTS_ORDER_WORLD_BEFORE_MULTI_CONTEXT
 	}
 }
 

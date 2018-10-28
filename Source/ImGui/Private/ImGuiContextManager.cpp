@@ -12,20 +12,6 @@
 #include <imgui.h>
 
 
-namespace CVars
-{
-	TAutoConsoleVariable<int> DebugDrawOnWorldTick(TEXT("ImGui.DebugDrawOnWorldTick"), 1,
-		TEXT("If this is enabled then all the ImGui debug draw events will be called during World Tick Start.\n")
-		TEXT("This has an advantage that all the global variables like GWorld are set to correct values.\n")
-		TEXT("A disadvantage is that objects are not yet updated. That can be changed by disabling this feature,")
-		TEXT("but preferable solution is to call debug code from object's own Tick function.\n")
-		TEXT("NOTE: Order of multi-context and world draw events depends on this value and is arranged in a way ")
-		TEXT("that world draw events and objects updates are closer together.\n")
-		TEXT("0: disabled, ImGui Debug Draw is called during Post-Tick\n")
-		TEXT("1: enabled (default), ImGui Debug Draw is called during World Tick Start"),
-		ECVF_Default);
-}
-
 namespace
 {
 #if WITH_EDITOR
@@ -77,12 +63,18 @@ FImGuiContextManager::FImGuiContextManager()
 	FontAtlas.GetTexDataAsRGBA32(&Pixels, &Width, &Height, &Bpp);
 
 	FWorldDelegates::OnWorldTickStart.AddRaw(this, &FImGuiContextManager::OnWorldTickStart);
+#if DRAW_EVENTS_ON_POST_ACTOR_TICK
+	FWorldDelegates::OnWorldPostActorTick.AddRaw(this, &FImGuiContextManager::OnWorldPostActorTick);
+#endif
 }
 
 FImGuiContextManager::~FImGuiContextManager()
 {
 	// Order matters because contexts can be created during World Tick Start events.
 	FWorldDelegates::OnWorldTickStart.RemoveAll(this);
+#if DRAW_EVENTS_ON_POST_ACTOR_TICK
+	FWorldDelegates::OnWorldPostActorTick.RemoveAll(this);
+#endif
 }
 
 void FImGuiContextManager::Tick(float DeltaSeconds)
@@ -106,12 +98,21 @@ void FImGuiContextManager::OnWorldTickStart(ELevelTick TickType, float DeltaSeco
 	{
 		FImGuiContextProxy& ContextProxy = GetWorldContextProxy(*GWorld);
 		ContextProxy.SetAsCurrent();
-		if (CVars::DebugDrawOnWorldTick.GetValueOnGameThread() > 0)
-		{
-			ContextProxy.Draw();
-		}
+
+#if DRAW_EVENTS_ON_WORLD_TICK_START
+		ContextProxy.Draw();
+#endif
 	}
 }
+
+#if DRAW_EVENTS_ON_POST_ACTOR_TICK
+void FImGuiContextManager::OnWorldPostActorTick(UWorld* World, ELevelTick TickType, float DeltaSeconds)
+{
+	FImGuiContextProxy& ContextProxy = GetWorldContextProxy(*GWorld);
+	ContextProxy.SetAsCurrent();
+	ContextProxy.Draw();
+}
+#endif // DRAW_EVENTS_ON_POST_ACTOR_TICK
 
 #if WITH_EDITOR
 FImGuiContextManager::FContextData& FImGuiContextManager::GetEditorContextData()
