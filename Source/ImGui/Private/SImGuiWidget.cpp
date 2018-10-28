@@ -62,12 +62,6 @@ namespace CVars
 		TEXT("3: keyboard and gamepad navigation (gamepad input is consumed)"),
 		ECVF_Default);
 
-	TAutoConsoleVariable<int> DrawMouseCursor(TEXT("ImGui.DrawMouseCursor"), 0,
-		TEXT("Whether or not mouse cursor in input mode should be drawn by ImGui.\n")
-		TEXT("0: disabled, hardware cursor will be used (default)\n")
-		TEXT("1: enabled, ImGui will take care for drawing mouse cursor"),
-		ECVF_Default);
-
 	TAutoConsoleVariable<int> DebugWidget(TEXT("ImGui.Debug.Widget"), 0,
 		TEXT("Show debug for SImGuiWidget.\n")
 		TEXT("0: disabled (default)\n")
@@ -110,16 +104,23 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 	ContextProxy->OnDraw().AddRaw(this, &SImGuiWidget::OnDebugDraw);
 	ContextProxy->SetInputState(&InputState);
 
+	// Cache locally software cursor mode.
+	UpdateSoftwareCursorMode();
+
 	// Create ImGui Input Handler.
 	CreateInputHandler();
-	RegisterInputHandlerChangedDelegate();
+
+	// Register for settings change.
+	RegisterImGuiSettingsDelegates();
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 SImGuiWidget::~SImGuiWidget()
 {
+	// Stop listening for settings change.
+	UnregisterImGuiSettingsDelegates();
+
 	// Release ImGui Input Handler.
-	UnregisterInputHandlerChangedDelegate();
 	ReleaseInputHandler();
 
 	// Remove binding between this widget and its context proxy.
@@ -378,7 +379,7 @@ FCursorReply SImGuiWidget::OnCursorQuery(const FGeometry& MyGeometry, const FPoi
 	{
 		MouseCursor = MouseCursorOverride;
 	}
-	else if (CVars::DrawMouseCursor.GetValueOnGameThread() <= 0)
+	else if (!bUseSoftwareCursor)
 	{
 		if (FImGuiContextProxy* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex))
 		{
@@ -412,7 +413,13 @@ void SImGuiWidget::RecreateInputHandler()
 	CreateInputHandler();
 }
 
-void SImGuiWidget::RegisterInputHandlerChangedDelegate()
+void SImGuiWidget::UpdateSoftwareCursorMode()
+{
+	UImGuiSettings* Settings = GetMutableDefault<UImGuiSettings>();
+	bUseSoftwareCursor = Settings && Settings->UseSoftwareCursor();
+}
+
+void SImGuiWidget::RegisterImGuiSettingsDelegates()
 {
 	if (UImGuiSettings* Settings = GetMutableDefault<UImGuiSettings>())
 	{
@@ -420,14 +427,19 @@ void SImGuiWidget::RegisterInputHandlerChangedDelegate()
 		{
 			Settings->OnImGuiInputHandlerClassChanged.AddRaw(this, &SImGuiWidget::RecreateInputHandler);
 		}
+		if (!Settings->OnSoftwareCursorChanged.IsBoundToObject(this))
+		{
+			Settings->OnSoftwareCursorChanged.AddRaw(this, &SImGuiWidget::UpdateSoftwareCursorMode);
+		}
 	}
 }
 
-void SImGuiWidget::UnregisterInputHandlerChangedDelegate()
+void SImGuiWidget::UnregisterImGuiSettingsDelegates()
 {
 	if (UImGuiSettings* Settings = GetMutableDefault<UImGuiSettings>())
 	{
 		Settings->OnImGuiInputHandlerClassChanged.RemoveAll(this);
+		Settings->OnSoftwareCursorChanged.RemoveAll(this);
 	}
 }
 
@@ -476,7 +488,7 @@ void SImGuiWidget::SetMouseCursorOverride(EMouseCursor::Type InMouseCursorOverri
 	{
 		MouseCursorOverride = InMouseCursorOverride;
 		FSlateApplication::Get().QueryCursor();
-		InputState.SetMousePointer(MouseCursorOverride == EMouseCursor::None && IsDirectlyHovered() && CVars::DrawMouseCursor.GetValueOnGameThread() > 0);
+		InputState.SetMousePointer(bUseSoftwareCursor && MouseCursorOverride == EMouseCursor::None && IsDirectlyHovered());
 	}
 }
 
@@ -581,7 +593,7 @@ void SImGuiWidget::UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer
 		}
 	}
 
-	InputState.SetMousePointer(MouseCursorOverride == EMouseCursor::None && bHasMousePointer && CVars::DrawMouseCursor.GetValueOnGameThread() > 0);
+	InputState.SetMousePointer(bUseSoftwareCursor && MouseCursorOverride == EMouseCursor::None && bHasMousePointer);
 }
 
 void SImGuiWidget::UpdateMouseStatus()

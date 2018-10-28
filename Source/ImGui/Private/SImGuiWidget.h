@@ -91,8 +91,10 @@ private:
 	void ReleaseInputHandler();
 	void RecreateInputHandler();
 
-	void RegisterInputHandlerChangedDelegate();
-	void UnregisterInputHandlerChangedDelegate();
+	void UpdateSoftwareCursorMode();
+
+	void RegisterImGuiSettingsDelegates();
+	void UnregisterImGuiSettingsDelegates();
 
 	// If needed, add to event reply a mouse lock or unlock request.
 	FORCEINLINE FReply WithMouseLockRequests(FReply&& Reply);
@@ -166,6 +168,9 @@ private:
 	bool bInputEnabled = false;
 	bool bReceivedMouseEvent = false;
 	bool bMouseLock = false;
+
+	// Whether or not ImGui should draw its own cursor.
+	bool bUseSoftwareCursor = false;
 
 	// Canvas map mode allows to zoom in/out and navigate between different parts of ImGui canvas.
 	bool bCanvasMapMode = false;

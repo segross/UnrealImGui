@@ -64,6 +64,10 @@ void UImGuiSettings::OnPropertyChanged(class UObject* ObjectBeingModified, struc
 		{
 			DebugExecBindings::UpdatePlayerInputs(SwitchInputModeKey, Commands::SwitchInputMode);
 		}
+		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, bUseSoftwareCursor))
+		{
+			OnSoftwareCursorChanged.Broadcast();
+		}
 	}
 }
 

@@ -59,8 +59,14 @@ public:
 	// Get mapping for 'ImGui.SwitchInputMode' command.
 	const FImGuiKeyInfo& GetSwitchInputModeKey() const { return SwitchInputModeKey; }
 
+	// Check whether ImGui should draw its own software cursor.
+	bool UseSoftwareCursor() const { return bUseSoftwareCursor; }
+
 	// Delegate raised when ImGuiInputHandlerClass property has changed.
 	FSimpleMulticastDelegate OnImGuiInputHandlerClassChanged;
+
+	// Delegate raised when SoftwareCursorEnabled property has changed.
+	FSimpleMulticastDelegate OnSoftwareCursorChanged;
 
 	virtual void PostInitProperties() override;
 
@@ -78,6 +84,12 @@ protected:
 	// This binding is using Player Input's DebugExecBindings which only works in non-shipment builds.
 	UPROPERTY(EditAnywhere, config, Category = "Keyboard Shortcuts")
 	FImGuiKeyInfo SwitchInputModeKey;
+
+	// If true, then in input mode ImGui will draw its own cursor in place of the hardware one.
+	// When disabled (default) there is a noticeable difference between cursor position seen by ImGui and position on
+	// the screen. Enabling this option removes that effect but with lower frame-rates UI becomes quickly unusable.
+	UPROPERTY(EditAnywhere, config, Category = "Input")
+	bool bUseSoftwareCursor = false;
 
 private:
 
