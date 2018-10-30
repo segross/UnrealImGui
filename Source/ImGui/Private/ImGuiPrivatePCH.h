@@ -1,8 +1,11 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
+// Module-wide macros
+#include "VersionCompatibility.h"
+#include "ImGuiModuleDebug.h"
+
 // Module
 #include "ImGuiModule.h"
-#include "VersionCompatibility.h"
 
 // Engine
 #include <Core.h>

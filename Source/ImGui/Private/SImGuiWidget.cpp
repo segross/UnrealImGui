@@ -25,7 +25,11 @@
 constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
 
 
+#if IMGUI_WIDGET_DEBUG
+
 DEFINE_LOG_CATEGORY_STATIC(LogImGuiWidget, Warning, All);
+
+#define IMGUI_WIDGET_LOG(Verbosity, Format, ...) UE_LOG(LogImGuiWidget, Verbosity, Format, __VA_ARGS__)
 
 #define TEXT_INPUT_MODE(Val) (\
 	(Val) == EInputMode::Full ? TEXT("Full") :\
@@ -34,6 +38,11 @@ DEFINE_LOG_CATEGORY_STATIC(LogImGuiWidget, Warning, All);
 
 #define TEXT_BOOL(Val) ((Val) ? TEXT("true") : TEXT("false"))
 
+#else
+
+#define IMGUI_WIDGET_LOG(...)
+
+#endif // IMGUI_WIDGET_DEBUG
 
 namespace
 {
@@ -61,7 +70,11 @@ namespace CVars
 		TEXT("2: gamepad navigation (gamepad input is consumed)\n")
 		TEXT("3: keyboard and gamepad navigation (gamepad input is consumed)"),
 		ECVF_Default);
+}
 
+#if IMGUI_WIDGET_DEBUG
+namespace CVars
+{
 	TAutoConsoleVariable<int> DebugWidget(TEXT("ImGui.Debug.Widget"), 0,
 		TEXT("Show debug for SImGuiWidget.\n")
 		TEXT("0: disabled (default)\n")
@@ -74,6 +87,7 @@ namespace CVars
 		TEXT("1: enabled"),
 		ECVF_Default);
 }
+#endif // IMGUI_WIDGET_DEBUG
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SImGuiWidget::Construct(const FArguments& InArgs)
@@ -101,7 +115,9 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 	// Bind this widget to its context proxy.
 	auto* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex);
 	checkf(ContextProxy, TEXT("Missing context during widget construction: ContextIndex = %d"), ContextIndex);
+#if IMGUI_WIDGET_DEBUG
 	ContextProxy->OnDraw().AddRaw(this, &SImGuiWidget::OnDebugDraw);
+#endif // IMGUI_WIDGET_DEBUG
 	ContextProxy->SetInputState(&InputState);
 
 	// Cache locally software cursor mode.
@@ -126,7 +142,9 @@ SImGuiWidget::~SImGuiWidget()
 	// Remove binding between this widget and its context proxy.
 	if (auto* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex))
 	{
+#if IMGUI_WIDGET_DEBUG
 		ContextProxy->OnDraw().RemoveAll(this);
+#endif // IMGUI_WIDGET_DEBUG
 		ContextProxy->RemoveInputState(&InputState);
 	}
 
@@ -323,7 +341,7 @@ FReply SImGuiWidget::OnFocusReceived(const FGeometry& MyGeometry, const FFocusEv
 {
 	Super::OnFocusReceived(MyGeometry, FocusEvent);
 
-	UE_LOG(LogImGuiWidget, VeryVerbose, TEXT("ImGui Widget %d - Focus Received."), ContextIndex);
+	IMGUI_WIDGET_LOG(VeryVerbose, TEXT("ImGui Widget %d - Focus Received."), ContextIndex);
 
 	// If widget has a keyboard focus we always maintain mouse input. Technically, if mouse is outside of the widget
 	// area it won't generate events but we freeze its state until it either comes back or input is completely lost.
@@ -337,7 +355,7 @@ void SImGuiWidget::OnFocusLost(const FFocusEvent& FocusEvent)
 {
 	Super::OnFocusLost(FocusEvent);
 
-	UE_LOG(LogImGuiWidget, VeryVerbose, TEXT("ImGui Widget %d - Focus Lost."), ContextIndex);
+	IMGUI_WIDGET_LOG(VeryVerbose, TEXT("ImGui Widget %d - Focus Lost."), ContextIndex);
 
 	UpdateInputMode(false, IsDirectlyHovered());
 }
@@ -346,7 +364,7 @@ void SImGuiWidget::OnMouseEnter(const FGeometry& MyGeometry, const FPointerEvent
 {
 	Super::OnMouseEnter(MyGeometry, MouseEvent);
 
-	UE_LOG(LogImGuiWidget, VeryVerbose, TEXT("ImGui Widget %d - Mouse Enter."), ContextIndex);
+	IMGUI_WIDGET_LOG(VeryVerbose, TEXT("ImGui Widget %d - Mouse Enter."), ContextIndex);
 
 	// If mouse enters while input is active then we need to update mouse buttons because there is a chance that we
 	// missed some events.
@@ -365,7 +383,7 @@ void SImGuiWidget::OnMouseLeave(const FPointerEvent& MouseEvent)
 {
 	Super::OnMouseLeave(MouseEvent);
 
-	UE_LOG(LogImGuiWidget, VeryVerbose, TEXT("ImGui Widget %d - Mouse Leave."), ContextIndex);
+	IMGUI_WIDGET_LOG(VeryVerbose, TEXT("ImGui Widget %d - Mouse Leave."), ContextIndex);
 
 	// We don't get any events when application loses focus, but often this is followed by OnMouseLeave, so we can use
 	// this event to immediately disable keyboard input if application lost focus.
@@ -497,7 +515,7 @@ void SImGuiWidget::SetVisibilityFromInputEnabled()
 	// If we don't use input disable hit test to make this widget invisible for cursors hit detection.
 	SetVisibility(bInputEnabled ? EVisibility::Visible : EVisibility::HitTestInvisible);
 
-	UE_LOG(LogImGuiWidget, VeryVerbose, TEXT("ImGui Widget %d - Visibility updated to '%s'."),
+	IMGUI_WIDGET_LOG(VeryVerbose, TEXT("ImGui Widget %d - Visibility updated to '%s'."),
 		ContextIndex, *GetVisibility().ToString());
 }
 
@@ -508,7 +526,7 @@ void SImGuiWidget::UpdateInputEnabled()
 	{
 		bInputEnabled = bEnabled;
 
-		UE_LOG(LogImGuiWidget, Log, TEXT("ImGui Widget %d - Input Enabled changed to '%s'."),
+		IMGUI_WIDGET_LOG(Log, TEXT("ImGui Widget %d - Input Enabled changed to '%s'."),
 			ContextIndex, TEXT_BOOL(bInputEnabled));
 
 		SetVisibilityFromInputEnabled();
@@ -568,7 +586,7 @@ void SImGuiWidget::UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer
 
 	if (InputMode != NewInputMode)
 	{
-		UE_LOG(LogImGuiWidget, Verbose, TEXT("ImGui Widget %d - Input Mode changed from '%s' to '%s'."),
+		IMGUI_WIDGET_LOG(Verbose, TEXT("ImGui Widget %d - Input Mode changed from '%s' to '%s'."),
 			ContextIndex, TEXT_INPUT_MODE(InputMode), TEXT_INPUT_MODE(NewInputMode));
 
 		// We need to reset input components if we are either fully shutting down or we are downgrading from full to
@@ -1048,6 +1066,8 @@ FVector2D SImGuiWidget::ComputeDesiredSize(float) const
 	return FVector2D{ 3840.f, 2160.f };
 }
 
+#if IMGUI_WIDGET_DEBUG
+
 static TArray<FKey> GetImGuiMappedKeys()
 {
 	TArray<FKey> Keys;
@@ -1329,3 +1349,7 @@ void SImGuiWidget::OnDebugDraw()
 
 #undef TEXT_INPUT_MODE
 #undef TEXT_BOOL
+
+#endif // IMGUI_WIDGET_DEBUG
+
+#undef IMGUI_WIDGET_LOG

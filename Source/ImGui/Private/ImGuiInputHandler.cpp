@@ -18,7 +18,8 @@
 #endif // WITH_EDITOR
 
 
-DEFINE_LOG_CATEGORY_STATIC(LogImGuiInputHandler, Warning, All);
+DEFINE_LOG_CATEGORY(LogImGuiInputHandler);
+
 
 FImGuiInputResponse UImGuiInputHandler::OnKeyDown(const FKeyEvent& KeyEvent)
 {

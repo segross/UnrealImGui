@@ -13,7 +13,7 @@
 #define VALIDATE_INPUT_CHARACTERS 1
 
 #if VALIDATE_INPUT_CHARACTERS
-DEFINE_LOG_CATEGORY_STATIC(LogImGuiInputState, Warning, All);
+DEFINE_LOG_CATEGORY_STATIC(LogImGuiInput, Warning, All);
 #endif
 
 namespace
@@ -34,7 +34,7 @@ namespace
 		// truncations.
 		static constexpr auto MinLimit = (std::numeric_limits<std::make_signed_t<ImWchar>>::min)();
 		static constexpr auto MaxLimit = (std::numeric_limits<std::make_unsigned_t<ImWchar>>::max)();
-		UE_CLOG(!(Char >= MinLimit && Char <= MaxLimit), LogImGuiInputState, Error,
+		UE_CLOG(!(Char >= MinLimit && Char <= MaxLimit), LogImGuiInput, Error,
 			TEXT("TCHAR value '%c' (%#x) is out of range %d (%#x) to %u (%#x) that can be safely converted to ImWchar. ")
 			TEXT("If you wish to disable this validation, please set VALIDATE_INPUT_CHARACTERS in ImGuiInputState.cpp to 0."),
 			Char, Char, MinLimit, MinLimit, MaxLimit, MaxLimit);

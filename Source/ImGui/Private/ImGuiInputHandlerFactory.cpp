@@ -8,8 +8,6 @@
 #include "ImGuiSettings.h"
 
 
-DEFINE_LOG_CATEGORY_STATIC(LogImGuiInputHandlerFactory, Warning, All);
-
 UImGuiInputHandler* FImGuiInputHandlerFactory::NewHandler(FImGuiModuleManager* ModuleManager, UGameViewportClient* GameViewport, int32 ContextIndex)
 {
 	UClass* HandlerClass = nullptr;
@@ -22,7 +20,7 @@ UImGuiInputHandler* FImGuiInputHandlerFactory::NewHandler(FImGuiModuleManager* M
 
 			if (!HandlerClass)
 			{
-				UE_LOG(LogImGuiInputHandlerFactory, Error, TEXT("Couldn't load ImGui Input Handler class '%s'."), *HandlerClassReference.ToString());
+				UE_LOG(LogImGuiInputHandler, Error, TEXT("Couldn't load ImGui Input Handler class '%s'."), *HandlerClassReference.ToString());
 			}
 		}
 	}
@@ -40,7 +38,7 @@ UImGuiInputHandler* FImGuiInputHandlerFactory::NewHandler(FImGuiModuleManager* M
 	}
 	else
 	{
-		UE_LOG(LogImGuiInputHandlerFactory, Error, TEXT("Failed attempt to create Input Handler: HandlerClass = %s."), *GetNameSafe(HandlerClass));
+		UE_LOG(LogImGuiInputHandler, Error, TEXT("Failed attempt to create Input Handler: HandlerClass = %s."), *GetNameSafe(HandlerClass));
 	}
 
 	return Handler;

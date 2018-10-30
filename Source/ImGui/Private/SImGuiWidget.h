@@ -3,9 +3,13 @@
 #pragma once
 
 #include "ImGuiInputState.h"
+#include "ImGuiModuleDebug.h"
 
 #include <Widgets/SLeafWidget.h>
 
+
+// Hide ImGui Widget debug in non-developer mode.
+#define IMGUI_WIDGET_DEBUG IMGUI_MODULE_DEVELOPER
 
 class FImGuiModuleManager;
 class UImGuiInputHandler;
@@ -151,7 +155,9 @@ private:
 
 	virtual FVector2D ComputeDesiredSize(float) const override;
 
+#if IMGUI_WIDGET_DEBUG
 	void OnDebugDraw();
+#endif // IMGUI_WIDGET_DEBUG
 
 	FImGuiModuleManager* ModuleManager = nullptr;
 	TWeakObjectPtr<UGameViewportClient> GameViewport;
