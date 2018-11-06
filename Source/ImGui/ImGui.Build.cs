@@ -124,7 +124,7 @@ public class ImGui : ModuleRules
 		List<string> PrivateDefinitions = Definitions;
 #endif
 
-		PrivateDefinitions.Add(string.Format("RUNTIME_LOADER_ENABLED = {0}", bEnableRuntimeLoader ? 1 : 0));
+		PrivateDefinitions.Add(string.Format("RUNTIME_LOADER_ENABLED={0}", bEnableRuntimeLoader ? 1 : 0));
 
 		bool bDrawOnWorldTickStart = (DrawEventsBroadcastMode == EEventsBroadcastMode.OnWorldTickStart);
 #if WITH_POST_ACTOR_TICK
@@ -133,9 +133,9 @@ public class ImGui : ModuleRules
 		bool bDrawOnPostActorTick = false;
 #endif
 
-		PrivateDefinitions.Add(string.Format("DRAW_EVENTS_ON_WORLD_TICK_START = {0}", bDrawOnWorldTickStart ? 1 : 0));
-		PrivateDefinitions.Add(string.Format("DRAW_EVENTS_ON_POST_ACTOR_TICK = {0}", bDrawOnPostActorTick ? 1 : 0));
-		PrivateDefinitions.Add(string.Format("DRAW_EVENTS_ORDER_WORLD_BEFORE_MULTI_CONTEXT = {0}",
+		PrivateDefinitions.Add(string.Format("DRAW_EVENTS_ON_WORLD_TICK_START={0}", bDrawOnWorldTickStart ? 1 : 0));
+		PrivateDefinitions.Add(string.Format("DRAW_EVENTS_ON_POST_ACTOR_TICK={0}", bDrawOnPostActorTick ? 1 : 0));
+		PrivateDefinitions.Add(string.Format("DRAW_EVENTS_ORDER_WORLD_BEFORE_MULTI_CONTEXT={0}",
 			(DrawEventsOrder == EEventsOrder.WorldBeforeMultiContext) ? 1 : 0));
 	}
 }
