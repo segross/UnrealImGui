@@ -54,24 +54,6 @@ namespace
 	constexpr const char* FontAtlasTextureName = "ImGuiModule_FontAtlas";
 }
 
-
-namespace CVars
-{
-	TAutoConsoleVariable<int> InputEnabled(TEXT("ImGui.InputEnabled"), 0,
-		TEXT("Enable or disable ImGui input mode.\n")
-		TEXT("0: disabled (default)\n")
-		TEXT("1: enabled, input is routed to ImGui and with a few exceptions is consumed"),
-		ECVF_Default);
-
-	TAutoConsoleVariable<int> InputNavigation(TEXT("ImGui.InputNavigation"), 0,
-		TEXT("EXPERIMENTAL Set ImGui navigation mode.\n")
-		TEXT("0: navigation is disabled\n")
-		TEXT("1: keyboard navigation\n")
-		TEXT("2: gamepad navigation (gamepad input is consumed)\n")
-		TEXT("3: keyboard and gamepad navigation (gamepad input is consumed)"),
-		ECVF_Default);
-}
-
 #if IMGUI_WIDGET_DEBUG
 namespace CVars
 {
@@ -521,7 +503,7 @@ void SImGuiWidget::SetVisibilityFromInputEnabled()
 
 void SImGuiWidget::UpdateInputEnabled()
 {
-	const bool bEnabled = CVars::InputEnabled.GetValueOnGameThread() > 0;
+	const bool bEnabled = FImGuiModuleProperties::Get().IsInputEnabled();
 	if (bInputEnabled != bEnabled)
 	{
 		bInputEnabled = bEnabled;
@@ -570,8 +552,9 @@ void SImGuiWidget::UpdateInputEnabled()
 
 	if (bInputEnabled)
 	{
-		InputState.SetKeyboardNavigationEnabled((CVars::InputNavigation.GetValueOnGameThread() & 1) != 0);
-		InputState.SetGamepadNavigationEnabled((CVars::InputNavigation.GetValueOnGameThread() & 2) != 0);
+		const auto& Properties = FImGuiModuleProperties::Get();
+		InputState.SetKeyboardNavigationEnabled(Properties.IsKeyboardNavigationEnabled());
+		InputState.SetGamepadNavigationEnabled(Properties.IsGamepadNavigationEnabled());
 		const auto& Application = FSlateApplication::Get().GetPlatformApplication();
 		InputState.SetGamepad(Application.IsValid() && Application->IsGamepadAttached());
 	}

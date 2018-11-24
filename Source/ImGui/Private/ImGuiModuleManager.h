@@ -3,6 +3,7 @@
 #pragma once
 
 #include "ImGuiContextManager.h"
+#include "ImGuiModuleCommands.h"
 #include "SImGuiWidget.h"
 #include "TextureManager.h"
 
@@ -55,6 +56,9 @@ private:
 
 	// Event that we call after ImGui is updated.
 	FSimpleMulticastDelegate PostImGuiUpdateEvent;
+
+	// Tying module console commands to life-cycle of this manager and module.
+	FImGuiModuleCommands Commands;
 
 	// Manager for ImGui contexts.
 	FImGuiContextManager ContextManager;

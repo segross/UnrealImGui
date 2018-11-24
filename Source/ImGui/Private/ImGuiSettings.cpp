@@ -3,7 +3,15 @@
 #include "ImGuiPrivatePCH.h"
 
 #include "ImGuiSettings.h"
-#include "Utilities/DebugExecBindings.h"
+
+
+UImGuiSettings* GImGuiSettings = nullptr;
+
+FSimpleMulticastDelegate& UImGuiSettings::OnSettingsLoaded()
+{
+	static FSimpleMulticastDelegate Instance;
+	return Instance;
+}
 
 
 UImGuiSettings::UImGuiSettings()
@@ -20,19 +28,25 @@ UImGuiSettings::~UImGuiSettings()
 #endif
 }
 
-namespace Commands
-{
-	extern const TCHAR* SwitchInputMode;
-}
-
 void UImGuiSettings::PostInitProperties()
 {
 	Super::PostInitProperties();
 
-	// Instead of saving binding to input config, we manually update DebugExecBindings from here. This has an advantage
-	// that there is no ambiguity where settings are stored and more importantly, it works out of the box in packed
-	// and staged builds.  
-	DebugExecBindings::UpdatePlayerInputs(SwitchInputModeKey, Commands::SwitchInputMode);
+	if (IsTemplate())
+	{
+		GImGuiSettings = this;
+		OnSettingsLoaded().Broadcast();
+	}
+}
+
+void UImGuiSettings::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	if (GImGuiSettings == this)
+	{
+		GImGuiSettings = nullptr;
+	}
 }
 
 #if WITH_EDITOR
@@ -62,7 +76,7 @@ void UImGuiSettings::OnPropertyChanged(class UObject* ObjectBeingModified, struc
 		}
 		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, SwitchInputModeKey))
 		{
-			DebugExecBindings::UpdatePlayerInputs(SwitchInputModeKey, Commands::SwitchInputMode);
+			OnSwitchInputModeKeyChanged.Broadcast();
 		}
 		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, bUseSoftwareCursor))
 		{

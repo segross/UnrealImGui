@@ -50,6 +50,9 @@ class UImGuiSettings : public UObject
 
 public:
 
+	// Delegate raised when settings instance is loaded.
+	static FSimpleMulticastDelegate& OnSettingsLoaded();
+
 	UImGuiSettings();
 	~UImGuiSettings();
 
@@ -65,10 +68,14 @@ public:
 	// Delegate raised when ImGuiInputHandlerClass property has changed.
 	FSimpleMulticastDelegate OnImGuiInputHandlerClassChanged;
 
+	// Delegate raised when SwitchInputModeKey property has changed.
+	FSimpleMulticastDelegate OnSwitchInputModeKeyChanged;
+
 	// Delegate raised when SoftwareCursorEnabled property has changed.
 	FSimpleMulticastDelegate OnSoftwareCursorChanged;
 
 	virtual void PostInitProperties() override;
+	virtual void BeginDestroy() override;
 
 protected:
 
@@ -102,3 +109,7 @@ private:
 
 #endif // WITH_EDITOR
 };
+
+// Pointer to the settings instance (default class object) assigned right after it is initialized and valid until
+// it is destroyed.
+extern UImGuiSettings* GImGuiSettings;

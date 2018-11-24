@@ -50,7 +50,7 @@ FImGuiEditor::~FImGuiEditor()
 void FImGuiEditor::Register()
 {
 	// Only register after UImGuiSettings class is initialized (necessary to check in early loading stages).
-	if (!bSettingsRegistered && UImGuiSettings::StaticClass()->IsValidLowLevelFast())
+	if (!bSettingsRegistered && GImGuiSettings)
 	{
 		if (ISettingsModule* SettingsModule = GetSettingsModule())
 		{
@@ -59,7 +59,7 @@ void FImGuiEditor::Register()
 			SettingsModule->RegisterSettings(SETTINGS_CONTAINER,
 				LOCTEXT("ImGuiSettingsName", "ImGui"),
 				LOCTEXT("ImGuiSettingsDescription", "Configure the Unreal ImGui plugin."),
-				GetMutableDefault<UImGuiSettings>());
+				GImGuiSettings);
 		}
 	}
 

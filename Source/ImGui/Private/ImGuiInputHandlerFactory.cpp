@@ -11,9 +11,9 @@
 UImGuiInputHandler* FImGuiInputHandlerFactory::NewHandler(FImGuiModuleManager* ModuleManager, UGameViewportClient* GameViewport, int32 ContextIndex)
 {
 	UClass* HandlerClass = nullptr;
-	if (UImGuiSettings* Settings = GetMutableDefault<UImGuiSettings>())
+	if (GImGuiSettings)
 	{
-		const auto& HandlerClassReference = Settings->GetImGuiInputHandlerClass();
+		const auto& HandlerClassReference = GImGuiSettings->GetImGuiInputHandlerClass();
 		if (HandlerClassReference.IsValid())
 		{
 			HandlerClass = HandlerClassReference.TryLoadClass<UImGuiInputHandler>();

@@ -26,7 +26,7 @@ FImGuiInputResponse UImGuiInputHandler::OnKeyDown(const FKeyEvent& KeyEvent)
 	// If this is an input mode switch event then handle it here and consume.
 	if (IsSwitchInputModeEvent(KeyEvent))
 	{
-		FImGuiModule::Get().ToggleInputMode();
+		FImGuiModuleProperties::Get().ToggleInput(ECVF_SetByConsole);
 		return FImGuiInputResponse().RequestConsume();
 	}
 
@@ -91,8 +91,9 @@ namespace
 
 bool UImGuiInputHandler::IsSwitchInputModeEvent(const FKeyEvent& KeyEvent) const
 {
-	const FImGuiKeyInfo KeyInfo = GetDefault<UImGuiSettings>()->GetSwitchInputModeKey();
-	return (KeyEvent.GetKey() == KeyInfo.Key) && AreModifiersMatching(KeyInfo, KeyEvent);
+	return GImGuiSettings
+		&& (KeyEvent.GetKey() == GImGuiSettings->GetSwitchInputModeKey().Key)
+		&& AreModifiersMatching(GImGuiSettings->GetSwitchInputModeKey(), KeyEvent);
 }
 
 bool UImGuiInputHandler::HasImGuiActiveItem() const

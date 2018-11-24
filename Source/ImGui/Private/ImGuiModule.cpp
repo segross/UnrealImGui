@@ -20,27 +20,6 @@
 #define LOCTEXT_NAMESPACE "FImGuiModule"
 
 
-namespace CVars
-{
-	extern TAutoConsoleVariable<int32> InputEnabled;
-	extern TAutoConsoleVariable<int32> ShowDemo;
-}
-
-namespace Commands
-{
-	const TCHAR* SwitchInputMode = TEXT("ImGui.SwitchInputMode");
-}
-
-void SwitchImGuiInputMode()
-{
-	FImGuiModule::Get().ToggleInputMode();
-}
-
-FAutoConsoleCommand SwitchInputModeCommand = FAutoConsoleCommand(
-	Commands::SwitchInputMode,
-	TEXT("Changes ImGui input mode."),
-	FConsoleCommandDelegate::CreateStatic(SwitchImGuiInputMode));
-
 struct EDelegateCategory
 {
 	enum
@@ -191,34 +170,32 @@ ImGuiContext** FImGuiModule::GetImGuiContextHandle()
 
 bool FImGuiModule::IsInputMode() const
 {
-	return CVars::InputEnabled.GetValueOnAnyThread() > 0;
+	return FImGuiModuleProperties::Get().IsInputEnabled();
 }
 
 void FImGuiModule::SetInputMode(bool bEnabled)
 {
-	// This function is for supporting shortcut or subsitiute for console command, so we are using the same priority.
-	CVars::InputEnabled->Set(bEnabled ? 1 : 0, ECVF_SetByConsole);
+	return FImGuiModuleProperties::Get().SetInputEnabled(bEnabled);
 }
 
 void FImGuiModule::ToggleInputMode()
 {
-	SetInputMode(!IsInputMode());
+	FImGuiModuleProperties::Get().ToggleInput();
 }
 
 bool FImGuiModule::IsShowingDemo() const
 {
-	return CVars::ShowDemo.GetValueOnAnyThread() > 0;
+	return FImGuiModuleProperties::Get().ShowDemo();
 }
 
 void FImGuiModule::SetShowDemo(bool bShow)
 {
-	// This function is for supporting shortcut or subsitiute for console command, so we are using the same priority.
-	CVars::ShowDemo->Set(bShow ? 1 : 0, ECVF_SetByConsole);
+	return FImGuiModuleProperties::Get().SetShowDemo(bShow);
 }
 
 void FImGuiModule::ToggleShowDemo()
 {
-	SetShowDemo(!IsShowingDemo());
+	return FImGuiModuleProperties::Get().ToggleDemo();
 }
 
 

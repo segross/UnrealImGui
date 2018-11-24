@@ -3,23 +3,12 @@
 #include "ImGuiPrivatePCH.h"
 
 #include "ImGuiDemo.h"
-#include "ImGuiModuleManager.h"
-#include "Utilities/ScopeGuards.h"
 
-
-namespace CVars
-{
-	TAutoConsoleVariable<int> ShowDemo(TEXT("ImGui.ShowDemo"), 0,
-		TEXT("Show ImGui demo.\n")
-		TEXT("0: disabled (default)\n")
-		TEXT("1: enabled."),
-		ECVF_Default);
-}
 
 // Demo copied (with minor modifications) from ImGui examples. See https://github.com/ocornut/imgui.
 void FImGuiDemo::DrawControls(int32 ContextIndex)
 {
-	if (CVars::ShowDemo.GetValueOnGameThread() > 0)
+	if (FImGuiModuleProperties::Get().ShowDemo())
 	{
 		const int32 ContextBit = ContextIndex < 0 ? 0 : 1 << ContextIndex;
 
