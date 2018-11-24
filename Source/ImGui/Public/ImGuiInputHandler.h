@@ -1,4 +1,4 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+// Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
 #pragma once
 
@@ -174,12 +174,12 @@ protected:
 #endif
 
 	/**
-	 * Checks whether this key event can switch ImGui input mode (as defined in settings).
+	 * Checks whether this key event can toggle ImGui input (as defined in settings).
 	 *
 	 * @param KeyEvent - Key event to test.
-	 * @returns True, if this key is bound to 'ImGui.SwitchInputMode' command that switches ImGui input mode.
+	 * @returns True, if this key is bound to 'ImGui.ToggleInput' command that switches ImGui input mode.
 	 */
-	bool IsSwitchInputModeEvent(const FKeyEvent& KeyEvent) const;
+	bool IsToggleInputEvent(const FKeyEvent& KeyEvent) const;
 
 	/**
 	 * Checks whether corresponding ImGui context has an active item (holding cursor focus).

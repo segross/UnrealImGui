@@ -12,12 +12,12 @@ namespace CommandNames
 {
 	namespace
 	{
-		const TCHAR* SwitchInputMode = TEXT("ImGui.SwitchInputMode");
+		const TCHAR* ToggleInput = TEXT("ImGui.ToggleInput");
 	}
 }
 
 FImGuiModuleCommands::FImGuiModuleCommands()
-	: ToggleInputCommand(CommandNames::SwitchInputMode,
+	: ToggleInputCommand(CommandNames::ToggleInput,
 		TEXT("Switch ImGui input mode."),
 		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleInput))
 {
@@ -46,9 +46,9 @@ void FImGuiModuleCommands::InitializeSettings()
 
 void FImGuiModuleCommands::RegisterSettingsDelegates()
 {
-	if (GImGuiSettings && !GImGuiSettings->OnSwitchInputModeKeyChanged.IsBoundToObject(this))
+	if (GImGuiSettings && !GImGuiSettings->OnToggleInputKeyChanged.IsBoundToObject(this))
 	{
-		GImGuiSettings->OnSwitchInputModeKeyChanged.AddRaw(this, &FImGuiModuleCommands::UpdateToggleInputKeyBinding);
+		GImGuiSettings->OnToggleInputKeyChanged.AddRaw(this, &FImGuiModuleCommands::UpdateToggleInputKeyBinding);
 	}
 }
 
@@ -56,7 +56,7 @@ void FImGuiModuleCommands::UnregisterSettingsDelegates()
 {
 	if (GImGuiSettings)
 	{
-		GImGuiSettings->OnSwitchInputModeKeyChanged.RemoveAll(this);
+		GImGuiSettings->OnToggleInputKeyChanged.RemoveAll(this);
 	}
 }
 
@@ -64,7 +64,7 @@ void FImGuiModuleCommands::UpdateToggleInputKeyBinding()
 {
 	if (GImGuiSettings)
 	{
-		DebugExecBindings::UpdatePlayerInputs(GImGuiSettings->GetSwitchInputModeKey(), CommandNames::SwitchInputMode);
+		DebugExecBindings::UpdatePlayerInputs(GImGuiSettings->GetToggleInputKey(), CommandNames::ToggleInput);
 	}
 }
 

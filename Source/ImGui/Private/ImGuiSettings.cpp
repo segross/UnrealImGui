@@ -32,6 +32,32 @@ void UImGuiSettings::PostInitProperties()
 {
 	Super::PostInitProperties();
 
+	if (SwitchInputModeKey_DEPRECATED.Key.IsValid() && !ToggleInput.Key.IsValid())
+	{
+		const FString ConfigFileName = GetDefaultConfigFilename();
+
+		// Move value to the new property.
+		ToggleInput = MoveTemp(SwitchInputModeKey_DEPRECATED);
+
+		// Remove from configuration file entry for obsolete property.
+		if (FConfigFile* ConfigFile = GConfig->Find(ConfigFileName, false))
+		{
+			if (FConfigSection* Section = ConfigFile->Find(TEXT("/Script/ImGui.ImGuiSettings")))
+			{
+				if (Section->Remove(TEXT("SwitchInputModeKey")))
+				{
+					ConfigFile->Dirty = true;
+					GConfig->Flush(false, ConfigFileName);
+				}
+			}
+		}
+
+		// Add to configuration file entry for new property.
+		UpdateSinglePropertyInConfigFile(
+			UImGuiSettings::StaticClass()->FindPropertyByName(GET_MEMBER_NAME_CHECKED(UImGuiSettings, ToggleInput)),
+			ConfigFileName);
+	}
+
 	if (IsTemplate())
 	{
 		GImGuiSettings = this;
@@ -74,9 +100,9 @@ void UImGuiSettings::OnPropertyChanged(class UObject* ObjectBeingModified, struc
 		{
 			OnImGuiInputHandlerClassChanged.Broadcast();
 		}
-		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, SwitchInputModeKey))
+		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, ToggleInput))
 		{
-			OnSwitchInputModeKeyChanged.Broadcast();
+			OnToggleInputKeyChanged.Broadcast();
 		}
 		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, bUseSoftwareCursor))
 		{

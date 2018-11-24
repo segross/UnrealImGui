@@ -59,19 +59,19 @@ public:
 	// Path to custom implementation of ImGui Input Handler.
 	const FStringClassReference& GetImGuiInputHandlerClass() const { return ImGuiInputHandlerClass; }
 
-	// Get mapping for 'ImGui.SwitchInputMode' command.
-	const FImGuiKeyInfo& GetSwitchInputModeKey() const { return SwitchInputModeKey; }
+	// Get the shortcut key info for 'ImGui.ToggleInput' command.
+	const FImGuiKeyInfo& GetToggleInputKey() const { return ToggleInput; }
 
 	// Check whether ImGui should draw its own software cursor.
 	bool UseSoftwareCursor() const { return bUseSoftwareCursor; }
 
-	// Delegate raised when ImGuiInputHandlerClass property has changed.
+	// Delegate raised when ImGuiInputHandlerClass is changed.
 	FSimpleMulticastDelegate OnImGuiInputHandlerClassChanged;
 
-	// Delegate raised when SwitchInputModeKey property has changed.
-	FSimpleMulticastDelegate OnSwitchInputModeKeyChanged;
+	// Delegate raised when ToggleInput key is changed.
+	FSimpleMulticastDelegate OnToggleInputKeyChanged;
 
-	// Delegate raised when SoftwareCursorEnabled property has changed.
+	// Delegate raised when SoftwareCursorEnabled property is changed.
 	FSimpleMulticastDelegate OnSoftwareCursorChanged;
 
 	virtual void PostInitProperties() override;
@@ -84,13 +84,17 @@ protected:
 	UPROPERTY(EditAnywhere, config, Category = "Extensions", meta = (MetaClass = "ImGuiInputHandler"))
 	FStringClassReference ImGuiInputHandlerClass;
 
-	// Define a custom key binding to 'ImGui.SwitchInputMode' command. Binding is only set if key is valid.
+	// Define a shortcut key to 'ImGui.ToggleInput' command. Binding is only set if the key field is valid.
 	// Note that modifier key properties can be set to one of the three values: undetermined means that state of the given
-	// modifier is not tested, checked means that it needs to be pressed and unchecked means that it cannot be pressed.
+	// modifier is not important, checked means that it needs to be pressed and unchecked means that it cannot be pressed.
 	//
 	// This binding is using Player Input's DebugExecBindings which only works in non-shipment builds.
 	UPROPERTY(EditAnywhere, config, Category = "Keyboard Shortcuts")
-	FImGuiKeyInfo SwitchInputModeKey;
+	FImGuiKeyInfo ToggleInput;
+
+	// Deprecated name for ToggleInput. Kept temporarily to automatically move old configuration.
+	UPROPERTY(config)
+	FImGuiKeyInfo SwitchInputModeKey_DEPRECATED;
 
 	// If true, then in input mode ImGui will draw its own cursor in place of the hardware one.
 	// When disabled (default) there is a noticeable difference between cursor position seen by ImGui and position on
