@@ -5,8 +5,4 @@
 #include "ImGuiModuleProperties.h"
 
 
-FImGuiModuleProperties& FImGuiModuleProperties::Get()
-{
-	static FImGuiModuleProperties Instance;
-	return Instance;
-}
+// TODO: Initialize relevant properties from settings.

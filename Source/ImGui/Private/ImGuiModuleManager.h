@@ -3,7 +3,9 @@
 #pragma once
 
 #include "ImGuiContextManager.h"
+#include "ImGuiDemo.h"
 #include "ImGuiModuleCommands.h"
+#include "ImGuiModuleProperties.h"
 #include "SImGuiWidget.h"
 #include "TextureManager.h"
 
@@ -15,6 +17,9 @@ class FImGuiModuleManager
 	friend class FImGuiModule;
 
 public:
+
+	// Get interface to module state properties. 
+	FImGuiModuleProperties& GetProperties() { return Properties; }
 
 	// Get ImGui contexts manager.
 	FImGuiContextManager& GetContextManager() { return ContextManager; }
@@ -57,8 +62,14 @@ private:
 	// Event that we call after ImGui is updated.
 	FSimpleMulticastDelegate PostImGuiUpdateEvent;
 
+	// Collection of module state properties.
+	FImGuiModuleProperties Properties;
+
 	// Tying module console commands to life-cycle of this manager and module.
-	FImGuiModuleCommands Commands;
+	FImGuiModuleCommands ModuleCommands;
+
+	// Widget that we add to all created contexts to draw ImGui demo. 
+	FImGuiDemo ImGuiDemo;
 
 	// Manager for ImGui contexts.
 	FImGuiContextManager ContextManager;

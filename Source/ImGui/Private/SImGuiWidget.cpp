@@ -503,7 +503,7 @@ void SImGuiWidget::SetVisibilityFromInputEnabled()
 
 void SImGuiWidget::UpdateInputEnabled()
 {
-	const bool bEnabled = FImGuiModuleProperties::Get().IsInputEnabled();
+	const bool bEnabled = ModuleManager && ModuleManager->GetProperties().IsInputEnabled();
 	if (bInputEnabled != bEnabled)
 	{
 		bInputEnabled = bEnabled;
@@ -552,9 +552,8 @@ void SImGuiWidget::UpdateInputEnabled()
 
 	if (bInputEnabled)
 	{
-		const auto& Properties = FImGuiModuleProperties::Get();
-		InputState.SetKeyboardNavigationEnabled(Properties.IsKeyboardNavigationEnabled());
-		InputState.SetGamepadNavigationEnabled(Properties.IsGamepadNavigationEnabled());
+		InputState.SetKeyboardNavigationEnabled(ModuleManager && ModuleManager->GetProperties().IsKeyboardNavigationEnabled());
+		InputState.SetGamepadNavigationEnabled(ModuleManager && ModuleManager->GetProperties().IsGamepadNavigationEnabled());
 		const auto& Application = FSlateApplication::Get().GetPlatformApplication();
 		InputState.SetGamepad(Application.IsValid() && Application->IsGamepadAttached());
 	}

@@ -170,32 +170,44 @@ ImGuiContext** FImGuiModule::GetImGuiContextHandle()
 
 bool FImGuiModule::IsInputMode() const
 {
-	return FImGuiModuleProperties::Get().IsInputEnabled();
+	return ImGuiModuleManager && ImGuiModuleManager->GetProperties().IsInputEnabled();
 }
 
 void FImGuiModule::SetInputMode(bool bEnabled)
 {
-	return FImGuiModuleProperties::Get().SetInputEnabled(bEnabled);
+	if (ImGuiModuleManager)
+	{
+		ImGuiModuleManager->GetProperties().SetInputEnabled(bEnabled);
+	}
 }
 
 void FImGuiModule::ToggleInputMode()
 {
-	FImGuiModuleProperties::Get().ToggleInput();
+	if (ImGuiModuleManager)
+	{
+		ImGuiModuleManager->GetProperties().ToggleInput();
+	}
 }
 
 bool FImGuiModule::IsShowingDemo() const
 {
-	return FImGuiModuleProperties::Get().ShowDemo();
+	return ImGuiModuleManager && ImGuiModuleManager->GetProperties().ShowDemo();
 }
 
 void FImGuiModule::SetShowDemo(bool bShow)
 {
-	return FImGuiModuleProperties::Get().SetShowDemo(bShow);
+	if (ImGuiModuleManager)
+	{
+		ImGuiModuleManager->GetProperties().SetShowDemo(bShow);
+	}
 }
 
 void FImGuiModule::ToggleShowDemo()
 {
-	return FImGuiModuleProperties::Get().ToggleDemo();
+	if (ImGuiModuleManager)
+	{
+		ImGuiModuleManager->GetProperties().ToggleDemo();
+	}
 }
 
 

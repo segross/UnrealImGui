@@ -5,14 +5,17 @@
 #include <IConsoleManager.h>
 
 
-// Wrapper for ImGui console commands.
+class FImGuiModuleManager;
+
+// Manges ImGui module console commands.
 class FImGuiModuleCommands
 {
-	// Allow module manager to control life-cycle of this class.
-	friend class FImGuiModuleManager;
+public:
 
-	FImGuiModuleCommands();
+	FImGuiModuleCommands(FImGuiModuleManager& InModuleManager);
 	~FImGuiModuleCommands();
+
+private:
 
 	FImGuiModuleCommands(const FImGuiModuleCommands&) = delete;
 	FImGuiModuleCommands& operator=(const FImGuiModuleCommands&) = delete;
@@ -31,6 +34,8 @@ class FImGuiModuleCommands
 	void ToggleKeyboardNavigation();
 	void ToggleGamepadNavigation();
 	void ToggleDemo();
+
+	FImGuiModuleManager& ModuleManager;
 
 	FAutoConsoleCommand ToggleInputCommand;
 	FAutoConsoleCommand ToggleKeyboardNavigationCommand;

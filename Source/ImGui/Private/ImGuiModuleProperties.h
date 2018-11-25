@@ -6,15 +6,11 @@
 
 
 // Collects and give access to module properties.
-// TODO: For now singleton instance is initialized on the first use. Try to move it to the ImGui Manager. 
 class FImGuiModuleProperties
 {
 public:
 
-	// Get the instance of the ImGui properties.
-	static FImGuiModuleProperties& Get();
-
-	// Check whether ImGui input is enabled.
+	// Check whether input is enabled.
 	bool IsInputEnabled() const { return bInputEnabled; }
 
 	// Enable or disable ImGui input.
@@ -51,14 +47,6 @@ public:
 	void ToggleDemo() { SetShowDemo(!ShowDemo()); }
 
 private:
-
-	FImGuiModuleProperties() = default;
-
-	FImGuiModuleProperties(const FImGuiModuleProperties&) = delete;
-	FImGuiModuleProperties& operator=(const FImGuiModuleProperties&) = delete;
-
-	FImGuiModuleProperties(FImGuiModuleProperties&&) = delete;
-	FImGuiModuleProperties& operator=(FImGuiModuleProperties&&) = delete;
 
 	bool bInputEnabled = false;
 

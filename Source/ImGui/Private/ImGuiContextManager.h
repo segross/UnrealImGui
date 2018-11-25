@@ -3,7 +3,6 @@
 #pragma once
 
 #include "ImGuiContextProxy.h"
-#include "ImGuiDemo.h"
 
 
 // Manages ImGui context proxies.
@@ -60,11 +59,10 @@ private:
 
 	struct FContextData
 	{
-		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas, FImGuiDemo& Demo, int32 InPIEInstance = -1)
+		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas, int32 InPIEInstance = -1)
 			: PIEInstance(InPIEInstance)
 			, ContextProxy(ContextName, &SharedDrawEvent, &FontAtlas)
 		{
-			ContextProxy.OnDraw().AddLambda([&Demo, ContextIndex]() { Demo.DrawControls(ContextIndex); });
 		}
 
 		FORCEINLINE bool CanTick() const { return PIEInstance < 0 || GEngine->GetWorldContextFromPIEInstance(PIEInstance); }
@@ -77,10 +75,9 @@ private:
 
 	struct FContextData
 	{
-		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas, FImGuiDemo& Demo)
+		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas)
 			: ContextProxy(ContextName, &SharedDrawEvent, &FontAtlas)
 		{
-			ContextProxy.OnDraw().AddLambda([&Demo, ContextIndex]() { Demo.DrawControls(ContextIndex); });
 		}
 
 		FORCEINLINE bool CanTick() const { return true; }
@@ -107,8 +104,6 @@ private:
 	FContextData& GetWorldContextData(const UWorld& World, int32* OutContextIndex = nullptr);
 
 	TMap<int32, FContextData> Contexts;
-
-	FImGuiDemo ImGuiDemo;
 
 	FSimpleMulticastDelegate DrawMultiContextEvent;
 

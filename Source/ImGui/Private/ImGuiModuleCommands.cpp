@@ -4,6 +4,7 @@
 
 #include "ImGuiModuleCommands.h"
 
+#include "ImGuiModuleManager.h"
 #include "ImGuiSettings.h"
 #include "Utilities/DebugExecBindings.h"
 
@@ -19,8 +20,9 @@ namespace CommandNames
 	}
 }
 
-FImGuiModuleCommands::FImGuiModuleCommands()
-	: ToggleInputCommand(CommandNames::ToggleInput,
+FImGuiModuleCommands::FImGuiModuleCommands(FImGuiModuleManager& InModuleManager)
+	: ModuleManager(InModuleManager)
+	, ToggleInputCommand(CommandNames::ToggleInput,
 		TEXT("Toggle ImGui input mode."),
 		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleInput))
 	, ToggleKeyboardNavigationCommand(CommandNames::ToggleKeyboardNavigation,
@@ -82,20 +84,20 @@ void FImGuiModuleCommands::UpdateToggleInputKeyBinding()
 
 void FImGuiModuleCommands::ToggleInput()
 {
-	FImGuiModuleProperties::Get().ToggleInput();
+	ModuleManager.GetProperties().ToggleInput();
 }
 
 void FImGuiModuleCommands::ToggleKeyboardNavigation()
 {
-	FImGuiModuleProperties::Get().ToggleKeyboardNavigation();
+	ModuleManager.GetProperties().ToggleKeyboardNavigation();
 }
 
 void FImGuiModuleCommands::ToggleGamepadNavigation()
 {
-	FImGuiModuleProperties::Get().ToggleGamepadNavigation();
+	ModuleManager.GetProperties().ToggleGamepadNavigation();
 }
 
 void FImGuiModuleCommands::ToggleDemo()
 {
-	FImGuiModuleProperties::Get().ToggleDemo();
+	ModuleManager.GetProperties().ToggleDemo();
 }

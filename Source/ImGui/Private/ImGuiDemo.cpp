@@ -4,11 +4,13 @@
 
 #include "ImGuiDemo.h"
 
+#include "ImGuiModuleManager.h"
+
 
 // Demo copied (with minor modifications) from ImGui examples. See https://github.com/ocornut/imgui.
 void FImGuiDemo::DrawControls(int32 ContextIndex)
 {
-	if (FImGuiModuleProperties::Get().ShowDemo())
+	if (ModuleManager.GetProperties().ShowDemo())
 	{
 		const int32 ContextBit = ContextIndex < 0 ? 0 : 1 << ContextIndex;
 

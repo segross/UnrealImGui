@@ -4,15 +4,23 @@
 
 #include <imgui.h>
 
+class FImGuiModuleManager;
 
 // Widget drawing ImGui demo.
 class FImGuiDemo
 {
 public:
 
+	FImGuiDemo(FImGuiModuleManager& InModuleManager)
+		: ModuleManager(InModuleManager)
+	{
+	}
+
 	void DrawControls(int32 ContextIndex);
 
 private:
+
+	FImGuiModuleManager& ModuleManager;
 
 	ImVec4 ClearColor = ImColor{ 114, 144, 154 };
 

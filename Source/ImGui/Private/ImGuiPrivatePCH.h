@@ -3,7 +3,6 @@
 // Module-wide macros
 #include "VersionCompatibility.h"
 #include "ImGuiModuleDebug.h"
-#include "ImGuiModuleProperties.h"
 
 // Module
 #include "ImGuiModule.h"
