@@ -130,6 +130,12 @@ void FImGuiModule::StartupModule()
 
 void FImGuiModule::ShutdownModule()
 {
+	// In editor store data that we want to move to hot-reloaded module.
+
+#if WITH_EDITOR
+	TOptional<FImGuiModuleProperties> PropertiesToMove = ImGuiModuleManager->GetProperties();
+#endif
+
 	// Before we shutdown we need to delete managers that will do all the necessary cleanup.
 
 #if WITH_EDITOR
@@ -147,7 +153,7 @@ void FImGuiModule::ShutdownModule()
 	// deleted. This can cause troubles after hot-reload when code in other modules calls ImGui interface functions
 	// which are statically bound to the obsolete module. To keep ImGui code functional we can redirect context handle
 	// to point to the new module.
-	FModuleManager::Get().OnModulesChanged().AddLambda([this](FName Name, EModuleChangeReason Reason)
+	FModuleManager::Get().OnModulesChanged().AddLambda([this, PropertiesToMove] (FName Name, EModuleChangeReason Reason) mutable
 	{
 		if (Reason == EModuleChangeReason::ModuleLoaded && Name == "ImGui")
 		{
@@ -155,6 +161,12 @@ void FImGuiModule::ShutdownModule()
 			if (&LoadedModule != this)
 			{
 				ImGuiImplementation::SetImGuiContextHandle(LoadedModule.GetImGuiContextHandle());
+
+				if (PropertiesToMove.IsSet())
+				{
+					LoadedModule.SetProperties(PropertiesToMove.GetValue());
+					PropertiesToMove.Reset();
+				}
 			}
 		}
 	});
@@ -162,6 +174,11 @@ void FImGuiModule::ShutdownModule()
 }
 
 #if WITH_EDITOR
+void FImGuiModule::SetProperties(const FImGuiModuleProperties& Properties)
+{
+	ImGuiModuleManager->GetProperties() = Properties;
+}
+
 ImGuiContext** FImGuiModule::GetImGuiContextHandle()
 {
 	return ImGuiImplementation::GetImGuiContextHandle();

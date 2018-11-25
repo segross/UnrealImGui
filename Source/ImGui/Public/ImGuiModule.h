@@ -148,6 +148,7 @@ public:
 	private:
 
 #if WITH_EDITOR
+	virtual void SetProperties(const class FImGuiModuleProperties& Properties);
 	virtual struct ImGuiContext** GetImGuiContextHandle();
 #endif
 };
