@@ -14,44 +14,56 @@ public:
 	// Get the instance of the ImGui properties.
 	static FImGuiModuleProperties& Get();
 
-	// Check whether input is enabled.
-	bool IsInputEnabled() const;
+	// Check whether ImGui input is enabled.
+	bool IsInputEnabled() const { return bInputEnabled; }
 
-	// Set whether input should be enabled.
-	void SetInputEnabled(bool bEnabled, EConsoleVariableFlags SetBy = ECVF_SetByCode);
+	// Enable or disable ImGui input.
+	void SetInputEnabled(bool bEnabled) { bInputEnabled = bEnabled; }
 
-	// Toggle input state.
-	void ToggleInput(EConsoleVariableFlags SetBy = ECVF_SetByCode);
+	// Toggle ImGui input.
+	void ToggleInput() { SetInputEnabled(!IsInputEnabled()); }
 
 	// Check whether keyboard navigation is enabled.
-	bool IsKeyboardNavigationEnabled() const;
+	bool IsKeyboardNavigationEnabled() const { return bKeyboardNavigationEnabled; }
+
+	// Enable or disable keyboard navigation.
+	void SetKeyboardNavigationEnabled(bool bEnabled) { bKeyboardNavigationEnabled = bEnabled; }
+
+	// Toggle keyboard navigation.
+	void ToggleKeyboardNavigation() { SetKeyboardNavigationEnabled(!IsKeyboardNavigationEnabled()); }
 
 	// Check whether gamepad navigation is enabled.
-	bool IsGamepadNavigationEnabled() const;
+	bool IsGamepadNavigationEnabled() const { return bGamepadNavigationEnabled; }
 
-	// Check whether demo should be visible.
-	bool ShowDemo() const;
+	// Enable or disable gamepad navigation.
+	void SetGamepadNavigationEnabled(bool bEnabled) { bGamepadNavigationEnabled = bEnabled; }
 
-	// Set whether demo should be visible.
-	void SetShowDemo(bool bEnabled, EConsoleVariableFlags SetBy = ECVF_SetByCode);
+	// Toggle gamepad navigation.
+	void ToggleGamepadNavigation() { SetGamepadNavigationEnabled(!IsGamepadNavigationEnabled()); }
 
-	// Toggle demo visibility.
-	void ToggleDemo(EConsoleVariableFlags SetBy = ECVF_SetByCode);
+	// Check whether ImGui demo is visible.
+	bool ShowDemo() const { return bShowDemo; }
+
+	// Show or hide ImGui demo.
+	void SetShowDemo(bool bShow) { bShowDemo = bShow; }
+
+	// Toggle ImGui demo.
+	void ToggleDemo() { SetShowDemo(!ShowDemo()); }
 
 private:
 
-	FImGuiModuleProperties();
+	FImGuiModuleProperties() = default;
 
-	// Disable copy and move semantics.
 	FImGuiModuleProperties(const FImGuiModuleProperties&) = delete;
 	FImGuiModuleProperties& operator=(const FImGuiModuleProperties&) = delete;
 
 	FImGuiModuleProperties(FImGuiModuleProperties&&) = delete;
 	FImGuiModuleProperties& operator=(FImGuiModuleProperties&&) = delete;
 
-	TAutoConsoleVariable<int32> InputEnabledVariable;
+	bool bInputEnabled = false;
 
-	TAutoConsoleVariable<int32> InputNavigationVariable;
+	bool bKeyboardNavigationEnabled = false;
+	bool bGamepadNavigationEnabled = false;
 
-	TAutoConsoleVariable<int32> ShowDemoVariable;
+	bool bShowDemo = false;
 };

@@ -26,7 +26,7 @@ FImGuiInputResponse UImGuiInputHandler::OnKeyDown(const FKeyEvent& KeyEvent)
 	// If this is an input mode switch event then handle it here and consume.
 	if (IsToggleInputEvent(KeyEvent))
 	{
-		FImGuiModuleProperties::Get().ToggleInput(ECVF_SetByConsole);
+		FImGuiModuleProperties::Get().ToggleInput();
 		return FImGuiInputResponse().RequestConsume();
 	}
 

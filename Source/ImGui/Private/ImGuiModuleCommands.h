@@ -14,13 +14,11 @@ class FImGuiModuleCommands
 	FImGuiModuleCommands();
 	~FImGuiModuleCommands();
 
-	// Disable copy semantics.
-	FImGuiModuleCommands(const FImGuiModuleCommands&) = default;
-	FImGuiModuleCommands& operator=(const FImGuiModuleCommands&) = default;
+	FImGuiModuleCommands(const FImGuiModuleCommands&) = delete;
+	FImGuiModuleCommands& operator=(const FImGuiModuleCommands&) = delete;
 
-	// Disable move semantics.
-	FImGuiModuleCommands(FImGuiModuleCommands&&) = default;
-	FImGuiModuleCommands& operator=(FImGuiModuleCommands&&) = default;
+	FImGuiModuleCommands(FImGuiModuleCommands&&) = delete;
+	FImGuiModuleCommands& operator=(FImGuiModuleCommands&&) = delete;
 
 	void InitializeSettings();
 
@@ -30,6 +28,12 @@ class FImGuiModuleCommands
 	void UpdateToggleInputKeyBinding();
 
 	void ToggleInput();
+	void ToggleKeyboardNavigation();
+	void ToggleGamepadNavigation();
+	void ToggleDemo();
 
 	FAutoConsoleCommand ToggleInputCommand;
+	FAutoConsoleCommand ToggleKeyboardNavigationCommand;
+	FAutoConsoleCommand ToggleGamepadNavigationCommand;
+	FAutoConsoleCommand ToggleDemoCommand;
 };
