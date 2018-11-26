@@ -52,12 +52,21 @@ PrivateDependencyModuleNames.AddRange(new string[] { "ImGui" });
 You should now be able to use ImGui.
 
 
+### Console commands
+
+Console support evolved from using console variables to plain variables combined with interface and console commands to toggle them. This means that it is possible to bind keys to those commands (currently only one is supported natively) and call interface functions from user code (also in shipping builds, if needed).
+
+- `ImGui.ToggleInput` - Toggle ImGui input mode (disabled by default). If enabled, input is routed to ImGui and with a few exceptions is consumed. It is possible to assign keyboard short-cut to this command trough ImGui properties panel.
+- `ImGui.ToggleKeyboardNavigation` - Toggle ImGui keyboard navigation feature (disabled by default but will be replaced with configurable setting).
+- `ImGui.ToggleGamepadNavigation` - Toggle ImGui gamepad navigation feature (disabled by default but will be replaced with configurable setting).
+- `ImGui.ToggleDemo` - Toggle visibility of the ImGui demo (disabled by default).
+
 ### Console variables
 
-- **ImGui.InputEnabled** - Enable or disable ImGui input mode. 0: disabled (default); 1: enabled, input is routed to ImGui and with a few exceptions is consumed. Note: this is going to be supported by a keyboard short-cut, but in the meantime ImGui input can be enabled/disabled using console.
-- **ImGui.DrawMouseCursor** - Whether or not mouse cursor in input mode should be drawn by ImGui. 0: disabled, hardware cursor will be used (default); 1: enabled, ImGui will take care for drawing mouse cursor.
-- **ImGui.ShowDemo** - Show ImGui demo. 0: disabled (default); 1: enabled.
-- **ImGui.Debug.Widget** - Show self-debug for the widget that renders ImGui output. 0: disabled (default); 1: enabled.
+Self-debug functionality is based on console variable but it will be also replaced by a command available in developer mode.
+
+- `ImGui.Debug.Widget` - Show self-debug for the widget that renders ImGui output. 0: disabled (default); 1: enabled.
+Note: this console variable will be replaced with optional toggle command.
 
 
 ### Canvas Map Mode
