@@ -2,48 +2,46 @@
 
 #pragma once
 
-#include <IConsoleManager.h>
 
-
-// Collects and give access to module properties.
-class FImGuiModuleProperties
+/** Properties that define state of the ImGui module. */
+class IMGUI_API FImGuiModuleProperties
 {
 public:
 
-	// Check whether input is enabled.
+	/** Check whether input is enabled. */
 	bool IsInputEnabled() const { return bInputEnabled; }
 
-	// Enable or disable ImGui input.
+	/** Enable or disable ImGui input. */
 	void SetInputEnabled(bool bEnabled) { bInputEnabled = bEnabled; }
 
-	// Toggle ImGui input.
+	/** Toggle ImGui input. */
 	void ToggleInput() { SetInputEnabled(!IsInputEnabled()); }
 
-	// Check whether keyboard navigation is enabled.
+	/** Check whether keyboard navigation is enabled. */
 	bool IsKeyboardNavigationEnabled() const { return bKeyboardNavigationEnabled; }
 
-	// Enable or disable keyboard navigation.
+	/** Enable or disable keyboard navigation. */
 	void SetKeyboardNavigationEnabled(bool bEnabled) { bKeyboardNavigationEnabled = bEnabled; }
 
-	// Toggle keyboard navigation.
+	/** Toggle keyboard navigation. */
 	void ToggleKeyboardNavigation() { SetKeyboardNavigationEnabled(!IsKeyboardNavigationEnabled()); }
 
-	// Check whether gamepad navigation is enabled.
+	/** Check whether gamepad navigation is enabled. */
 	bool IsGamepadNavigationEnabled() const { return bGamepadNavigationEnabled; }
 
-	// Enable or disable gamepad navigation.
+	/** Enable or disable gamepad navigation. */
 	void SetGamepadNavigationEnabled(bool bEnabled) { bGamepadNavigationEnabled = bEnabled; }
 
-	// Toggle gamepad navigation.
+	/** Toggle gamepad navigation. */
 	void ToggleGamepadNavigation() { SetGamepadNavigationEnabled(!IsGamepadNavigationEnabled()); }
 
-	// Check whether ImGui demo is visible.
+	/** Check whether ImGui demo is visible. */
 	bool ShowDemo() const { return bShowDemo; }
 
-	// Show or hide ImGui demo.
+	/** Show or hide ImGui demo. */
 	void SetShowDemo(bool bShow) { bShowDemo = bShow; }
 
-	// Toggle ImGui demo.
+	/** Toggle ImGui demo. */
 	void ToggleDemo() { SetShowDemo(!ShowDemo()); }
 
 private:

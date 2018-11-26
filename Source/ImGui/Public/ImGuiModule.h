@@ -3,6 +3,7 @@
 #pragma once
 
 #include "ImGuiDelegates.h"
+#include "ImGuiModuleProperties.h"
 #include "ImGuiTextureHandle.h"
 
 #include <ModuleManager.h>
@@ -104,6 +105,15 @@ public:
 	virtual void ReleaseTexture(const FImGuiTextureHandle& Handle);
 
 	/**
+	 * Get ImGui module properties.
+	 *
+	 * @returns Reference to an instance of ImGui module properties that allows to read and/or modify module state.
+	 */
+	virtual FImGuiModuleProperties& GetProperties();
+	virtual const FImGuiModuleProperties& GetProperties() const;
+
+	/**
+	 * DEPRECIATED: Please use GetProperties() as this function is scheduled for removal.
 	 * Check whether Input Mode is enabled (tests ImGui.InputEnabled console variable).
 	 *
 	 * @returns True, if Input Mode is enabled (ImGui.InputEnabled != 0) and false otherwise.
@@ -111,6 +121,7 @@ public:
 	virtual bool IsInputMode() const;
 
 	/**
+	 * DEPRECIATED: Please use GetProperties() as this function is scheduled for removal.
 	 * Set Input Mode state (sets ImGui.InputEnabled console variable, so it can be used together with a console).
 	 *
 	 * @param bEnabled - Whether Input Mode should be enabled (ImGui.InputEnabled = 1) or not (ImGui.InputEnabled = 0).
@@ -118,11 +129,13 @@ public:
 	virtual void SetInputMode(bool bEnabled);
 
 	/**
+	 * DEPRECIATED: Please use GetProperties() as this function is scheduled for removal.
 	 * Toggle Input Mode state (changes ImGui.InputEnabled console variable).
 	 */
 	virtual void ToggleInputMode();
 
 	/**
+	 * DEPRECIATED: Please use GetProperties() as this function is scheduled for removal.
 	 * Check whether ImGui Demo is shown (tests ImGui.ShowDemo console variable).
 	 *
 	 * @returns True, if demo is shown (ImGui.ShowDemo != 0) and false otherwise.
@@ -130,6 +143,7 @@ public:
 	virtual bool IsShowingDemo() const;
 
 	/**
+	 * DEPRECIATED: Please use GetProperties() as this function is scheduled for removal.
 	 * Set whether to show ImGui Demo (sets ImGui.ShowDemo console variable, so it can be used together with a console).
 	 *
 	 * @param bShow - Whether to show ImGui Demo (ImGui.ShowDemo = 1) or not (ImGui.ShowDemo = 0).
@@ -137,6 +151,7 @@ public:
 	virtual void SetShowDemo(bool bShow);
 
 	/**
+	 * DEPRECIATED: Please use GetProperties() as this function is scheduled for removal.
 	 * Toggle ImGui Demo (changes ImGui.ShowDemo console variable).
 	 */
 	virtual void ToggleShowDemo();
@@ -148,7 +163,7 @@ public:
 	private:
 
 #if WITH_EDITOR
-	virtual void SetProperties(const class FImGuiModuleProperties& Properties);
+	virtual void SetProperties(const FImGuiModuleProperties& Properties);
 	virtual struct ImGuiContext** GetImGuiContextHandle();
 #endif
 };

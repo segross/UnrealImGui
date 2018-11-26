@@ -185,6 +185,16 @@ ImGuiContext** FImGuiModule::GetImGuiContextHandle()
 }
 #endif
 
+FImGuiModuleProperties& FImGuiModule::GetProperties()
+{
+	return ImGuiModuleManager->GetProperties();
+}
+
+const FImGuiModuleProperties& FImGuiModule::GetProperties() const
+{
+	return ImGuiModuleManager->GetProperties();
+}
+
 bool FImGuiModule::IsInputMode() const
 {
 	return ImGuiModuleManager && ImGuiModuleManager->GetProperties().IsInputEnabled();
