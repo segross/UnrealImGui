@@ -5,6 +5,14 @@
 #include "ImGuiContextProxy.h"
 
 
+// TODO: It might be useful to broadcast FContextProxyCreatedDelegate to users, to support similar cases to our ImGui
+// demo, but we would need to remove from that interface internal classes.
+
+// Delegate called when new context proxy is created.
+// @param ContextIndex - Index for that world
+// @param ContextProxy - Created context proxy
+DECLARE_MULTICAST_DELEGATE_TwoParams(FContextProxyCreatedDelegate, int32, FImGuiContextProxy&);
+
 // Manages ImGui context proxies.
 class FImGuiContextManager
 {
@@ -50,6 +58,9 @@ public:
 	// Delegate called for all contexts in manager, right after calling context specific draw event. Allows listeners
 	// draw the same content to multiple contexts.
 	FSimpleMulticastDelegate& OnDrawMultiContext() { return DrawMultiContextEvent; }
+
+	// Delegate called when new context proxy is created.
+	FContextProxyCreatedDelegate& OnContextProxyCreated() { return ContextProxyCreatedEvent; }
 
 	void Tick(float DeltaSeconds);
 
@@ -106,6 +117,8 @@ private:
 	TMap<int32, FContextData> Contexts;
 
 	FSimpleMulticastDelegate DrawMultiContextEvent;
+
+	FContextProxyCreatedDelegate ContextProxyCreatedEvent;
 
 	ImFontAtlas FontAtlas;
 };
