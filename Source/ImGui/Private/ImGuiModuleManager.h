@@ -59,6 +59,8 @@ private:
 	void AddWidgetToViewport(UGameViewportClient* GameViewport);
 	void AddWidgetsToActiveViewports();
 
+	void OnContextProxyCreated(int32 ContextIndex, FImGuiContextProxy& ContextProxy);
+
 	// Event that we call after ImGui is updated.
 	FSimpleMulticastDelegate PostImGuiUpdateEvent;
 

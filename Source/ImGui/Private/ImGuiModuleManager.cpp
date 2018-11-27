@@ -16,6 +16,9 @@ FImGuiModuleManager::FImGuiModuleManager()
 	: ModuleCommands(*this)
 	, ImGuiDemo(*this)
 {
+	// Register in context manager to get information whenever a new context proxy is created.
+	ContextManager.OnContextProxyCreated().AddRaw(this, &FImGuiModuleManager::OnContextProxyCreated);
+
 	// Typically we will use viewport created events to add widget to new game viewports.
 	ViewportCreatedHandle = UGameViewportClient::OnViewportCreated().AddRaw(this, &FImGuiModuleManager::OnViewportCreated);
 
@@ -169,7 +172,6 @@ void FImGuiModuleManager::AddWidgetToViewport(UGameViewportClient* GameViewport)
 	// Make sure that we have a context for this viewport's world and get its index.
 	int32 ContextIndex;
 	auto& ContextProxy = ContextManager.GetWorldContextProxy(*GameViewport->GetWorld(), ContextIndex);
-	ContextProxy.OnDraw().AddLambda([this, ContextIndex]() { ImGuiDemo.DrawControls(ContextIndex); });
 
 	// Make sure that textures are loaded before the first Slate widget is created.
 	LoadTextures();
@@ -207,4 +209,9 @@ void FImGuiModuleManager::AddWidgetsToActiveViewports()
 			}
 		}
 	}
+}
+
+void FImGuiModuleManager::OnContextProxyCreated(int32 ContextIndex, FImGuiContextProxy& ContextProxy)
+{
+	ContextProxy.OnDraw().AddLambda([this, ContextIndex]() { ImGuiDemo.DrawControls(ContextIndex); });
 }
