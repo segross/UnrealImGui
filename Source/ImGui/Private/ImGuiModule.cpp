@@ -133,7 +133,8 @@ void FImGuiModule::ShutdownModule()
 	// In editor store data that we want to move to hot-reloaded module.
 
 #if WITH_EDITOR
-	static TOptional<FImGuiModuleProperties> PropertiesToMove = ImGuiModuleManager->GetProperties();
+	static bool bMoveProperties = true;
+	static FImGuiModuleProperties PropertiesToMove = ImGuiModuleManager->GetProperties();
 #endif
 
 	// Before we shutdown we need to delete managers that will do all the necessary cleanup.
@@ -162,10 +163,10 @@ void FImGuiModule::ShutdownModule()
 			{
 				ImGuiImplementation::SetImGuiContextHandle(LoadedModule.GetImGuiContextHandle());
 
-				if (PropertiesToMove.IsSet())
+				if (bMoveProperties)
 				{
-					LoadedModule.SetProperties(PropertiesToMove.GetValue());
-					PropertiesToMove.Reset();
+					bMoveProperties = false;
+					LoadedModule.SetProperties(PropertiesToMove);
 				}
 			}
 		}

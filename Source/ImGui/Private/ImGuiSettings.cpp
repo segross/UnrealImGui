@@ -100,13 +100,21 @@ void UImGuiSettings::OnPropertyChanged(class UObject* ObjectBeingModified, struc
 		{
 			OnImGuiInputHandlerClassChanged.Broadcast();
 		}
-		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, ToggleInput))
+		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, bShareKeyboardInput))
 		{
-			OnToggleInputKeyChanged.Broadcast();
+			OnShareKeyboardInputChanged.Broadcast(bShareKeyboardInput);
+		}
+		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, bShareGamepadInput))
+		{
+			OnShareGamepadInputChanged.Broadcast(bShareGamepadInput);
 		}
 		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, bUseSoftwareCursor))
 		{
 			OnSoftwareCursorChanged.Broadcast();
+		}
+		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, ToggleInput))
+		{
+			OnToggleInputKeyChanged.Broadcast();
 		}
 	}
 }

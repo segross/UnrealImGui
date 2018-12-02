@@ -50,29 +50,44 @@ class UImGuiSettings : public UObject
 
 public:
 
+	// Generic delegate used to notify changes of boolean properties.
+	DECLARE_MULTICAST_DELEGATE_OneParam(FBoolChangeDelegate, bool);
+
 	// Delegate raised when settings instance is loaded.
 	static FSimpleMulticastDelegate& OnSettingsLoaded();
 
 	UImGuiSettings();
 	~UImGuiSettings();
 
-	// Path to custom implementation of ImGui Input Handler.
+	// Get the path to custom implementation of ImGui Input Handler.
 	const FStringClassReference& GetImGuiInputHandlerClass() const { return ImGuiInputHandlerClass; }
 
-	// Get the shortcut key info for 'ImGui.ToggleInput' command.
-	const FImGuiKeyInfo& GetToggleInputKey() const { return ToggleInput; }
+	// Get the keyboard input sharing configuration.
+	bool ShareKeyboardInput() const { return bShareKeyboardInput; }
 
-	// Check whether ImGui should draw its own software cursor.
+	// Get the gamepad input sharing configuration.
+	bool ShareGamepadInput() const { return bShareGamepadInput; }
+
+	// Get the software cursor configuration.
 	bool UseSoftwareCursor() const { return bUseSoftwareCursor; }
 
-	// Delegate raised when ImGuiInputHandlerClass is changed.
+	// Get the shortcut configuration for 'ImGui.ToggleInput' command.
+	const FImGuiKeyInfo& GetToggleInputKey() const { return ToggleInput; }
+
+	// Delegate raised when ImGui Input Handle is changed.
 	FSimpleMulticastDelegate OnImGuiInputHandlerClassChanged;
 
-	// Delegate raised when ToggleInput key is changed.
-	FSimpleMulticastDelegate OnToggleInputKeyChanged;
+	// Delegate raised when keyboard input sharing configuration is changed.
+	FBoolChangeDelegate OnShareKeyboardInputChanged;
 
-	// Delegate raised when SoftwareCursorEnabled property is changed.
+	// Delegate raised when gamepad input sharing configuration is changed.
+	FBoolChangeDelegate OnShareGamepadInputChanged;
+
+	// Delegate raised when software cursor configuration is changed.
 	FSimpleMulticastDelegate OnSoftwareCursorChanged;
+
+	// Delegate raised when shortcut configuration for 'ImGui.ToggleInput' command is changed.
+	FSimpleMulticastDelegate OnToggleInputKeyChanged;
 
 	virtual void PostInitProperties() override;
 	virtual void BeginDestroy() override;
@@ -83,6 +98,24 @@ protected:
 	// If not set then default handler is used.
 	UPROPERTY(EditAnywhere, config, Category = "Extensions", meta = (MetaClass = "ImGuiInputHandler"))
 	FStringClassReference ImGuiInputHandlerClass;
+
+	// Whether ImGui should share keyboard input with game.
+	// This defines initial behaviour which can be later changed using 'ImGui.ToggleKeyboardInputSharing' command or
+	// module properties interface.
+	UPROPERTY(EditAnywhere, config, Category = "Input")
+	bool bShareKeyboardInput = false;
+
+	// Whether ImGui should share gamepad input with game.
+	// This defines initial behaviour which can be later changed using 'ImGui.ToggleGamepadInputSharing' command or
+	// module properties interface.
+	UPROPERTY(EditAnywhere, config, Category = "Input")
+	bool bShareGamepadInput = false;
+
+	// If true, then in input mode ImGui will draw its own cursor in place of the hardware one.
+	// When disabled (default) there is a noticeable difference between cursor position seen by ImGui and position on
+	// the screen. Enabling this option removes that effect but with lower frame-rates UI becomes quickly unusable.
+	UPROPERTY(EditAnywhere, config, Category = "Input", AdvancedDisplay)
+	bool bUseSoftwareCursor = false;
 
 	// Define a shortcut key to 'ImGui.ToggleInput' command. Binding is only set if the key field is valid.
 	// Note that modifier key properties can be set to one of the three values: undetermined means that state of the given
@@ -95,12 +128,6 @@ protected:
 	// Deprecated name for ToggleInput. Kept temporarily to automatically move old configuration.
 	UPROPERTY(config)
 	FImGuiKeyInfo SwitchInputModeKey_DEPRECATED;
-
-	// If true, then in input mode ImGui will draw its own cursor in place of the hardware one.
-	// When disabled (default) there is a noticeable difference between cursor position seen by ImGui and position on
-	// the screen. Enabling this option removes that effect but with lower frame-rates UI becomes quickly unusable.
-	UPROPERTY(EditAnywhere, config, Category = "Input")
-	bool bUseSoftwareCursor = false;
 
 private:
 

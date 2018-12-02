@@ -64,6 +64,23 @@ public:
 
 private:
 
+	// Allow private state copying to support hot-reloading but otherwise it is disabled due to non-trivial constructor
+	// and destructor.
+
+	FImGuiModuleProperties();
+	~FImGuiModuleProperties();
+
+	FImGuiModuleProperties(const FImGuiModuleProperties&) = default;
+	FImGuiModuleProperties& operator=(const FImGuiModuleProperties&) = default;
+
+	FImGuiModuleProperties(FImGuiModuleProperties&&) = default;
+	FImGuiModuleProperties& operator=(FImGuiModuleProperties&&) = default;
+
+	void InitializeSettings();
+
+	void RegisterSettingsDelegates();
+	void UnregisterSettingsDelegates();
+
 	bool bInputEnabled = false;
 
 	bool bKeyboardNavigationEnabled = false;
@@ -73,4 +90,8 @@ private:
 	bool bGamepadInputShared = false;
 
 	bool bShowDemo = false;
+
+	// Allow FImGuiModuleManager and FImGuiModule to create and copy properties.
+	friend class FImGuiModule;
+	friend class FImGuiModuleManager;
 };
