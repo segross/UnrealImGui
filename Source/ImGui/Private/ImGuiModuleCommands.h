@@ -33,6 +33,8 @@ private:
 	void ToggleInput();
 	void ToggleKeyboardNavigation();
 	void ToggleGamepadNavigation();
+	void ToggleKeyboardInputSharing();
+	void ToggleGamepadInputSharing();
 	void ToggleDemo();
 
 	FImGuiModuleManager& ModuleManager;
@@ -40,5 +42,7 @@ private:
 	FAutoConsoleCommand ToggleInputCommand;
 	FAutoConsoleCommand ToggleKeyboardNavigationCommand;
 	FAutoConsoleCommand ToggleGamepadNavigationCommand;
+	FAutoConsoleCommand ToggleKeyboardInputSharingCommand;
+	FAutoConsoleCommand ToggleGamepadInputSharingCommand;
 	FAutoConsoleCommand ToggleDemoCommand;
 };

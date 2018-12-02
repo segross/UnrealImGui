@@ -16,6 +16,8 @@ namespace CommandNames
 		const TCHAR* ToggleInput = TEXT("ImGui.ToggleInput");
 		const TCHAR* ToggleKeyboardNavigation = TEXT("ImGui.ToggleKeyboardNavigation");
 		const TCHAR* ToggleGamepadNavigation = TEXT("ImGui.ToggleGamepadNavigation");
+		const TCHAR* ToggleKeyboardInputSharing = TEXT("ImGui.ToggleKeyboardInputSharing");
+		const TCHAR* ToggleGamepadInputSharing = TEXT("ImGui.ToggleGamepadInputSharing");
 		const TCHAR* ToggleDemo = TEXT("ImGui.ToggleDemo");
 	}
 }
@@ -31,6 +33,12 @@ FImGuiModuleCommands::FImGuiModuleCommands(FImGuiModuleManager& InModuleManager)
 	, ToggleGamepadNavigationCommand(CommandNames::ToggleGamepadNavigation,
 		TEXT("Toggle ImGui gamepad navigation."),
 		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleGamepadNavigation))
+	, ToggleKeyboardInputSharingCommand(CommandNames::ToggleKeyboardInputSharing,
+		TEXT("Toggle ImGui keyboard input sharing."),
+		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleKeyboardInputSharing))
+	, ToggleGamepadInputSharingCommand(CommandNames::ToggleGamepadInputSharing,
+		TEXT("Toggle ImGui gamepad input sharing."),
+		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleGamepadInputSharing))
 	, ToggleDemoCommand(CommandNames::ToggleDemo,
 		TEXT("Toggle ImGui demo."),
 		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleDemo))
@@ -95,6 +103,16 @@ void FImGuiModuleCommands::ToggleKeyboardNavigation()
 void FImGuiModuleCommands::ToggleGamepadNavigation()
 {
 	ModuleManager.GetProperties().ToggleGamepadNavigation();
+}
+
+void FImGuiModuleCommands::ToggleKeyboardInputSharing()
+{
+	ModuleManager.GetProperties().ToggleKeyboardInputSharing();
+}
+
+void FImGuiModuleCommands::ToggleGamepadInputSharing()
+{
+	ModuleManager.GetProperties().ToggleGamepadInputSharing();
 }
 
 void FImGuiModuleCommands::ToggleDemo()

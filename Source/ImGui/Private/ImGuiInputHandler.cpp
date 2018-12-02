@@ -20,6 +20,7 @@
 
 DEFINE_LOG_CATEGORY(LogImGuiInputHandler);
 
+static FImGuiInputResponse IgnoreResponse{ false, false };
 
 FImGuiInputResponse UImGuiInputHandler::OnKeyDown(const FKeyEvent& KeyEvent)
 {
@@ -27,13 +28,13 @@ FImGuiInputResponse UImGuiInputHandler::OnKeyDown(const FKeyEvent& KeyEvent)
 	if (IsToggleInputEvent(KeyEvent))
 	{
 		ModuleManager->GetProperties().ToggleInput();
-		return FImGuiInputResponse().RequestConsume();
+		return GetDefaultKeyboardResponse().RequestConsume();
 	}
 
 	// Ignore console events, so we don't block it from opening.
 	if (IsConsoleEvent(KeyEvent))
 	{
-		return FImGuiInputResponse{ false, false };
+		return IgnoreResponse;
 	}
 
 #if WITH_EDITOR
@@ -41,11 +42,21 @@ FImGuiInputResponse UImGuiInputHandler::OnKeyDown(const FKeyEvent& KeyEvent)
 	// command, then ignore that event and let the command execute.
 	if (!HasImGuiActiveItem() && IsStopPlaySessionEvent(KeyEvent))
 	{
-		return FImGuiInputResponse{ false, false };
+		return IgnoreResponse;
 	}
 #endif // WITH_EDITOR
 
-	return DefaultResponse();
+	return GetDefaultKeyboardResponse();
+}
+
+FImGuiInputResponse UImGuiInputHandler::GetDefaultKeyboardResponse() const
+{
+	return FImGuiInputResponse{ true, !ModuleManager->GetProperties().IsKeyboardInputShared() };
+}
+
+FImGuiInputResponse UImGuiInputHandler::GetDefaultGamepadResponse() const
+{
+	return FImGuiInputResponse{ true, !ModuleManager->GetProperties().IsGamepadInputShared() };
 }
 
 bool UImGuiInputHandler::IsConsoleEvent(const FKeyEvent& KeyEvent) const

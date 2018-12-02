@@ -106,7 +106,7 @@ public:
 	 * @returns Response with rules how input should be handled. Default implementation contains requests to process
 	 * and consume this event.
 	 */
-	virtual FImGuiInputResponse OnKeyChar(const struct FCharacterEvent& CharacterEvent) { return DefaultResponse(); }
+	virtual FImGuiInputResponse OnKeyChar(const struct FCharacterEvent& CharacterEvent) { return GetDefaultKeyboardResponse(); }
 
 	/**
 	 * Called when handling keyboard key down events.
@@ -125,7 +125,7 @@ public:
 	 * @returns Response with rules how input should be handled. Default implementation contains requests to consume
 	 * this event.
 	 */
-	virtual FImGuiInputResponse OnKeyUp(const FKeyEvent& KeyEvent) { return DefaultResponse(); }
+	virtual FImGuiInputResponse OnKeyUp(const FKeyEvent& KeyEvent) { return GetDefaultKeyboardResponse(); }
 
 	/**
 	 * Called when handling gamepad key down events.
@@ -133,7 +133,7 @@ public:
 	 * @returns Response with rules how input should be handled. Default implementation contains requests to process
 	 * and consume this event.
 	 */
-	virtual FImGuiInputResponse OnGamepadKeyDown(const FKeyEvent& GamepadKeyEvent) { return DefaultResponse(); }
+	virtual FImGuiInputResponse OnGamepadKeyDown(const FKeyEvent& GamepadKeyEvent) { return GetDefaultGamepadResponse(); }
 
 	/**
 	 * Called when handling gamepad key up events.
@@ -143,7 +143,7 @@ public:
 	 * @returns Response with rules how input should be handled. Default implementation contains requests to consume
 	 * this event.
 	 */
-	virtual FImGuiInputResponse OnGamepadKeyUp(const FKeyEvent& GamepadKeyEvent) { return DefaultResponse(); }
+	virtual FImGuiInputResponse OnGamepadKeyUp(const FKeyEvent& GamepadKeyEvent) { return GetDefaultGamepadResponse(); }
 
 	/**
 	 * Called when handling gamepad analog events.
@@ -151,9 +151,23 @@ public:
 	 * @returns Response with rules how input should be handled. Default implementation contains requests to process
 	 * and consume this event.
 	 */
-	virtual FImGuiInputResponse OnGamepadAxis(const FAnalogInputEvent& GamepadAxisEvent) { return DefaultResponse(); }
+	virtual FImGuiInputResponse OnGamepadAxis(const FAnalogInputEvent& GamepadAxisEvent) { return GetDefaultGamepadResponse(); }
 
 protected:
+
+	/**
+	 * Get default keyboard response, with consume request based on IsKeyboardInputShared property.
+	 *
+	 * @returns Default response for keyboard inputs.
+	 */
+	FImGuiInputResponse GetDefaultKeyboardResponse() const;
+
+	/**
+	 * Get default gamepad response, with consume request based on IsGamepadInputShared property.
+	 *
+	 * @returns Default response for gamepad inputs.
+	 */
+	FImGuiInputResponse GetDefaultGamepadResponse() const;
 
 	/**
 	 * Checks whether this is a key event that can open console.
@@ -191,8 +205,6 @@ protected:
 private:
 
 	void Initialize(FImGuiModuleManager* InModuleManager, UGameViewportClient* InGameViewport, int32 InContextIndex);
-
-	FORCEINLINE FImGuiInputResponse DefaultResponse() { return FImGuiInputResponse{ true, true }; }
 
 	FImGuiModuleManager* ModuleManager = nullptr;
 
