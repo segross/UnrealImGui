@@ -24,13 +24,6 @@ static FImGuiInputResponse IgnoreResponse{ false, false };
 
 FImGuiInputResponse UImGuiInputHandler::OnKeyDown(const FKeyEvent& KeyEvent)
 {
-	// If this is an input mode switch event then handle it here and consume.
-	if (IsToggleInputEvent(KeyEvent))
-	{
-		ModuleManager->GetProperties().ToggleInput();
-		return GetDefaultKeyboardResponse().RequestConsume();
-	}
-
 	// Ignore console events, so we don't block it from opening.
 	if (IsConsoleEvent(KeyEvent))
 	{
@@ -46,7 +39,15 @@ FImGuiInputResponse UImGuiInputHandler::OnKeyDown(const FKeyEvent& KeyEvent)
 	}
 #endif // WITH_EDITOR
 
-	return GetDefaultKeyboardResponse();
+	const FImGuiInputResponse Response = GetDefaultKeyboardResponse();
+
+	// With shared input we can leave command bindings for DebugExec to handle, otherwise we need to do it here.
+	if (Response.HasConsumeRequest() && IsToggleInputEvent(KeyEvent))
+	{
+		ModuleManager->GetProperties().ToggleInput();
+	}
+
+	return Response;
 }
 
 FImGuiInputResponse UImGuiInputHandler::GetDefaultKeyboardResponse() const
