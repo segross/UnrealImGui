@@ -92,9 +92,10 @@ namespace
 		return (CheckBoxState == ECheckBoxState::Undetermined) || ((CheckBoxState == ECheckBoxState::Checked) == bValue);
 	}
 
-	bool AreModifiersMatching(const FImGuiKeyInfo& KeyInfo, const FKeyEvent& KeyEvent)
+	bool IsMatchingEvent(const FKeyEvent& KeyEvent, const FImGuiKeyInfo& KeyInfo)
 	{
-		return IsMatching(KeyInfo.Shift, KeyEvent.IsShiftDown())
+		return (KeyInfo.Key == KeyEvent.GetKey())
+			&& IsMatching(KeyInfo.Shift, KeyEvent.IsShiftDown())
 			&& IsMatching(KeyInfo.Ctrl, KeyEvent.IsControlDown())
 			&& IsMatching(KeyInfo.Alt, KeyEvent.IsAltDown())
 			&& IsMatching(KeyInfo.Cmd, KeyEvent.IsCommandDown());
@@ -103,9 +104,7 @@ namespace
 
 bool UImGuiInputHandler::IsToggleInputEvent(const FKeyEvent& KeyEvent) const
 {
-	return GImGuiSettings
-		&& (KeyEvent.GetKey() == GImGuiSettings->GetToggleInputKey().Key)
-		&& AreModifiersMatching(GImGuiSettings->GetToggleInputKey(), KeyEvent);
+	return IsMatchingEvent(KeyEvent, ModuleManager->GetSettings().GetToggleInputKey());
 }
 
 bool UImGuiInputHandler::HasImGuiActiveItem() const

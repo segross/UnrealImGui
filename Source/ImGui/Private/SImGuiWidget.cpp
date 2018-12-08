@@ -102,14 +102,16 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 #endif // IMGUI_WIDGET_DEBUG
 	ContextProxy->SetInputState(&InputState);
 
-	// Cache locally software cursor mode.
-	UpdateSoftwareCursorMode();
-
-	// Create ImGui Input Handler.
-	CreateInputHandler();
-
 	// Register for settings change.
 	RegisterImGuiSettingsDelegates();
+
+	const auto& Settings = ModuleManager->GetSettings();
+
+	// Cache locally software cursor mode.
+	SetUseSoftwareCursor(Settings.UseSoftwareCursor());
+
+	// Create ImGui Input Handler.
+	CreateInputHandler(Settings.GetImGuiInputHandlerClass());
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -390,11 +392,13 @@ FCursorReply SImGuiWidget::OnCursorQuery(const FGeometry& MyGeometry, const FPoi
 	return FCursorReply::Cursor(MouseCursor);
 }
 
-void SImGuiWidget::CreateInputHandler()
+void SImGuiWidget::CreateInputHandler(const FStringClassReference& HandlerClassReference)
 {
+	ReleaseInputHandler();
+
 	if (!InputHandler.IsValid())
 	{
-		InputHandler = FImGuiInputHandlerFactory::NewHandler(ModuleManager, GameViewport.Get(), ContextIndex);
+		InputHandler = FImGuiInputHandlerFactory::NewHandler(HandlerClassReference, ModuleManager, GameViewport.Get(), ContextIndex);
 	}
 }
 
@@ -407,40 +411,26 @@ void SImGuiWidget::ReleaseInputHandler()
 	}
 }
 
-void SImGuiWidget::RecreateInputHandler()
-{
-	ReleaseInputHandler();
-	CreateInputHandler();
-}
-
-void SImGuiWidget::UpdateSoftwareCursorMode()
-{
-	UImGuiSettings* Settings = GetMutableDefault<UImGuiSettings>();
-	bUseSoftwareCursor = Settings && Settings->UseSoftwareCursor();
-}
-
 void SImGuiWidget::RegisterImGuiSettingsDelegates()
 {
-	if (UImGuiSettings* Settings = GetMutableDefault<UImGuiSettings>())
+	auto& Settings = ModuleManager->GetSettings();
+
+	if (!Settings.OnImGuiInputHandlerClassChanged.IsBoundToObject(this))
 	{
-		if (!Settings->OnImGuiInputHandlerClassChanged.IsBoundToObject(this))
-		{
-			Settings->OnImGuiInputHandlerClassChanged.AddRaw(this, &SImGuiWidget::RecreateInputHandler);
-		}
-		if (!Settings->OnSoftwareCursorChanged.IsBoundToObject(this))
-		{
-			Settings->OnSoftwareCursorChanged.AddRaw(this, &SImGuiWidget::UpdateSoftwareCursorMode);
-		}
+		Settings.OnImGuiInputHandlerClassChanged.AddRaw(this, &SImGuiWidget::CreateInputHandler);
+	}
+	if (!Settings.OnUseSoftwareCursorChanged.IsBoundToObject(this))
+	{
+		Settings.OnUseSoftwareCursorChanged.AddRaw(this, &SImGuiWidget::SetUseSoftwareCursor);
 	}
 }
 
 void SImGuiWidget::UnregisterImGuiSettingsDelegates()
 {
-	if (UImGuiSettings* Settings = GetMutableDefault<UImGuiSettings>())
-	{
-		Settings->OnImGuiInputHandlerClassChanged.RemoveAll(this);
-		Settings->OnSoftwareCursorChanged.RemoveAll(this);
-	}
+	auto& Settings = ModuleManager->GetSettings();
+
+	Settings.OnImGuiInputHandlerClassChanged.RemoveAll(this);
+	Settings.OnUseSoftwareCursorChanged.RemoveAll(this);
 }
 
 FReply SImGuiWidget::WithMouseLockRequests(FReply&& Reply)

@@ -4,15 +4,15 @@
 
 #include <imgui.h>
 
-class FImGuiModuleManager;
+class FImGuiModuleProperties;
 
 // Widget drawing ImGui demo.
 class FImGuiDemo
 {
 public:
 
-	FImGuiDemo(FImGuiModuleManager& InModuleManager)
-		: ModuleManager(InModuleManager)
+	FImGuiDemo(FImGuiModuleProperties& InProperties)
+		: Properties(InProperties)
 	{
 	}
 
@@ -20,7 +20,7 @@ public:
 
 private:
 
-	FImGuiModuleManager& ModuleManager;
+	FImGuiModuleProperties& Properties;
 
 	ImVec4 ClearColor = ImColor{ 114, 144, 154 };
 

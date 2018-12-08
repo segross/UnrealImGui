@@ -2,17 +2,8 @@
 
 #pragma once
 
-#include "ImGuiInputHandler.h"
-
 #include <Delegates/Delegate.h>
 #include <UObject/Object.h>
-
-// Select right soft class reference header to avoid warning.
-#if ENGINE_COMPATIBILITY_LEGACY_STRING_CLASS_REF
-#include <StringClassReference.h>
-#else
-#include <UObject/SoftObjectPath.h>
-#endif
 
 #include "ImGuiSettings.generated.h"
 
@@ -40,9 +31,23 @@ struct FImGuiKeyInfo
 
 	UPROPERTY(EditAnywhere)
 	ECheckBoxState Cmd = ECheckBoxState::Undetermined;
+
+	friend bool operator==(const FImGuiKeyInfo& Lhs, const FImGuiKeyInfo& Rhs)
+	{
+		return Lhs.Key == Rhs.Key
+			&& Lhs.Shift == Rhs.Shift
+			&& Lhs.Ctrl == Rhs.Ctrl
+			&& Lhs.Alt == Rhs.Alt
+			&& Lhs.Cmd == Rhs.Cmd;
+	}
+
+	friend bool operator!=(const FImGuiKeyInfo& Lhs, const FImGuiKeyInfo& Rhs)
+	{
+		return !(Lhs == Rhs);
+	}
 };
 
-// Settings for ImGui module.
+// UObject used for loading and saving ImGui settings. To access actual settings use FImGuiModuleSettings interface.
 UCLASS(config=ImGui, defaultconfig)
 class UImGuiSettings : public UObject
 {
@@ -50,44 +55,11 @@ class UImGuiSettings : public UObject
 
 public:
 
-	// Generic delegate used to notify changes of boolean properties.
-	DECLARE_MULTICAST_DELEGATE_OneParam(FBoolChangeDelegate, bool);
+	// Get default instance or null if it is not loaded.
+	static UImGuiSettings* Get() { return DefaultInstance; }
 
-	// Delegate raised when settings instance is loaded.
-	static FSimpleMulticastDelegate& OnSettingsLoaded();
-
-	UImGuiSettings();
-	~UImGuiSettings();
-
-	// Get the path to custom implementation of ImGui Input Handler.
-	const FStringClassReference& GetImGuiInputHandlerClass() const { return ImGuiInputHandlerClass; }
-
-	// Get the keyboard input sharing configuration.
-	bool ShareKeyboardInput() const { return bShareKeyboardInput; }
-
-	// Get the gamepad input sharing configuration.
-	bool ShareGamepadInput() const { return bShareGamepadInput; }
-
-	// Get the software cursor configuration.
-	bool UseSoftwareCursor() const { return bUseSoftwareCursor; }
-
-	// Get the shortcut configuration for 'ImGui.ToggleInput' command.
-	const FImGuiKeyInfo& GetToggleInputKey() const { return ToggleInput; }
-
-	// Delegate raised when ImGui Input Handle is changed.
-	FSimpleMulticastDelegate OnImGuiInputHandlerClassChanged;
-
-	// Delegate raised when keyboard input sharing configuration is changed.
-	FBoolChangeDelegate OnShareKeyboardInputChanged;
-
-	// Delegate raised when gamepad input sharing configuration is changed.
-	FBoolChangeDelegate OnShareGamepadInputChanged;
-
-	// Delegate raised when software cursor configuration is changed.
-	FSimpleMulticastDelegate OnSoftwareCursorChanged;
-
-	// Delegate raised when shortcut configuration for 'ImGui.ToggleInput' command is changed.
-	FSimpleMulticastDelegate OnToggleInputKeyChanged;
+	// Delegate raised when default instance is loaded.
+	static FSimpleMulticastDelegate OnSettingsLoaded;
 
 	virtual void PostInitProperties() override;
 	virtual void BeginDestroy() override;
@@ -129,18 +101,73 @@ protected:
 	UPROPERTY(config)
 	FImGuiKeyInfo SwitchInputModeKey_DEPRECATED;
 
-private:
+	static UImGuiSettings* DefaultInstance;
 
-#if WITH_EDITOR
-
-	void RegisterPropertyChangedDelegate();
-	void UnregisterPropertyChangedDelegate();
-
-	void OnPropertyChanged(class UObject* ObjectBeingModified, struct FPropertyChangedEvent& PropertyChangedEvent);
-
-#endif // WITH_EDITOR
+	friend class FImGuiModuleSettings;
 };
 
-// Pointer to the settings instance (default class object) assigned right after it is initialized and valid until
-// it is destroyed.
-extern UImGuiSettings* GImGuiSettings;
+
+class FImGuiModuleCommands;
+class FImGuiModuleProperties;
+
+// Interface for ImGui module settings. It shadows all the settings and keep them in sync after UImGuiSettings class is
+// loaded, but it can also work before that time what simplifies workflow in early-loading scenarios.
+// It binds to module properties and commands objects that need to be passed during construction.
+class FImGuiModuleSettings
+{
+public:
+
+	// Generic delegate used to notify changes of boolean properties.
+	DECLARE_MULTICAST_DELEGATE_OneParam(FBoolChangeDelegate, bool);
+	DECLARE_MULTICAST_DELEGATE_OneParam(FStringClassReferenceChangeDelegate, const FStringClassReference&);
+
+	// Constructor for ImGui module settings. It will bind to instances of module properties and commands and will
+	// update them every time when settings are changed.
+	//
+	// @param InProperties - Instance of module properties that will be bound and updated by this object.
+	// @param InCommands - Instance of module commands that will be bound and updated by this object.
+	FImGuiModuleSettings(FImGuiModuleProperties& InProperties, FImGuiModuleCommands& InCommands);
+	~FImGuiModuleSettings();
+
+	// It doesn't offer interface for settings that define initial values for properties, as those are passed during
+	// start-up and should be accessed trough properties interface. Remaining settings can have getter and/or change
+	// event that are defined depending on needs.
+
+	// Get the path to custom implementation of ImGui Input Handler.
+	const FStringClassReference& GetImGuiInputHandlerClass() const { return ImGuiInputHandlerClass; }
+
+	// Get the software cursor configuration.
+	bool UseSoftwareCursor() const { return bUseSoftwareCursor; }
+
+	// Get the shortcut configuration for 'ImGui.ToggleInput' command.
+	const FImGuiKeyInfo& GetToggleInputKey() const { return ToggleInputKey; }
+
+	// Delegate raised when ImGui Input Handle is changed.
+	FStringClassReferenceChangeDelegate OnImGuiInputHandlerClassChanged;
+
+	// Delegate raised when software cursor configuration is changed.
+	FBoolChangeDelegate OnUseSoftwareCursorChanged;
+
+private:
+
+	void UpdateSettings();
+
+	void SetImGuiInputHandlerClass(const FStringClassReference& ClassReference);
+	void SetShareKeyboardInput(bool bShare);
+	void SetShareGamepadInput(bool bShare);
+	void SetUseSoftwareCursor(bool bUse);
+	void SetToggleInputKey(const FImGuiKeyInfo& KeyInfo);
+
+#if WITH_EDITOR
+	void OnPropertyChanged(class UObject* ObjectBeingModified, struct FPropertyChangedEvent& PropertyChangedEvent);
+#endif // WITH_EDITOR
+
+	FImGuiModuleProperties& Properties;
+	FImGuiModuleCommands& Commands;
+
+	FStringClassReference ImGuiInputHandlerClass;
+	FImGuiKeyInfo ToggleInputKey;
+	bool bShareKeyboardInput = false;
+	bool bShareGamepadInput = false;
+	bool bUseSoftwareCursor = false;
+};

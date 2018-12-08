@@ -4,29 +4,17 @@
 
 #include "ImGuiSettings.h"
 
-
-UImGuiSettings* GImGuiSettings = nullptr;
-
-FSimpleMulticastDelegate& UImGuiSettings::OnSettingsLoaded()
-{
-	static FSimpleMulticastDelegate Instance;
-	return Instance;
-}
+#include "ImGuiModuleCommands.h"
+#include "ImGuiModuleProperties.h"
 
 
-UImGuiSettings::UImGuiSettings()
-{
-#if WITH_EDITOR
-	RegisterPropertyChangedDelegate();
-#endif
-}
+//====================================================================================================
+// UImGuiSettings
+//====================================================================================================
 
-UImGuiSettings::~UImGuiSettings()
-{
-#if WITH_EDITOR
-	UnregisterPropertyChangedDelegate();
-#endif
-}
+UImGuiSettings* UImGuiSettings::DefaultInstance = nullptr;
+
+FSimpleMulticastDelegate UImGuiSettings::OnSettingsLoaded;
 
 void UImGuiSettings::PostInitProperties()
 {
@@ -60,8 +48,8 @@ void UImGuiSettings::PostInitProperties()
 
 	if (IsTemplate())
 	{
-		GImGuiSettings = this;
-		OnSettingsLoaded().Broadcast();
+		DefaultInstance = this;
+		OnSettingsLoaded.Broadcast();
 	}
 }
 
@@ -69,53 +57,106 @@ void UImGuiSettings::BeginDestroy()
 {
 	Super::BeginDestroy();
 
-	if (GImGuiSettings == this)
+	if (DefaultInstance == this)
 	{
-		GImGuiSettings = nullptr;
+		DefaultInstance = nullptr;
+	}
+}
+
+//====================================================================================================
+// FImGuiModuleSettings
+//====================================================================================================
+
+FImGuiModuleSettings::FImGuiModuleSettings(FImGuiModuleProperties& InProperties, FImGuiModuleCommands& InCommands)
+	: Properties(InProperties)
+	, Commands(InCommands)
+{
+#if WITH_EDITOR
+	FCoreUObjectDelegates::OnObjectPropertyChanged.AddRaw(this, &FImGuiModuleSettings::OnPropertyChanged);
+#endif
+
+	// Delegate initializer to support settings loaded after this object creation (in stand-alone builds) and potential
+	// reloading of settings.
+	UImGuiSettings::OnSettingsLoaded.AddRaw(this, &FImGuiModuleSettings::UpdateSettings);
+
+	// Call initializer to support settings already loaded (editor).
+	UpdateSettings();
+}
+
+FImGuiModuleSettings::~FImGuiModuleSettings()
+{
+
+	UImGuiSettings::OnSettingsLoaded.RemoveAll(this);
+
+#if WITH_EDITOR
+	FCoreUObjectDelegates::OnObjectPropertyChanged.RemoveAll(this);
+#endif
+}
+
+void FImGuiModuleSettings::UpdateSettings()
+{
+	if (UImGuiSettings* SettingsObject = UImGuiSettings::Get())
+	{
+		SetImGuiInputHandlerClass(SettingsObject->ImGuiInputHandlerClass);
+		SetShareKeyboardInput(SettingsObject->bShareKeyboardInput);
+		SetShareGamepadInput(SettingsObject->bShareGamepadInput);
+		SetUseSoftwareCursor(SettingsObject->bUseSoftwareCursor);
+		SetToggleInputKey(SettingsObject->ToggleInput);
+	}
+}
+
+void FImGuiModuleSettings::SetImGuiInputHandlerClass(const FStringClassReference& ClassReference)
+{
+	if (ImGuiInputHandlerClass != ClassReference)
+	{
+		ImGuiInputHandlerClass = ClassReference;
+		OnImGuiInputHandlerClassChanged.Broadcast(ClassReference);
+	}
+}
+
+void FImGuiModuleSettings::SetShareKeyboardInput(bool bShare)
+{
+	if (bShareKeyboardInput != bShare)
+	{
+		bShareKeyboardInput = bShare;
+		Properties.SetKeyboardInputShared(bShare);
+	}
+}
+
+void FImGuiModuleSettings::SetShareGamepadInput(bool bShare)
+{
+	if (bShareGamepadInput != bShare)
+	{
+		bShareGamepadInput = bShare;
+		Properties.SetGamepadInputShared(bShare);
+	}
+}
+
+void FImGuiModuleSettings::SetUseSoftwareCursor(bool bUse)
+{
+	if (bUseSoftwareCursor != bUse)
+	{
+		bUseSoftwareCursor = bUse;
+		OnUseSoftwareCursorChanged.Broadcast(bUse);
+	}
+}
+
+void FImGuiModuleSettings::SetToggleInputKey(const FImGuiKeyInfo& KeyInfo)
+{
+	if (ToggleInputKey != KeyInfo)
+	{
+		ToggleInputKey = KeyInfo;
+		Commands.SetKeyBinding(FImGuiModuleCommands::ToggleInput, ToggleInputKey);
 	}
 }
 
 #if WITH_EDITOR
 
-void UImGuiSettings::RegisterPropertyChangedDelegate()
+void FImGuiModuleSettings::OnPropertyChanged(class UObject* ObjectBeingModified, struct FPropertyChangedEvent& PropertyChangedEvent)
 {
-	if (!FCoreUObjectDelegates::OnObjectPropertyChanged.IsBoundToObject(this))
+	if (ObjectBeingModified == UImGuiSettings::Get())
 	{
-		FCoreUObjectDelegates::OnObjectPropertyChanged.AddUObject(this, &UImGuiSettings::OnPropertyChanged);
-	}
-}
-
-void UImGuiSettings::UnregisterPropertyChangedDelegate()
-{
-	FCoreUObjectDelegates::OnObjectPropertyChanged.RemoveAll(this);
-}
-
-void UImGuiSettings::OnPropertyChanged(class UObject* ObjectBeingModified, struct FPropertyChangedEvent& PropertyChangedEvent)
-{
-	if (ObjectBeingModified == this)
-	{
-		const FName UpdatedPropertyName = PropertyChangedEvent.MemberProperty ? PropertyChangedEvent.MemberProperty->GetFName() : NAME_None;
-
-		if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, ImGuiInputHandlerClass))
-		{
-			OnImGuiInputHandlerClassChanged.Broadcast();
-		}
-		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, bShareKeyboardInput))
-		{
-			OnShareKeyboardInputChanged.Broadcast(bShareKeyboardInput);
-		}
-		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, bShareGamepadInput))
-		{
-			OnShareGamepadInputChanged.Broadcast(bShareGamepadInput);
-		}
-		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, bUseSoftwareCursor))
-		{
-			OnSoftwareCursorChanged.Broadcast();
-		}
-		else if (UpdatedPropertyName == GET_MEMBER_NAME_CHECKED(UImGuiSettings, ToggleInput))
-		{
-			OnToggleInputKeyChanged.Broadcast();
-		}
+		UpdateSettings();
 	}
 }
 

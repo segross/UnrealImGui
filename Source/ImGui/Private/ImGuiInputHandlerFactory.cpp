@@ -5,23 +5,18 @@
 #include "ImGuiInputHandlerFactory.h"
 
 #include "ImGuiInputHandler.h"
-#include "ImGuiSettings.h"
 
 
-UImGuiInputHandler* FImGuiInputHandlerFactory::NewHandler(FImGuiModuleManager* ModuleManager, UGameViewportClient* GameViewport, int32 ContextIndex)
+UImGuiInputHandler* FImGuiInputHandlerFactory::NewHandler(const FStringClassReference& HandlerClassReference, FImGuiModuleManager* ModuleManager, UGameViewportClient* GameViewport, int32 ContextIndex)
 {
 	UClass* HandlerClass = nullptr;
-	if (GImGuiSettings)
+	if (HandlerClassReference.IsValid())
 	{
-		const auto& HandlerClassReference = GImGuiSettings->GetImGuiInputHandlerClass();
-		if (HandlerClassReference.IsValid())
-		{
-			HandlerClass = HandlerClassReference.TryLoadClass<UImGuiInputHandler>();
+		HandlerClass = HandlerClassReference.TryLoadClass<UImGuiInputHandler>();
 
-			if (!HandlerClass)
-			{
-				UE_LOG(LogImGuiInputHandler, Error, TEXT("Couldn't load ImGui Input Handler class '%s'."), *HandlerClassReference.ToString());
-			}
+		if (!HandlerClass)
+		{
+			UE_LOG(LogImGuiInputHandler, Error, TEXT("Couldn't load ImGui Input Handler class '%s'."), *HandlerClassReference.ToString());
 		}
 	}
 

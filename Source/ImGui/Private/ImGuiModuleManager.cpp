@@ -13,8 +13,9 @@
 
 
 FImGuiModuleManager::FImGuiModuleManager()
-	: ModuleCommands(*this)
-	, ImGuiDemo(*this)
+	: Commands(Properties)
+	, Settings(Properties, Commands)
+	, ImGuiDemo(Properties)
 {
 	// Register in context manager to get information whenever a new context proxy is created.
 	ContextManager.OnContextProxyCreated().AddRaw(this, &FImGuiModuleManager::OnContextProxyCreated);

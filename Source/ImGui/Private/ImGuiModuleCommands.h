@@ -5,39 +5,35 @@
 #include <IConsoleManager.h>
 
 
-class FImGuiModuleManager;
+struct FImGuiKeyInfo;
+class FImGuiModuleProperties;
 
 // Manges ImGui module console commands.
 class FImGuiModuleCommands
 {
 public:
 
-	FImGuiModuleCommands(FImGuiModuleManager& InModuleManager);
-	~FImGuiModuleCommands();
+	static const TCHAR* const ToggleInput;
+	static const TCHAR* const ToggleKeyboardNavigation;
+	static const TCHAR* const ToggleGamepadNavigation;
+	static const TCHAR* const ToggleKeyboardInputSharing;
+	static const TCHAR* const ToggleGamepadInputSharing;
+	static const TCHAR* const ToggleDemo;
+
+	FImGuiModuleCommands(FImGuiModuleProperties& InProperties);
+
+	void SetKeyBinding(const TCHAR* CommandName, const FImGuiKeyInfo& KeyInfo);
 
 private:
 
-	FImGuiModuleCommands(const FImGuiModuleCommands&) = delete;
-	FImGuiModuleCommands& operator=(const FImGuiModuleCommands&) = delete;
+	void ToggleInputImpl();
+	void ToggleKeyboardNavigationImpl();
+	void ToggleGamepadNavigationImpl();
+	void ToggleKeyboardInputSharingImpl();
+	void ToggleGamepadInputSharingImpl();
+	void ToggleDemoImpl();
 
-	FImGuiModuleCommands(FImGuiModuleCommands&&) = delete;
-	FImGuiModuleCommands& operator=(FImGuiModuleCommands&&) = delete;
-
-	void InitializeSettings();
-
-	void RegisterSettingsDelegates();
-	void UnregisterSettingsDelegates();
-
-	void UpdateToggleInputKeyBinding();
-
-	void ToggleInput();
-	void ToggleKeyboardNavigation();
-	void ToggleGamepadNavigation();
-	void ToggleKeyboardInputSharing();
-	void ToggleGamepadInputSharing();
-	void ToggleDemo();
-
-	FImGuiModuleManager& ModuleManager;
+	FImGuiModuleProperties& Properties;
 
 	FAutoConsoleCommand ToggleInputCommand;
 	FAutoConsoleCommand ToggleKeyboardNavigationCommand;

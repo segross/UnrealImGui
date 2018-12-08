@@ -4,6 +4,7 @@
 
 #include "ImGuiInputState.h"
 #include "ImGuiModuleDebug.h"
+#include "ImGuiSettings.h"
 
 #include <Widgets/SLeafWidget.h>
 
@@ -91,11 +92,10 @@ private:
 		Full
 	};
 
-	void CreateInputHandler();
+	void CreateInputHandler(const FStringClassReference& HandlerClassReference);
 	void ReleaseInputHandler();
-	void RecreateInputHandler();
 
-	void UpdateSoftwareCursorMode();
+	void SetUseSoftwareCursor(bool bUse) { bUseSoftwareCursor = bUse; }
 
 	void RegisterImGuiSettingsDelegates();
 	void UnregisterImGuiSettingsDelegates();

@@ -6,6 +6,7 @@
 #include "ImGuiDemo.h"
 #include "ImGuiModuleCommands.h"
 #include "ImGuiModuleProperties.h"
+#include "ImGuiSettings.h"
 #include "SImGuiWidget.h"
 #include "TextureManager.h"
 
@@ -17,6 +18,9 @@ class FImGuiModuleManager
 	friend class FImGuiModule;
 
 public:
+
+	// Get interface to module settings.
+	FImGuiModuleSettings& GetSettings() { return Settings; }
 
 	// Get interface to module state properties. 
 	FImGuiModuleProperties& GetProperties() { return Properties; }
@@ -68,7 +72,10 @@ private:
 	FImGuiModuleProperties Properties;
 
 	// Tying module console commands to life-cycle of this manager and module.
-	FImGuiModuleCommands ModuleCommands;
+	FImGuiModuleCommands Commands;
+
+	// ImGui settings proxy (valid in every loading stage).
+	FImGuiModuleSettings Settings;
 
 	// Widget that we add to all created contexts to draw ImGui demo. 
 	FImGuiDemo ImGuiDemo;

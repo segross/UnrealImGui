@@ -4,118 +4,70 @@
 
 #include "ImGuiModuleCommands.h"
 
-#include "ImGuiModuleManager.h"
-#include "ImGuiSettings.h"
 #include "Utilities/DebugExecBindings.h"
 
 
-namespace CommandNames
-{
-	namespace
-	{
-		const TCHAR* ToggleInput = TEXT("ImGui.ToggleInput");
-		const TCHAR* ToggleKeyboardNavigation = TEXT("ImGui.ToggleKeyboardNavigation");
-		const TCHAR* ToggleGamepadNavigation = TEXT("ImGui.ToggleGamepadNavigation");
-		const TCHAR* ToggleKeyboardInputSharing = TEXT("ImGui.ToggleKeyboardInputSharing");
-		const TCHAR* ToggleGamepadInputSharing = TEXT("ImGui.ToggleGamepadInputSharing");
-		const TCHAR* ToggleDemo = TEXT("ImGui.ToggleDemo");
-	}
-}
+const TCHAR* const FImGuiModuleCommands::ToggleInput = TEXT("ImGui.ToggleInput");
+const TCHAR* const FImGuiModuleCommands::ToggleKeyboardNavigation = TEXT("ImGui.ToggleKeyboardNavigation");
+const TCHAR* const FImGuiModuleCommands::ToggleGamepadNavigation = TEXT("ImGui.ToggleGamepadNavigation");
+const TCHAR* const FImGuiModuleCommands::ToggleKeyboardInputSharing = TEXT("ImGui.ToggleKeyboardInputSharing");
+const TCHAR* const FImGuiModuleCommands::ToggleGamepadInputSharing = TEXT("ImGui.ToggleGamepadInputSharing");
+const TCHAR* const FImGuiModuleCommands::ToggleDemo = TEXT("ImGui.ToggleDemo");
 
-FImGuiModuleCommands::FImGuiModuleCommands(FImGuiModuleManager& InModuleManager)
-	: ModuleManager(InModuleManager)
-	, ToggleInputCommand(CommandNames::ToggleInput,
+FImGuiModuleCommands::FImGuiModuleCommands(FImGuiModuleProperties& InProperties)
+	: Properties(InProperties)
+	, ToggleInputCommand(ToggleInput,
 		TEXT("Toggle ImGui input mode."),
-		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleInput))
-	, ToggleKeyboardNavigationCommand(CommandNames::ToggleKeyboardNavigation,
+		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleInputImpl))
+	, ToggleKeyboardNavigationCommand(ToggleKeyboardNavigation,
 		TEXT("Toggle ImGui keyboard navigation."),
-		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleKeyboardNavigation))
-	, ToggleGamepadNavigationCommand(CommandNames::ToggleGamepadNavigation,
+		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleKeyboardNavigationImpl))
+	, ToggleGamepadNavigationCommand(ToggleGamepadNavigation,
 		TEXT("Toggle ImGui gamepad navigation."),
-		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleGamepadNavigation))
-	, ToggleKeyboardInputSharingCommand(CommandNames::ToggleKeyboardInputSharing,
+		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleGamepadNavigationImpl))
+	, ToggleKeyboardInputSharingCommand(ToggleKeyboardInputSharing,
 		TEXT("Toggle ImGui keyboard input sharing."),
-		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleKeyboardInputSharing))
-	, ToggleGamepadInputSharingCommand(CommandNames::ToggleGamepadInputSharing,
+		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleKeyboardInputSharingImpl))
+	, ToggleGamepadInputSharingCommand(ToggleGamepadInputSharing,
 		TEXT("Toggle ImGui gamepad input sharing."),
-		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleGamepadInputSharing))
-	, ToggleDemoCommand(CommandNames::ToggleDemo,
+		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleGamepadInputSharingImpl))
+	, ToggleDemoCommand(ToggleDemo,
 		TEXT("Toggle ImGui demo."),
-		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleDemo))
+		FConsoleCommandDelegate::CreateRaw(this, &FImGuiModuleCommands::ToggleDemoImpl))
 {
-	// Delegate initializer to support settings loaded after this object creation (in stand-alone builds) and potential
-	// reloading of settings.
-	UImGuiSettings::OnSettingsLoaded().AddRaw(this, &FImGuiModuleCommands::InitializeSettings);
-
-	// Call initializer to support settings already loaded (editor).
-	InitializeSettings();
 }
 
-FImGuiModuleCommands::~FImGuiModuleCommands()
+void FImGuiModuleCommands::SetKeyBinding(const TCHAR* CommandName, const FImGuiKeyInfo& KeyInfo)
 {
-	UImGuiSettings::OnSettingsLoaded().RemoveAll(this);
-	UnregisterSettingsDelegates();
+	DebugExecBindings::UpdatePlayerInputs(KeyInfo, CommandName);
 }
 
-void FImGuiModuleCommands::InitializeSettings()
+void FImGuiModuleCommands::ToggleInputImpl()
 {
-	RegisterSettingsDelegates();
-
-	// We manually update key bindings based on ImGui settings rather than using input configuration. This works out
-	// of the box in packed and staged builds and it helps to avoid ambiguities where ImGui settings are stored.
-	UpdateToggleInputKeyBinding();
+	Properties.ToggleInput();
 }
 
-void FImGuiModuleCommands::RegisterSettingsDelegates()
+void FImGuiModuleCommands::ToggleKeyboardNavigationImpl()
 {
-	if (GImGuiSettings && !GImGuiSettings->OnToggleInputKeyChanged.IsBoundToObject(this))
-	{
-		GImGuiSettings->OnToggleInputKeyChanged.AddRaw(this, &FImGuiModuleCommands::UpdateToggleInputKeyBinding);
-	}
+	Properties.ToggleKeyboardNavigation();
 }
 
-void FImGuiModuleCommands::UnregisterSettingsDelegates()
+void FImGuiModuleCommands::ToggleGamepadNavigationImpl()
 {
-	if (GImGuiSettings)
-	{
-		GImGuiSettings->OnToggleInputKeyChanged.RemoveAll(this);
-	}
+	Properties.ToggleGamepadNavigation();
 }
 
-void FImGuiModuleCommands::UpdateToggleInputKeyBinding()
+void FImGuiModuleCommands::ToggleKeyboardInputSharingImpl()
 {
-	if (GImGuiSettings)
-	{
-		DebugExecBindings::UpdatePlayerInputs(GImGuiSettings->GetToggleInputKey(), CommandNames::ToggleInput);
-	}
+	Properties.ToggleKeyboardInputSharing();
 }
 
-void FImGuiModuleCommands::ToggleInput()
+void FImGuiModuleCommands::ToggleGamepadInputSharingImpl()
 {
-	ModuleManager.GetProperties().ToggleInput();
+	Properties.ToggleGamepadInputSharing();
 }
 
-void FImGuiModuleCommands::ToggleKeyboardNavigation()
+void FImGuiModuleCommands::ToggleDemoImpl()
 {
-	ModuleManager.GetProperties().ToggleKeyboardNavigation();
-}
-
-void FImGuiModuleCommands::ToggleGamepadNavigation()
-{
-	ModuleManager.GetProperties().ToggleGamepadNavigation();
-}
-
-void FImGuiModuleCommands::ToggleKeyboardInputSharing()
-{
-	ModuleManager.GetProperties().ToggleKeyboardInputSharing();
-}
-
-void FImGuiModuleCommands::ToggleGamepadInputSharing()
-{
-	ModuleManager.GetProperties().ToggleGamepadInputSharing();
-}
-
-void FImGuiModuleCommands::ToggleDemo()
-{
-	ModuleManager.GetProperties().ToggleDemo();
+	Properties.ToggleDemo();
 }
