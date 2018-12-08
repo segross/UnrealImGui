@@ -6,7 +6,7 @@
 #include "ImGuiDemo.h"
 #include "ImGuiModuleCommands.h"
 #include "ImGuiModuleProperties.h"
-#include "ImGuiSettings.h"
+#include "ImGuiModuleSettings.h"
 #include "SImGuiWidget.h"
 #include "TextureManager.h"
 

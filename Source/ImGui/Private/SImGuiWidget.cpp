@@ -11,7 +11,7 @@
 #include "ImGuiInputHandlerFactory.h"
 #include "ImGuiInteroperability.h"
 #include "ImGuiModuleManager.h"
-#include "ImGuiSettings.h"
+#include "ImGuiModuleSettings.h"
 #include "TextureManager.h"
 #include "Utilities/Arrays.h"
 #include "Utilities/ScopeGuards.h"

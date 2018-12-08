@@ -2,7 +2,7 @@
 
 #include "ImGuiPrivatePCH.h"
 
-#include "ImGuiSettings.h"
+#include "ImGuiModuleSettings.h"
 
 #include "ImGuiModuleCommands.h"
 #include "ImGuiModuleProperties.h"

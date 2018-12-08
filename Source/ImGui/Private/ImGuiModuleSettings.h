@@ -5,7 +5,7 @@
 #include <Delegates/Delegate.h>
 #include <UObject/Object.h>
 
-#include "ImGuiSettings.generated.h"
+#include "ImGuiModuleSettings.generated.h"
 
 
 /**

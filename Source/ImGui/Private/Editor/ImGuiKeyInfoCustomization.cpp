@@ -6,7 +6,7 @@
 
 #include "ImGuiKeyInfoCustomization.h"
 
-#include "ImGuiSettings.h"
+#include "ImGuiModuleSettings.h"
 
 #include <PropertyCustomizationHelpers.h>
 #include <SKeySelector.h>

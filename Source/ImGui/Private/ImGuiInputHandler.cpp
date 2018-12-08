@@ -6,7 +6,7 @@
 
 #include "ImGuiContextProxy.h"
 #include "ImGuiModuleManager.h"
-#include "ImGuiSettings.h"
+#include "ImGuiModuleSettings.h"
 
 #include <Engine/Console.h>
 #include <Input/Events.h>

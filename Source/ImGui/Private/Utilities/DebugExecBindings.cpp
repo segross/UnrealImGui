@@ -3,7 +3,7 @@
 #include "ImGuiPrivatePCH.h"
 
 #include "DebugExecBindings.h"
-#include "ImGuiSettings.h"
+#include "ImGuiModuleSettings.h"
 
 #include <GameFramework/PlayerInput.h>
 

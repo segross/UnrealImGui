@@ -7,7 +7,7 @@
 #include "ImGuiEditor.h"
 
 #include "ImGuiKeyInfoCustomization.h"
-#include "ImGuiSettings.h"
+#include "ImGuiModuleSettings.h"
 
 #include <ISettingsModule.h>
 

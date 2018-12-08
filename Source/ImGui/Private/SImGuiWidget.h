@@ -4,7 +4,7 @@
 
 #include "ImGuiInputState.h"
 #include "ImGuiModuleDebug.h"
-#include "ImGuiSettings.h"
+#include "ImGuiModuleSettings.h"
 
 #include <Widgets/SLeafWidget.h>
 
