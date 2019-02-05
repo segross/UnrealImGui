@@ -113,6 +113,10 @@ private:
 	// Update visibility based on input enabled state.
 	void SetVisibilityFromInputEnabled();
 
+	ULocalPlayer* GetLocalPlayer() const;
+	void TakeFocus();
+	void ReturnFocus();
+
 	// Update input enabled state from console variable.
 	void UpdateInputEnabled();
 

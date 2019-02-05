@@ -491,6 +491,65 @@ void SImGuiWidget::SetVisibilityFromInputEnabled()
 		ContextIndex, *GetVisibility().ToString());
 }
 
+ULocalPlayer* SImGuiWidget::GetLocalPlayer() const
+{
+	if (GameViewport.IsValid())
+	{
+		if (UWorld* World = GameViewport->GetWorld())
+		{
+			if (ULocalPlayer* LocalPlayer = World->GetFirstLocalPlayerFromController())
+			{
+				return World->GetFirstLocalPlayerFromController();
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+void SImGuiWidget::TakeFocus()
+{
+	auto& SlateApplication = FSlateApplication::Get();
+
+	PreviousUserFocusedWidget = SlateApplication.GetUserFocusedWidget(SlateApplication.GetUserIndexForKeyboard());
+
+	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
+	{
+		TSharedRef<SWidget> FocusWidget = SharedThis(this);
+		LocalPlayer->GetSlateOperations().CaptureMouse(FocusWidget);
+		LocalPlayer->GetSlateOperations().SetUserFocus(FocusWidget);
+	}
+	else
+	{
+		SlateApplication.SetKeyboardFocus(SharedThis(this));
+	}
+}
+
+void SImGuiWidget::ReturnFocus()
+{
+	if (HasKeyboardFocus())
+	{
+		auto FocusWidgetPtr = PreviousUserFocusedWidget.IsValid()
+			? PreviousUserFocusedWidget.Pin()
+			: GameViewport->GetGameViewportWidget();
+
+		if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
+		{
+			auto FocusWidgetRef = FocusWidgetPtr.ToSharedRef();
+			LocalPlayer->GetSlateOperations().CaptureMouse(FocusWidgetRef);
+			LocalPlayer->GetSlateOperations().SetUserFocus(FocusWidgetRef);
+		}
+		else
+		{
+			auto& SlateApplication = FSlateApplication::Get();
+			SlateApplication.ResetToDefaultPointerInputSettings();
+			SlateApplication.SetUserFocus(SlateApplication.GetUserIndexForKeyboard(), FocusWidgetPtr);
+		}
+	}
+
+	PreviousUserFocusedWidget.Reset();
+}
+
 void SImGuiWidget::UpdateInputEnabled()
 {
 	const bool bEnabled = ModuleManager && ModuleManager->GetProperties().IsInputEnabled();
@@ -505,16 +564,7 @@ void SImGuiWidget::UpdateInputEnabled()
 
 		if (!bInputEnabled)
 		{
-			auto& Slate = FSlateApplication::Get();
-			if (Slate.GetKeyboardFocusedWidget().Get() == this)
-			{
-				Slate.ResetToDefaultPointerInputSettings();
-				Slate.SetUserFocus(Slate.GetUserIndexForKeyboard(),
-					PreviousUserFocusedWidget.IsValid() ? PreviousUserFocusedWidget.Pin() : GameViewport->GetGameViewportWidget());
-			}
-
-			PreviousUserFocusedWidget.Reset();
-
+			ReturnFocus();
 			UpdateInputMode(false, false);
 		}
 	}
@@ -526,9 +576,7 @@ void SImGuiWidget::UpdateInputEnabled()
 		const auto& ViewportWidget = GameViewport->GetGameViewportWidget();
 		if (ViewportWidget->HasKeyboardFocus() || ViewportWidget->HasFocusedDescendants())
 		{
-			auto& Slate = FSlateApplication::Get();
-			PreviousUserFocusedWidget = Slate.GetUserFocusedWidget(Slate.GetUserIndexForKeyboard());
-			Slate.SetKeyboardFocus(SharedThis(this));
+			TakeFocus();
 		}
 	}
 
