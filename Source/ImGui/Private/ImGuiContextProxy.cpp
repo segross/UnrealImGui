@@ -39,13 +39,26 @@ namespace
 	}
 }
 
+FImGuiContextProxy::FImGuiContextPtr::~FImGuiContextPtr()
+{
+	if (Context)
+	{
+		// Setting this as a current context. is still required in the current framework version to properly shutdown
+		// and save data.
+		ImGui::SetCurrentContext(Context);
+
+		// Save context data and destroy.
+		ImGui::DestroyContext(Context);
+	}
+}
+
 FImGuiContextProxy::FImGuiContextProxy(const FString& InName, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas)
 	: Name(InName)
 	, SharedDrawEvent(InSharedDrawEvent)
 	, IniFilename(TCHAR_TO_ANSI(*GetIniFile(InName)))
 {
 	// Create context.
-	Context = TUniquePtr<ImGuiContext>(ImGui::CreateContext(InFontAtlas));
+	Context = FImGuiContextPtr(ImGui::CreateContext(InFontAtlas));
 
 	// Set this context in ImGui for initialization (any allocations will be tracked in this context).
 	SetAsCurrent();
@@ -66,19 +79,6 @@ FImGuiContextProxy::FImGuiContextProxy(const FString& InName, FSimpleMulticastDe
 	// Begin frame to complete context initialization (this is to avoid problems with other systems calling to ImGui
 	// during startup).
 	BeginFrame();
-}
-
-FImGuiContextProxy::~FImGuiContextProxy()
-{
-	if (Context)
-	{
-		// Setting this as a current context is still required in the current framework version to properly shutdown
-		// and save data.
-		SetAsCurrent();
-
-		// Save context data and destroy.
-		ImGui::DestroyContext(Context.Release());
-	}
 }
 
 void FImGuiContextProxy::Draw()

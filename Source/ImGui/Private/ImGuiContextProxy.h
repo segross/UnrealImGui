@@ -17,16 +17,37 @@ class FImGuiInputState;
 // broadcasts draw events to allow listeners draw their controls. After update it stores draw data.
 class FImGuiContextProxy
 {
+	class FImGuiContextPtr
+	{
+	public:
+
+		FImGuiContextPtr() = default;
+		FImGuiContextPtr(ImGuiContext* InContext) : Context(InContext) {}
+
+		FImGuiContextPtr(const FImGuiContextPtr&) = delete;
+		FImGuiContextPtr& operator=(const FImGuiContextPtr&) = delete;
+
+		FImGuiContextPtr(FImGuiContextPtr&& Other) : Context(Other.Context) { Other.Context = nullptr; }
+		FImGuiContextPtr& operator=(FImGuiContextPtr&& Other) { std::swap(Context, Other.Context); return *this; }
+
+		~FImGuiContextPtr();
+
+		ImGuiContext* Get() const { return Context; }
+
+	private:
+
+		ImGuiContext* Context = nullptr;
+	};
+
 public:
 
 	FImGuiContextProxy(const FString& Name, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas);
-	~FImGuiContextProxy();
 
 	FImGuiContextProxy(const FImGuiContextProxy&) = delete;
 	FImGuiContextProxy& operator=(const FImGuiContextProxy&) = delete;
 
-	FImGuiContextProxy(FImGuiContextProxy&& Other) = default;
-	FImGuiContextProxy& operator=(FImGuiContextProxy&& Other) = default;
+	FImGuiContextProxy(FImGuiContextProxy&&) = default;
+	FImGuiContextProxy& operator=(FImGuiContextProxy&&) = default;
 
 	// Get the name of this context.
 	const FString& GetName() const { return Name; }
@@ -75,7 +96,7 @@ private:
 
 	void UpdateDrawData(ImDrawData* DrawData);
 
-	TUniquePtr<ImGuiContext> Context;
+	FImGuiContextPtr Context;
 
 	FVector2D DisplaySize = FVector2D::ZeroVector;
 

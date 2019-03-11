@@ -51,7 +51,7 @@ namespace Utilities
 		return WorldContext ? GetWorldContextIndex(*WorldContext) : INVALID_CONTEXT_INDEX;
 	}
 
-	int32 GetWorldContextIndex(const UWorld& World)
+	FORCEINLINE int32 GetWorldContextIndex(const UWorld& World)
 	{
 		return (World.WorldType == EWorldType::Editor) ? EDITOR_CONTEXT_INDEX : GetWorldContextIndex(World.GetGameInstance());
 	}
