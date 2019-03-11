@@ -104,9 +104,7 @@ namespace ImGuiInterops
 			return *pCharCode;
 		}
 
-		checkf(false, TEXT("Couldn't find a Key Code for key '%s'. Expecting that all keys should have a Key Code."), *Key.GetDisplayName().ToString());
-
-		return -1;
+		return 0;
 	}
 
 	uint32 GetMouseIndex(const FKey& MouseButton)
