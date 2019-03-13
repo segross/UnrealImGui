@@ -7,8 +7,8 @@
 #include "ImGuiModuleCommands.h"
 #include "ImGuiModuleProperties.h"
 #include "ImGuiModuleSettings.h"
-#include "SImGuiWidget.h"
 #include "TextureManager.h"
+#include "Widgets/SImGuiLayout.h"
 
 
 // Central manager that implements module logic. It initializes and controls remaining module components.
@@ -87,7 +87,7 @@ private:
 	FTextureManager TextureManager;
 
 	// Slate widgets that we created.
-	TArray<TWeakPtr<SImGuiWidget>> Widgets;
+	TArray<TWeakPtr<SImGuiLayout>> Widgets;
 
 	FDelegateHandle TickInitializerHandle;
 	FDelegateHandle TickDelegateHandle;

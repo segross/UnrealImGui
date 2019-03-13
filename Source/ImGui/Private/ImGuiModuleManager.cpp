@@ -12,6 +12,10 @@
 #include <imgui.h>
 
 
+// High enough z-order guarantees that ImGui output is rendered on top of the game UI.
+constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
+
+
 FImGuiModuleManager::FImGuiModuleManager()
 	: Commands(Properties)
 	, Settings(Properties, Commands)
@@ -49,9 +53,14 @@ FImGuiModuleManager::~FImGuiModuleManager()
 	// Remove still active widgets (important during hot-reloading).
 	for (auto& Widget : Widgets)
 	{
-		if (Widget.IsValid())
+		auto SharedWidget = Widget.Pin();
+		if (SharedWidget.IsValid())
 		{
-			Widget.Pin()->Detach();
+			auto& WidgetGameViewport = SharedWidget->GetGameViewport();
+			if (WidgetGameViewport.IsValid())
+			{
+				WidgetGameViewport->RemoveViewportWidgetContent(SharedWidget.ToSharedRef());
+			}
 		}
 	}
 
@@ -178,12 +187,14 @@ void FImGuiModuleManager::AddWidgetToViewport(UGameViewportClient* GameViewport)
 	LoadTextures();
 
 	// Create and initialize the widget.
-	TSharedPtr<SImGuiWidget> SharedWidget;
-	SAssignNew(SharedWidget, SImGuiWidget).ModuleManager(this).GameViewport(GameViewport).ContextIndex(ContextIndex);
+	TSharedPtr<SImGuiLayout> SharedWidget;
+	SAssignNew(SharedWidget, SImGuiLayout).ModuleManager(this).GameViewport(GameViewport).ContextIndex(ContextIndex);
+
+	GameViewport->AddViewportWidgetContent(SharedWidget.ToSharedRef(), IMGUI_WIDGET_Z_ORDER);
 
 	// We transfer widget ownerships to viewports but we keep weak references in case we need to manually detach active
 	// widgets during module shutdown (important during hot-reloading).
-	if (TWeakPtr<SImGuiWidget>* Slot = Widgets.FindByPredicate([](auto& Widget) { return !Widget.IsValid(); }))
+	if (TWeakPtr<SImGuiLayout>* Slot = Widgets.FindByPredicate([](auto& Widget) { return !Widget.IsValid(); }))
 	{
 		*Slot = SharedWidget;
 	}

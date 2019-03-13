@@ -3,6 +3,7 @@
 #include "ImGuiPrivatePCH.h"
 
 #include "SImGuiWidget.h"
+#include "SImGuiCanvasControl.h"
 
 #include "ImGuiContextManager.h"
 #include "ImGuiContextProxy.h"
@@ -19,10 +20,6 @@
 #include <Engine/Console.h>
 
 #include <utility>
-
-
-// High enough z-order guarantees that ImGui output is rendered on top of the game UI.
-constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
 
 
 #if IMGUI_WIDGET_DEBUG
@@ -43,16 +40,6 @@ DEFINE_LOG_CATEGORY_STATIC(LogImGuiWidget, Warning, All);
 #define IMGUI_WIDGET_LOG(...)
 
 #endif // IMGUI_WIDGET_DEBUG
-
-namespace
-{
-	const FColor CanvasFrameColor = { 16, 16, 16 };
-	const FColor ViewportFrameColor = { 204, 74, 10 };
-	const FColor ViewportFrameHighlightColor = { 255, 110, 38 };
-
-	constexpr const char* PlainTextureName = "ImGuiModule_Plain";
-	constexpr const char* FontAtlasTextureName = "ImGuiModule_FontAtlas";
-}
 
 #if IMGUI_WIDGET_DEBUG
 namespace CVars
@@ -81,15 +68,11 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 	GameViewport = InArgs._GameViewport;
 	ContextIndex = InArgs._ContextIndex;
 
-	// NOTE: We could allow null game viewports (for instance to attach to non-viewport widgets) but we would need
-	// to modify a few functions that assume valid viewport pointer.
-	GameViewport->AddViewportWidgetContent(SharedThis(this), IMGUI_WIDGET_Z_ORDER);
-
 	// Disable mouse cursor over this widget as we will use ImGui to draw it.
 	SetCursor(EMouseCursor::None);
 
 	// Sync visibility with default input enabled state.
-	SetVisibilityFromInputEnabled();
+	UpdateVisibility();
 
 	// Register to get post-update notifications, so we can clean frame updates.
 	ModuleManager->OnPostImGuiUpdate().AddRaw(this, &SImGuiWidget::OnPostImGuiUpdate);
@@ -112,6 +95,13 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 
 	// Create ImGui Input Handler.
 	CreateInputHandler(Settings.GetImGuiInputHandlerClass());
+
+	ChildSlot
+	[
+		SAssignNew(CanvasControlWidget, SImGuiCanvasControl).OnTransformChanged(this, &SImGuiWidget::SetImGuiTransform)
+	];
+
+	ImGuiTransform = CanvasControlWidget->GetTransform();
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
@@ -134,15 +124,6 @@ SImGuiWidget::~SImGuiWidget()
 
 	// Unregister from post-update notifications.
 	ModuleManager->OnPostImGuiUpdate().RemoveAll(this);
-}
-
-void SImGuiWidget::Detach()
-{
-	if (GameViewport.IsValid())
-	{
-		GameViewport->RemoveViewportWidgetContent(SharedThis(this));
-		GameViewport.Reset();
-	}
 }
 
 void SImGuiWidget::Tick(const FGeometry& AllottedGeometry, const double InCurrentTime, const float InDeltaTime)
@@ -196,7 +177,7 @@ FReply SImGuiWidget::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Key
 	}
 	else
 	{
-		UpdateCanvasMapMode(KeyEvent);
+		UpdateCanvasControlMode(KeyEvent);
 
 		const FImGuiInputResponse Response = InputHandler->OnKeyDown(KeyEvent);
 		if (Response.HasProcessingRequest())
@@ -205,7 +186,7 @@ FReply SImGuiWidget::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Key
 			CopyModifierKeys(KeyEvent);
 		}
 
-		return WithMouseLockRequests(ToSlateReply(Response));
+		return ToSlateReply(Response);
 	}
 }
 
@@ -227,13 +208,13 @@ FReply SImGuiWidget::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& KeyEv
 	}
 	else
 	{
-		UpdateCanvasMapMode(KeyEvent);
+		UpdateCanvasControlMode(KeyEvent);
 
 		// Always handle key up events to protect from leaving accidental keys not cleared in ImGui input state.
 		InputState.SetKeyDown(KeyEvent, false);
 		CopyModifierKeys(KeyEvent);
 
-		return WithMouseLockRequests(ToSlateReply(InputHandler->OnKeyUp(KeyEvent)));
+		return ToSlateReply(InputHandler->OnKeyUp(KeyEvent));
 	}
 }
 
@@ -260,10 +241,7 @@ FReply SImGuiWidget::OnMouseButtonDown(const FGeometry& MyGeometry, const FPoint
 	InputState.SetMouseDown(MouseEvent, true);
 	CopyModifierKeys(MouseEvent);
 
-	UpdateCanvasMapMode(MouseEvent);
-	UpdateCanvasDraggingConditions(MouseEvent);
-
-	return WithMouseLockRequests(FReply::Handled());
+	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
@@ -271,10 +249,7 @@ FReply SImGuiWidget::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const
 	InputState.SetMouseDown(MouseEvent, true);
 	CopyModifierKeys(MouseEvent);
 
-	UpdateCanvasMapMode(MouseEvent);
-	UpdateCanvasDraggingConditions(MouseEvent);
-
-	return WithMouseLockRequests(FReply::Handled());
+	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
@@ -282,21 +257,12 @@ FReply SImGuiWidget::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointer
 	InputState.SetMouseDown(MouseEvent, false);
 	CopyModifierKeys(MouseEvent);
 
-	UpdateCanvasMapMode(MouseEvent);
-
-	return WithMouseLockRequests(FReply::Handled());
+	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	if (bCanvasMapMode)
-	{
-		AddCanvasScale(MouseEvent.GetWheelDelta());
-	}
-	else
-	{
-		InputState.AddMouseWheelDelta(MouseEvent.GetWheelDelta());
-	}
+	InputState.AddMouseWheelDelta(MouseEvent.GetWheelDelta());
 	CopyModifierKeys(MouseEvent);
 
 	return FReply::Handled();
@@ -304,21 +270,14 @@ FReply SImGuiWidget::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEve
 
 FReply SImGuiWidget::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	if (bCanvasMapMode)
-	{
-		UpdateCanvasDragging(MyGeometry, MouseEvent);
-	}
-
-	const FVector2D CanvasScreenSpacePosition = MyGeometry.AbsolutePosition + GetCanvasPosition(CanvasScale, CanvasOffset);
-	InputState.SetMousePosition((MouseEvent.GetScreenSpacePosition() - CanvasScreenSpacePosition) / CanvasScale);
+	const FSlateRenderTransform ImGuiToScreen = ImGuiTransform.Concatenate(MyGeometry.GetAccumulatedRenderTransform());
+	InputState.SetMousePosition(ImGuiToScreen.Inverse().TransformPoint(MouseEvent.GetScreenSpacePosition()));
 	CopyModifierKeys(MouseEvent);
 
 	// This event is called in every frame when we have a mouse, so we can use it to raise notifications.
 	NotifyMouseEvent();
 
-	UpdateCanvasMapMode(MouseEvent);
-
-	return WithMouseLockRequests(FReply::Handled());
+	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnFocusReceived(const FGeometry& MyGeometry, const FFocusEvent& FocusEvent)
@@ -332,7 +291,7 @@ FReply SImGuiWidget::OnFocusReceived(const FGeometry& MyGeometry, const FFocusEv
 	UpdateInputMode(true, IsDirectlyHovered());
 
 	FSlateApplication::Get().ResetToDefaultPointerInputSettings();
-	return WithMouseLockRequests(FReply::Handled());
+	return FReply::Handled();
 }
 
 void SImGuiWidget::OnFocusLost(const FFocusEvent& FocusEvent)
@@ -377,11 +336,7 @@ void SImGuiWidget::OnMouseLeave(const FPointerEvent& MouseEvent)
 FCursorReply SImGuiWidget::OnCursorQuery(const FGeometry& MyGeometry, const FPointerEvent& CursorEvent) const
 {
 	EMouseCursor::Type MouseCursor = EMouseCursor::None;
-	if (MouseCursorOverride != EMouseCursor::None)
-	{
-		MouseCursor = MouseCursorOverride;
-	}
-	else if (!bUseSoftwareCursor)
+	if (!bUseSoftwareCursor)
 	{
 		if (FImGuiContextProxy* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex))
 		{
@@ -433,25 +388,6 @@ void SImGuiWidget::UnregisterImGuiSettingsDelegates()
 	Settings.OnUseSoftwareCursorChanged.RemoveAll(this);
 }
 
-FReply SImGuiWidget::WithMouseLockRequests(FReply&& Reply)
-{
-	const bool bNeedMouseLock = bCanvasDragging || bFrameDragging;
-	if (bNeedMouseLock != bMouseLock)
-	{
-		bMouseLock = bNeedMouseLock;
-		if (bMouseLock)
-		{
-			Reply.LockMouseToWidget(SharedThis(this));
-		}
-		else
-		{
-			Reply.ReleaseMouseLock();
-		}
-	}
-
-	return Reply;
-}
-
 void SImGuiWidget::CopyModifierKeys(const FInputEvent& InputEvent)
 {
 	InputState.SetControlDown(InputEvent.IsControlDown());
@@ -472,17 +408,7 @@ bool SImGuiWidget::IsConsoleOpened() const
 	return GameViewport->ViewportConsole && GameViewport->ViewportConsole->ConsoleState != NAME_None;
 }
 
-void SImGuiWidget::SetMouseCursorOverride(EMouseCursor::Type InMouseCursorOverride)
-{
-	if (MouseCursorOverride != InMouseCursorOverride)
-	{
-		MouseCursorOverride = InMouseCursorOverride;
-		FSlateApplication::Get().QueryCursor();
-		InputState.SetMousePointer(bUseSoftwareCursor && MouseCursorOverride == EMouseCursor::None && IsDirectlyHovered());
-	}
-}
-
-void SImGuiWidget::SetVisibilityFromInputEnabled()
+void SImGuiWidget::UpdateVisibility()
 {
 	// If we don't use input disable hit test to make this widget invisible for cursors hit detection.
 	SetVisibility(bInputEnabled ? EVisibility::Visible : EVisibility::HitTestInvisible);
@@ -560,7 +486,7 @@ void SImGuiWidget::UpdateInputEnabled()
 		IMGUI_WIDGET_LOG(Log, TEXT("ImGui Widget %d - Input Enabled changed to '%s'."),
 			ContextIndex, TEXT_BOOL(bInputEnabled));
 
-		SetVisibilityFromInputEnabled();
+		UpdateVisibility();
 
 		if (!bInputEnabled)
 		{
@@ -624,14 +550,9 @@ void SImGuiWidget::UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer
 		InputMode = NewInputMode;
 
 		ClearMouseEventNotification();
-
-		if (InputMode != EInputMode::Full)
-		{
-			SetCanvasMapMode(false);
-		}
 	}
 
-	InputState.SetMousePointer(bUseSoftwareCursor && MouseCursorOverride == EMouseCursor::None && bHasMousePointer);
+	InputState.SetMousePointer(bUseSoftwareCursor && bHasMousePointer);
 }
 
 void SImGuiWidget::UpdateMouseStatus()
@@ -650,6 +571,11 @@ void SImGuiWidget::UpdateMouseStatus()
 	}
 }
 
+void SImGuiWidget::UpdateCanvasControlMode(const FInputEvent& InputEvent)
+{
+	CanvasControlWidget->SetActive(InputEvent.IsLeftAltDown() && InputEvent.IsLeftShiftDown());
+}
+
 void SImGuiWidget::OnPostImGuiUpdate()
 {
 	if (InputMode != EInputMode::None)
@@ -657,271 +583,17 @@ void SImGuiWidget::OnPostImGuiUpdate()
 		InputState.ClearUpdateState();
 	}
 
-	// Remember values associated with input state send to ImGui, so we can use them when rendering frame output.
-	ImGuiFrameCanvasScale = CanvasScale;
-	ImGuiFrameCanvasOffset = CanvasOffset;
-
-	// Update canvas scale.
-	UdateCanvasScale(FSlateApplication::Get().GetDeltaTime());
-}
-
-void SImGuiWidget::UpdateCanvasMapMode(const FInputEvent& InputEvent)
-{
-	SetCanvasMapMode(InputEvent.IsLeftAltDown() && InputEvent.IsLeftShiftDown());
-}
-
-void SImGuiWidget::SetCanvasMapMode(bool bEnabled)
-{
-	if (bEnabled != bCanvasMapMode)
-	{
-		bCanvasMapMode = bEnabled;
-
-		if (!bCanvasMapMode)
-		{
-			if (TargetCanvasScale != 1.f)
-			{
-				TargetCanvasScale = 1.f;
-			}
-
-			bCanvasDragging = false;
-			bFrameDragging = false;
-			bFrameDraggingReady = false;
-			SetMouseCursorOverride(EMouseCursor::None);
-		}
-	}
-}
-
-void SImGuiWidget::AddCanvasScale(float Delta)
-{
-	TargetCanvasScale = FMath::Clamp(TargetCanvasScale + Delta * 0.05f, GetMinCanvasScale(), 1.f);
-}
-
-void SImGuiWidget::UdateCanvasScale(float DeltaSeconds)
-{
-	if (CanvasScale != TargetCanvasScale)
-	{
-		CanvasScale = FMath::Lerp(CanvasScale, TargetCanvasScale, DeltaSeconds * 25.f);
-
-		if (FMath::Abs(CanvasScale - TargetCanvasScale) < KINDA_SMALL_NUMBER)
-		{
-			CanvasScale = TargetCanvasScale;
-		}
-
-		// If viewport frame is being dragged, move mouse to fix de-synchronization caused by scaling.
-		if (bFrameDragging)
-		{
-			const FVector2D Position = GetCanvasPosition(CanvasScale, CanvasOffset) - CanvasScale * CanvasOffset + GetViewportSize() * CanvasScale * 0.5f;
-			GameViewport->Viewport->SetMouse((int32)Position.X, (int32)Position.Y);
-
-			// Ignore next mouse movement, so this syncing doesn't change canvas offset.
-			bFrameDraggingSkipMouseMove = true;
-		}
-	}
-}
-
-void SImGuiWidget::UpdateCanvasDraggingConditions(const FPointerEvent& MouseEvent)
-{
-	if (bCanvasMapMode)
-	{
-		if (MouseEvent.GetEffectingButton() == EKeys::RightMouseButton)
-		{
-			bCanvasDragging = !bFrameDragging && MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton)
-				&& CanvasScale > GetMinCanvasScale();
-		}
-		else if (MouseEvent.GetEffectingButton() == EKeys::MiddleMouseButton)
-		{
-			bFrameDragging = bFrameDraggingReady && MouseEvent.IsMouseButtonDown(EKeys::MiddleMouseButton);
-			if (bFrameDragging)
-			{
-				bFrameDraggingReady = false;
-			}
-		}
-	}
+	ImGuiRenderTransform = ImGuiTransform;
 }
 
 namespace
 {
-	FORCEINLINE FVector2D Min(const FVector2D& A, const FVector2D& B)
+	FORCEINLINE FSlateRenderTransform RoundTranslation(const FSlateRenderTransform& Transform)
 	{
-		return { FMath::Min(A.X, B.X), FMath::Min(A.Y, B.Y) };
+		const FVector2D& Translation = Transform.GetTranslation();
+		return FSlateRenderTransform{ Transform.GetMatrix(),
+			FVector2D{ FMath::RoundToFloat(Translation.X), FMath::RoundToFloat(Translation.Y) } };
 	}
-
-	FORCEINLINE FVector2D Max(const FVector2D& A, const FVector2D& B)
-	{
-		return { FMath::Max(A.X, B.X), FMath::Max(A.Y, B.Y) };
-	}
-
-	FORCEINLINE FVector2D Clamp(const FVector2D& V, const FVector2D& Min, const FVector2D& Max)
-	{
-		return { FMath::Clamp(V.X, Min.X, Max.X), FMath::Clamp(V.Y, Min.Y, Max.Y) };
-	}
-}
-
-void SImGuiWidget::UpdateCanvasDragging(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
-{
-	// We only start on mouse button down but we handle finishing here, to make sure that we don't miss any release
-	// events (possible when tabbing out etc.).
-	bCanvasDragging &= MouseEvent.IsMouseButtonDown(EKeys::RightMouseButton);
-	bFrameDragging &= MouseEvent.IsMouseButtonDown(EKeys::MiddleMouseButton);
-
-	bool bMouseLeftCanvas = false;
-
-	FImGuiContextProxy* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex);
-	if (ContextProxy && GameViewport.IsValid())
-	{
-		const FVector2D CanvasScreenSpacePosition = MyGeometry.AbsolutePosition + GetCanvasPosition(CanvasScale, CanvasOffset);
-		const FVector2D CanvasScreenSpaceMax = CanvasScreenSpacePosition + ContextProxy->GetDisplaySize() * CanvasScale;
-		bMouseLeftCanvas = (MouseEvent.GetScreenSpacePosition().X > CanvasScreenSpaceMax.X) || (MouseEvent.GetScreenSpacePosition().Y > CanvasScreenSpaceMax.Y);
-
-		if (bCanvasDragging)
-		{
-			CanvasOffset += MouseEvent.GetCursorDelta() / CanvasScale;
-		}
-		else if (bFrameDraggingSkipMouseMove)
-		{
-			bFrameDraggingSkipMouseMove = false;
-		}
-		else if (bFrameDragging)
-		{
-			// We can express canvas offset as a function of a viewport frame position and scale. With position and
-			// mouse deltas equal we can find a ratio between canvas offset and mouse position deltas.
-			const float DeltaPositionByOffset = (GetNormalizedCanvasScale(CanvasScale) - CanvasScale);
-
-			// Function for viewport frame positions behaves nicely when zooming but derived function for canvas offset
-			// delta has singularity in 1 - which actually makes sense because dragging frame loses context when it
-			// takes the whole widget area. We can handle that by preventing dragging when scale is 1.
-			if (DeltaPositionByOffset < 0.f)
-			{
-				// We drag viewport frame in a way that it always remain in the canvas rectangle (see below). But this
-				// creates a dead zone around the widget edges, and to handle that we clamp down all the mouse deltas
-				// while mouse is in that zone.
-				const FVector2D ViewportSizeScaled = GetViewportSize() * CanvasScale;
-				const FVector2D ActiveZoneMin = CanvasScreenSpacePosition + ViewportSizeScaled * 0.5f;
-				const FVector2D ActiveZoneMax = CanvasScreenSpaceMax - ViewportSizeScaled * 0.5f;
-				const FVector2D MaxLimits = Max(MouseEvent.GetScreenSpacePosition() - ActiveZoneMin, FVector2D::ZeroVector);
-				const FVector2D MinLimits = Min(MouseEvent.GetScreenSpacePosition() - ActiveZoneMax, FVector2D::ZeroVector);
-
-				CanvasOffset += Clamp(MouseEvent.GetCursorDelta(), MinLimits, MaxLimits) / FMath::Min(DeltaPositionByOffset, -0.1f);
-			}
-		}
-
-		if (bCanvasDragging || bFrameDragging)
-		{
-			// Clamping canvas offset keeps the whole viewport frame inside of the canvas rectangle.
-			const FVector2D ViewportSize = GetViewportSize();
-			const FVector2D DisplaySize = ContextProxy->GetDisplaySize();
-			CanvasOffset = Clamp(CanvasOffset, -DisplaySize + ViewportSize, FVector2D::ZeroVector);
-		}
-
-		bFrameDraggingReady = !bFrameDragging && !bCanvasDragging && CanvasScale < 1.f
-			&& InFrameGrabbingRange(MouseEvent.GetScreenSpacePosition() - MyGeometry.AbsolutePosition, CanvasScale, CanvasOffset);
-	}
-
-	const EMouseCursor::Type CursorTypeOverride = (bFrameDragging || bCanvasDragging) ? EMouseCursor::GrabHandClosed
-		: (bFrameDraggingReady) ? EMouseCursor::CardinalCross
-		: (bMouseLeftCanvas) ? EMouseCursor::Default
-		: EMouseCursor::None;
-
-	SetMouseCursorOverride(CursorTypeOverride);
-}
-
-float SImGuiWidget::GetMinCanvasScale() const
-{
-	const FVector2D ViewportSize = GetViewportSize();
-	const FVector2D CanvasSize = ModuleManager->GetContextManager().GetContextProxy(ContextIndex)->GetDisplaySize();
-	return FMath::Min(ViewportSize.X / CanvasSize.X, ViewportSize.Y / CanvasSize.Y);
-}
-
-float SImGuiWidget::GetNormalizedCanvasScale(float Scale) const
-{
-	const float MinScale = GetMinCanvasScale();
-	return (Scale - MinScale) / (1.f - MinScale);
-}
-
-FVector2D SImGuiWidget::GetCanvasPosition(float Scale, const FVector2D& Offset) const
-{
-	// Vast majority of calls will be with scale 1.0f.
-	return (Scale == 1.f) ? Offset : Offset * GetNormalizedCanvasScale(Scale);
-}
-
-bool SImGuiWidget::InFrameGrabbingRange(const FVector2D& Position, float Scale, const FVector2D& Offset) const
-{
-	const FVector2D ViewportCenter = GetCanvasPosition(Scale, Offset) - Offset * Scale + GetViewportSize() * Scale * 0.5f;
-
-	// Get the grab range based on cursor shape.
-	FVector2D Size, UVMin, UVMax, OutlineUVMin, OutlineUVMax;
-	const float Range = ImGuiImplementation::GetCursorData(ImGuiMouseCursor_ResizeAll, Size, UVMin, UVMax, OutlineUVMin, OutlineUVMax)
-		? Size.GetMax() * 0.5f + 5.f : 25.f;
-
-	return (Position - ViewportCenter).GetAbsMax() <= Range;
-}
-
-FVector2D SImGuiWidget::GetViewportSize() const
-{
-	FVector2D Size = FVector2D::ZeroVector;
-	if (GameViewport.IsValid())
-	{
-		GameViewport->GetViewportSize(Size);
-	}
-	return Size;
-}
-
-namespace
-{
-	FORCEINLINE FVector2D RoundToFloat(const FVector2D& Vector)
-	{
-		return FVector2D{ FMath::RoundToFloat(Vector.X), FMath::RoundToFloat(Vector.Y) };
-	}
-
-	void AddLocalRectanglePoints(TArray<FVector2D> &OutPoints, const FGeometry& AllottedGeometry, const FVector2D& AbsoluteMin, const FVector2D& AbsoluteSize)
-	{
-		FVector2D LocalMin = AllottedGeometry.AbsoluteToLocal(AbsoluteMin) + FVector2D::UnitVector;
-		FVector2D LocalMax = AllottedGeometry.AbsoluteToLocal(AbsoluteMin + AbsoluteSize);
-		OutPoints.Append({
-			FVector2D(LocalMin.X, LocalMin.Y),
-			FVector2D(LocalMax.X, LocalMin.Y),
-			FVector2D(LocalMax.X, LocalMax.Y),
-			FVector2D(LocalMin.X, LocalMax.Y),
-			FVector2D(LocalMin.X, LocalMin.Y - 1.f) // -1 to close properly
-			});
-	}
-
-#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
-	void AddQuad(TArray<FSlateVertex>& OutVertexBuffer, TArray<SlateIndex>& OutIndexBuffer, const FVector2D& Position, const FVector2D& Size,
-		const FVector2D& UVMin, const FVector2D& UVMax, const FColor& Color, const FSlateRotatedClipRectType& InClipRect)
-	{
-
-		const uint32 IndexOffset = static_cast<uint32>(OutVertexBuffer.Num());
-
-		FVector2D Min = RoundToFloat(Position) + FVector2D::UnitVector * 0.5f;
-		FVector2D Max = RoundToFloat(Position + Size) + FVector2D::UnitVector * 0.5f;
-		OutVertexBuffer.Append({
-			FSlateVertex({}, { Min.X, Min.Y }, { UVMin.X, UVMin.Y }, Color, InClipRect),
-			FSlateVertex({}, { Max.X, Min.Y }, { UVMax.X, UVMin.Y }, Color, InClipRect),
-			FSlateVertex({}, { Max.X, Max.Y }, { UVMax.X, UVMax.Y }, Color, InClipRect),
-			FSlateVertex({}, { Min.X, Max.Y }, { UVMin.X, UVMax.Y }, Color, InClipRect)
-			});
-
-		OutIndexBuffer.Append({ IndexOffset + 0U, IndexOffset + 1U, IndexOffset + 2U, IndexOffset + 0U, IndexOffset + 2U, IndexOffset + 3U });
-	}
-#else
-	void AddQuad(TArray<FSlateVertex>& OutVertexBuffer, TArray<SlateIndex>& OutIndexBuffer, const FVector2D& Position, const FVector2D& Size,
-		const FVector2D& UVMin, const FVector2D& UVMax, const FColor& Color)
-	{
-		const uint32 IndexOffset = static_cast<uint32>(OutVertexBuffer.Num());
-
-		FVector2D Min = RoundToFloat(Position) + FVector2D::UnitVector * 0.5f;
-		FVector2D Max = RoundToFloat(Position + Size) + FVector2D::UnitVector * 0.5f;
-		OutVertexBuffer.Append({
-			FSlateVertex::Make<ESlateVertexRounding::Disabled>({}, { Min.X, Min.Y }, { UVMin.X, UVMin.Y }, Color),
-			FSlateVertex::Make<ESlateVertexRounding::Disabled>({}, { Max.X, Min.Y }, { UVMax.X, UVMin.Y }, Color),
-			FSlateVertex::Make<ESlateVertexRounding::Disabled>({}, { Max.X, Max.Y }, { UVMax.X, UVMax.Y }, Color),
-			FSlateVertex::Make<ESlateVertexRounding::Disabled>({}, { Min.X, Max.Y }, { UVMin.X, UVMax.Y }, Color)
-			});
-
-		OutIndexBuffer.Append({ IndexOffset + 0U, IndexOffset + 1U, IndexOffset + 2U, IndexOffset + 0U, IndexOffset + 2U, IndexOffset + 3U });
-	}
-#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 }
 
 int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyClippingRect,
@@ -933,11 +605,10 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 		// keep frame tearing at minimum because it is executed at the very end of the frame.
 		ContextProxy->Tick(FSlateApplication::Get().GetDeltaTime());
 
-		// Calculate offset that will transform vertex positions to screen space - rounded to avoid half pixel offsets.
-		const FVector2D CanvasScreenSpacePosition = MyClippingRect.GetTopLeft() + GetCanvasPosition(ImGuiFrameCanvasScale, ImGuiFrameCanvasOffset);
-
-		// Calculate transform between ImGui canvas ans screen space (scale and then offset in Screen Space).
-		const FTransform2D Transform{ ImGuiFrameCanvasScale, RoundToFloat(CanvasScreenSpacePosition) };
+		// Calculate transform from ImGui to screen space. Rounding translation is necessary to keep it pixel-perfect
+		// in older engine versions.
+		const FSlateRenderTransform& WidgetToScreen = AllottedGeometry.GetAccumulatedRenderTransform();
+		const FSlateRenderTransform ImGuiToScreen = RoundTranslation(ImGuiRenderTransform.Concatenate(WidgetToScreen));
 
 #if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 		// Convert clipping rectangle to format required by Slate vertex.
@@ -947,19 +618,19 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 		for (const auto& DrawList : ContextProxy->GetDrawData())
 		{
 #if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
-			DrawList.CopyVertexData(VertexBuffer, Transform, VertexClippingRect);
+			DrawList.CopyVertexData(VertexBuffer, ImGuiToScreen, VertexClippingRect);
 
 			// Get access to the Slate scissor rectangle defined in Slate Core API, so we can customize elements drawing.
 			extern SLATECORE_API TOptional<FShortRect> GSlateScissorRect;
 			auto GSlateScissorRectSaver = ScopeGuards::MakeStateSaver(GSlateScissorRect);
 #else
-			DrawList.CopyVertexData(VertexBuffer, Transform);
+			DrawList.CopyVertexData(VertexBuffer, ImGuiToScreen);
 #endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 
 			int IndexBufferOffset = 0;
 			for (int CommandNb = 0; CommandNb < DrawList.NumCommands(); CommandNb++)
 			{
-				const auto& DrawCommand = DrawList.GetCommand(CommandNb, Transform);
+				const auto& DrawCommand = DrawList.GetCommand(CommandNb, ImGuiToScreen);
 
 				DrawList.CopyIndexData(IndexBuffer, IndexBufferOffset, DrawCommand.NumElements);
 
@@ -986,104 +657,14 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 #endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 			}
 		}
-
-		// In canvas map mode we need to draw additional information helping with navigation and dragging.
-		if (bCanvasMapMode)
-		{
-			const FVector2D ViewportSizeScaled = GetViewportSize() * ImGuiFrameCanvasScale;
-			const FVector2D ViewportScreenSpacePosition = CanvasScreenSpacePosition - ImGuiFrameCanvasOffset * ImGuiFrameCanvasScale;
-
-			const FColor FrameColor = bFrameDraggingReady ? ViewportFrameHighlightColor : ViewportFrameColor;
-
-			TArray<FVector2D> Points;
-
-			if (ImGuiFrameCanvasScale < 1.f)
-			{
-				// Add a fader outside of the ImGui canvas if it is smaller than widget/viewport area.
-				const FVector2D CanvasSizeScaled = ContextProxy->GetDisplaySize() * ImGuiFrameCanvasScale;
-				const TextureIndex PlainTextureIndex = ModuleManager->GetTextureManager().FindTextureIndex(FName{ PlainTextureName });
-				if (PlainTextureIndex != INDEX_NONE)
-				{
-					const FVector2D CanvasScreenSpaceMax = CanvasScreenSpacePosition + CanvasSizeScaled;
-					const FVector2D WidgetScreenSpaceMax = MyClippingRect.GetBottomRight() - FVector2D::UnitVector;
-					FVector2D DeadZoneScreenSpaceMin = MyClippingRect.GetTopLeft();
-					if (CanvasScreenSpaceMax.X < WidgetScreenSpaceMax.X)
-					{
-						DeadZoneScreenSpaceMin.X = CanvasScreenSpaceMax.X;
-					}
-					else if(CanvasScreenSpaceMax.Y < WidgetScreenSpaceMax.Y)
-					{
-						DeadZoneScreenSpaceMin.Y = CanvasScreenSpaceMax.Y;
-					}
-
-					if (!DeadZoneScreenSpaceMin.Equals(MyClippingRect.GetTopLeft()))
-					{
-						IndexBuffer.SetNum(0, false);
-						VertexBuffer.SetNum(0, false);
-#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
-						AddQuad(VertexBuffer, IndexBuffer, DeadZoneScreenSpaceMin, MyClippingRect.GetBottomRight() - DeadZoneScreenSpaceMin,
-							FVector2D::ZeroVector, FVector2D::ZeroVector, CanvasFrameColor.WithAlpha(128), VertexClippingRect);
-#else
-						AddQuad(VertexBuffer, IndexBuffer, DeadZoneScreenSpaceMin, MyClippingRect.GetBottomRight() - DeadZoneScreenSpaceMin,
-							FVector2D::ZeroVector, FVector2D::ZeroVector, CanvasFrameColor.WithAlpha(128));
-#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
-
-						const FSlateResourceHandle& Handle = ModuleManager->GetTextureManager().GetTextureHandle(PlainTextureIndex);
-						FSlateDrawElement::MakeCustomVerts(OutDrawElements, LayerId, Handle, VertexBuffer, IndexBuffer, nullptr, 0, 0);
-					}
-				}
-
-				// Draw a scaled canvas border.
-				AddLocalRectanglePoints(Points, AllottedGeometry, CanvasScreenSpacePosition, CanvasSizeScaled);
-#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
-				FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), Points, MyClippingRect,
-					ESlateDrawEffect::None, FLinearColor{ CanvasFrameColor }, false);
-#else
-				FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), Points,
-					ESlateDrawEffect::None, FLinearColor{ CanvasFrameColor }, false);
-#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
-
-				// Draw a movement gizmo (using ImGui move cursor).
-				FVector2D Size, UVMin, UVMax, OutlineUVMin, OutlineUVMax;
-				if (ImGuiImplementation::GetCursorData(ImGuiMouseCursor_ResizeAll, Size, UVMin, UVMax, OutlineUVMin, OutlineUVMax))
-				{
-					const TextureIndex FontAtlasIndex = ModuleManager->GetTextureManager().FindTextureIndex(FName{ FontAtlasTextureName });
-					if (FontAtlasIndex != INDEX_NONE)
-					{
-						IndexBuffer.SetNum(0, false);
-						VertexBuffer.SetNum(0, false);
-#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
-						AddQuad(VertexBuffer, IndexBuffer, ViewportScreenSpacePosition + ViewportSizeScaled * 0.5f - Size * 0.375f, Size * 0.75f,
-							UVMin, UVMax, FrameColor.WithAlpha(bCanvasDragging ? 32 : 128), VertexClippingRect);
-#else
-						AddQuad(VertexBuffer, IndexBuffer, ViewportScreenSpacePosition + ViewportSizeScaled * 0.5f - Size * 0.375f, Size * 0.75f,
-							UVMin, UVMax, FrameColor.WithAlpha(bCanvasDragging ? 32 : 128));
-#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
-						const FSlateResourceHandle& Handle = ModuleManager->GetTextureManager().GetTextureHandle(FontAtlasIndex);
-						FSlateDrawElement::MakeCustomVerts(OutDrawElements, LayerId, Handle, VertexBuffer, IndexBuffer, nullptr, 0, 0);
-					}
-				}
-			}
-
-			// Draw frame representing area of the ImGui canvas that is visible when scale is 1.
-			Points.SetNum(0, false);
-			AddLocalRectanglePoints(Points, AllottedGeometry, ViewportScreenSpacePosition, ViewportSizeScaled);
-#if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
-				FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), Points, MyClippingRect,
-					ESlateDrawEffect::None, FLinearColor{ FrameColor }, false);
-#else
-				FSlateDrawElement::MakeLines(OutDrawElements, LayerId, AllottedGeometry.ToPaintGeometry(), Points,
-				ESlateDrawEffect::None, FLinearColor{ FrameColor }, false);
-#endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
-		}
 	}
 
-	return LayerId;
+	return Super::OnPaint(Args, AllottedGeometry, MyClippingRect, OutDrawElements, LayerId, WidgetStyle, bParentEnabled);
 }
 
-FVector2D SImGuiWidget::ComputeDesiredSize(float) const
+FVector2D SImGuiWidget::ComputeDesiredSize(float Scale) const
 {
-	return FVector2D{ 3840.f, 2160.f };
+	return FVector2D{ 3840.f, 2160.f } * Scale;
 }
 
 #if IMGUI_WIDGET_DEBUG

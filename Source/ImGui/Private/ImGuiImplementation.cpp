@@ -38,31 +38,11 @@ ImGuiContext** GImGuiContextPtrHandle = &GImGuiContextPtr;
 #include <HideWindowsPlatformTypes.h>
 #endif // PLATFORM_WINDOWS
 
-
 #include "ImGuiInteroperability.h"
+
 
 namespace ImGuiImplementation
 {
-	bool GetCursorData(ImGuiMouseCursor CursorType, FVector2D& OutSize, FVector2D& OutUVMin, FVector2D& OutUVMax, FVector2D& OutOutlineUVMin, FVector2D& OutOutlineUVMax)
-	{
-		ImFontAtlas* FontAtlas = ImGui::GetIO().Fonts;
-		ImVec2 Offset, Size, UV[4];
-		if (FontAtlas && FontAtlas->GetMouseCursorTexData(CursorType, &Offset, &Size, &UV[0], &UV[2]))
-		{
-			using namespace ImGuiInterops;
-			OutSize = ToVector2D(Size);
-			OutUVMin = ToVector2D(UV[0]);
-			OutUVMax = ToVector2D(UV[1]);
-			OutOutlineUVMin = ToVector2D(UV[2]);
-			OutOutlineUVMax = ToVector2D(UV[3]);
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-
 #if WITH_EDITOR
 	ImGuiContext** GetImGuiContextHandle()
 	{

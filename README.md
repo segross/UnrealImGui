@@ -40,12 +40,12 @@ Content of this repository needs to be placed in *Plugins* directory under proje
 
 To use that in other modules you will need to declare it as a public or private dependency in those modules' Build.cs files:
 
-```
+```C#
 PublicDependencyModuleNames.AddRange(new string[] { "ImGui" });
 ```
 or
 
-```
+```C#
 PrivateDependencyModuleNames.AddRange(new string[] { "ImGui" });
 ```
 
@@ -69,16 +69,12 @@ Self-debug functionality is based on console variable but it will be also replac
 Note: this console variable will be replaced with optional toggle command.
 
 
-### Canvas Map Mode
+### Canvas Control Mode
 
-When input mode is enabled, it is possible to activate *Canvas Map Mode* (better name welcomed) by pressing and holding `Left Shift` + `Left Alt` keys. In this mode it is possible to drag ImGui canvas and change its scale. It can be helpful to temporarily reach areas of canvas that otherwise would be inaccessible and to change what part of the canvas should be visible in normal mode.
-
-In canvas map mode:
-- **Mouse Wheel** - to zoom in and out.
-- **Right Mouse Button** - to drag ImGui canvas (not available at maximum zoom out).
-- **Middle Mouse Button** - to drag frame that represents part of the ImGui canvas that is visible in normal mode (only available after zooming out). To start dragging mouse needs to be in the centre of that frame.
-- It is still possible to use remaining keys and gestures to use ImGui, but primary goal is to select part of the canvas visible in normal mode.
-- Releasing `Left Shift` and/or `Left Alt` key switches back to normal mode and automatically sets scale to 1.
+Canvas control mode gives a possibility to navigate around ImGui canvas and control which part of it should be visible on the screen. To activate this mode press and hold `Left Shift` + `Left Alt` keys while in ImGui input mode. Leaving ImGui input mode or releasing shortcut keys will deactivate control mode. While in control mode ImGui draws canvas borders and a frame representing part of the ImGui canvas visible after leaving that mode. To control canvas scale, offset and frame use mouse wheel and dragging:
+- *Mouse Wheel* - to zoom in and out (resets to 1 after leaving control mode)
+- *Right Mouse Button* - to drag ImGui canvas/content
+- *Middle Mouse Button* - to drag frame representing part of the ImGui canvas that will be visible after leaving control mode
 
 
 See also
