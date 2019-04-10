@@ -5,6 +5,13 @@ Versions marked as 'unofficial' are labelled only for the needs of this changelo
 Change History
 --------------
 
+Version: 1.15 (2019/04)
+- Added new FImGuiDelegates interface for ImGui debug delegates.
+- Added code preserving delegates during hot-reloading and moving them to a new module.
+- DEPRECIATED old FImGuiModule delegates interface and FImGuiDelegateHandle.
+- Delegates registered with depreciated interface are redirected and get benefit of being preserved during hot-reloading. This can be controlled with IMGUI_REDIRECT_OBSOLETE_DELEGATES.
+- Added IMGUI_WITH_OBSOLETE_DELEGATES allowing to strip depreciated interface from builds (that interface will be officially removed in one of later releases).
+
 Version: 1.14 (2019/03)
 - Added SImGuiLayout to resets layout for SImGuiWidget.
 - Refactored rendering in SImGuiWidget to take advantage of layout reset.

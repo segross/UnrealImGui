@@ -4,6 +4,8 @@
 
 #include "ImGuiDrawData.h"
 
+#include "Utilities/WorldContextIndex.h"
+
 #include <ICursor.h>
 
 #include <imgui.h>
@@ -41,7 +43,7 @@ class FImGuiContextProxy
 
 public:
 
-	FImGuiContextProxy(const FString& Name, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas);
+	FImGuiContextProxy(const FString& Name, int32 InContextIndex, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas);
 
 	FImGuiContextProxy(const FImGuiContextProxy&) = delete;
 	FImGuiContextProxy& operator=(const FImGuiContextProxy&) = delete;
@@ -96,6 +98,9 @@ private:
 
 	void UpdateDrawData(ImDrawData* DrawData);
 
+	void BroadcastWorldTick();
+	void BroadcastMultiContextTick();
+
 	FImGuiContextPtr Context;
 
 	FVector2D DisplaySize = FVector2D::ZeroVector;
@@ -114,6 +119,8 @@ private:
 	const FImGuiInputState* InputState = nullptr;
 
 	TArray<FImGuiDrawList> DrawLists;
+
+	int32 ContextIndex = Utilities::INVALID_CONTEXT_INDEX;
 
 	FString Name;
 	std::string IniFilename;

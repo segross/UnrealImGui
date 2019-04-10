@@ -4,6 +4,7 @@
 
 #include "ImGuiContextManager.h"
 
+#include "ImGuiDelegatesContainer.h"
 #include "ImGuiImplementation.h"
 #include "Utilities/ScopeGuards.h"
 #include "Utilities/WorldContext.h"
@@ -88,6 +89,11 @@ void FImGuiContextManager::Tick(float DeltaSeconds)
 		if (ContextData.CanTick())
 		{
 			ContextData.ContextProxy.Tick(DeltaSeconds);
+		}
+		else
+		{
+			// Clear to make sure that we don't store objects registered for world that is no longer valid.
+			FImGuiDelegatesContainer::Get().OnWorldDebug(Pair.Key).Clear();
 		}
 	}
 }

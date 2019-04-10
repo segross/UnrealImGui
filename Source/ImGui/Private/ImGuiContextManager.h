@@ -72,7 +72,7 @@ private:
 	{
 		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas, int32 InPIEInstance = -1)
 			: PIEInstance(InPIEInstance)
-			, ContextProxy(ContextName, &SharedDrawEvent, &FontAtlas)
+			, ContextProxy(ContextName, ContextIndex, &SharedDrawEvent, &FontAtlas)
 		{
 		}
 
@@ -87,7 +87,7 @@ private:
 	struct FContextData
 	{
 		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas)
-			: ContextProxy(ContextName, &SharedDrawEvent, &FontAtlas)
+			: ContextProxy(ContextName, ContextIndex, &SharedDrawEvent, &FontAtlas)
 		{
 		}
 

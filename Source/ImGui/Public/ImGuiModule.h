@@ -34,6 +34,8 @@ public:
 		return FModuleManager::Get().IsModuleLoaded("ImGui");
 	}
 
+#if IMGUI_WITH_OBSOLETE_DELEGATES
+
 #if WITH_EDITOR
 	/**
 	 * Add a delegate called at the end of editor debug frame to draw debug controls in its ImGui context, creating
@@ -70,6 +72,8 @@ public:
 	 * @param Handle - Delegate handle that was returned by adding function
 	 */
 	virtual void RemoveImGuiDelegate(const FImGuiDelegateHandle& Handle);
+
+#endif // #if IMGUI_WITH_OBSOLETE_DELEGATES
 
 	/**
 	 * If it exists, get a handle to the texture with given resource name.
@@ -165,5 +169,6 @@ public:
 #if WITH_EDITOR
 	virtual void SetProperties(const FImGuiModuleProperties& Properties);
 	virtual struct ImGuiContext** GetImGuiContextHandle();
+	virtual struct FImGuiDelegatesContainer& GetDelegatesContainer();
 #endif
 };

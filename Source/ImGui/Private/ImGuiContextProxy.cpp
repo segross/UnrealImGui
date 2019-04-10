@@ -4,6 +4,7 @@
 
 #include "ImGuiContextProxy.h"
 
+#include "ImGuiDelegatesContainer.h"
 #include "ImGuiImplementation.h"
 #include "ImGuiInteroperability.h"
 
@@ -52,8 +53,9 @@ FImGuiContextProxy::FImGuiContextPtr::~FImGuiContextPtr()
 	}
 }
 
-FImGuiContextProxy::FImGuiContextProxy(const FString& InName, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas)
+FImGuiContextProxy::FImGuiContextProxy(const FString& InName, int32 InContextIndex, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas)
 	: Name(InName)
+	, ContextIndex(InContextIndex)
 	, SharedDrawEvent(InSharedDrawEvent)
 	, IniFilename(TCHAR_TO_ANSI(*GetIniFile(InName)))
 {
@@ -91,22 +93,13 @@ void FImGuiContextProxy::Draw()
 
 		// Broadcast draw event to allow listeners to draw their controls to this context.
 #if DRAW_EVENTS_ORDER_WORLD_BEFORE_MULTI_CONTEXT
-		if (DrawEvent.IsBound())
-		{
-			DrawEvent.Broadcast();
-		}
+		BroadcastWorldTick();
 #endif // DRAW_EVENTS_ORDER_WORLD_BEFORE_MULTI_CONTEXT
 
-		if (SharedDrawEvent && SharedDrawEvent->IsBound())
-		{
-			SharedDrawEvent->Broadcast();
-		}
+		BroadcastMultiContextTick();
 
 #if !DRAW_EVENTS_ORDER_WORLD_BEFORE_MULTI_CONTEXT
-		if (DrawEvent.IsBound())
-		{
-			DrawEvent.Broadcast();
-		}
+		BroadcastWorldTick();
 #endif // !DRAW_EVENTS_ORDER_WORLD_BEFORE_MULTI_CONTEXT
 	}
 }
@@ -190,5 +183,36 @@ void FImGuiContextProxy::UpdateDrawData(ImDrawData* DrawData)
 	{
 		// If we are not rendering then this might be a good moment to empty the array.
 		DrawLists.Empty();
+	}
+}
+
+void FImGuiContextProxy::BroadcastWorldTick()
+{
+	if (DrawEvent.IsBound())
+	{
+		DrawEvent.Broadcast();
+	}
+
+	if (ContextIndex != Utilities::INVALID_CONTEXT_INDEX)
+	{
+		FSimpleMulticastDelegate& WorldDebugEvent = FImGuiDelegatesContainer::Get().OnWorldDebug(ContextIndex);
+		if (WorldDebugEvent.IsBound())
+		{
+			WorldDebugEvent.Broadcast();
+		}
+	}
+}
+
+void FImGuiContextProxy::BroadcastMultiContextTick()
+{
+	if (SharedDrawEvent && SharedDrawEvent->IsBound())
+	{
+		SharedDrawEvent->Broadcast();
+	}
+
+	FSimpleMulticastDelegate& MultiContextDebugEvent = FImGuiDelegatesContainer::Get().OnMultiContextDebug();
+	if (MultiContextDebugEvent.IsBound())
+	{
+		MultiContextDebugEvent.Broadcast();
 	}
 }
