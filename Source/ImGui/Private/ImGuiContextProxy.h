@@ -107,7 +107,7 @@ private:
 	bool bIsDrawCalled = false;
 
 	uint32 LastFrameNumber = 0;
-
+	FString Name;
 	FSimpleMulticastDelegate DrawEvent;
 	FSimpleMulticastDelegate* SharedDrawEvent = nullptr;
 
@@ -115,6 +115,6 @@ private:
 
 	TArray<FImGuiDrawList> DrawLists;
 
-	FString Name;
+
 	std::string IniFilename;
 };
