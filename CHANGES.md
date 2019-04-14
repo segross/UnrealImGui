@@ -11,6 +11,9 @@ Version: 1.15 (2019/04)
 - DEPRECIATED old FImGuiModule delegates interface and FImGuiDelegateHandle.
 - Delegates registered with depreciated interface are redirected and get benefit of being preserved during hot-reloading. This can be controlled with IMGUI_REDIRECT_OBSOLETE_DELEGATES.
 - Added IMGUI_WITH_OBSOLETE_DELEGATES allowing to strip depreciated interface from builds (that interface will be officially removed in one of later releases).
+- Added new ImGui early debug delegates called during world tick start.
+- Delegates are called in fixed order: multi-context early debug, world early debug (called during world tick start), world debug, multi-context debug (called during world post actor tick or if not available, during world tick start).
+- Removed from build script configuration of debug delegates.
 
 Version: 1.14 (2019/03)
 - Added SImGuiLayout to resets layout for SImGuiWidget.

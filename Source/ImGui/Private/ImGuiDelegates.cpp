@@ -6,6 +6,21 @@
 #include "ImGuiDelegatesContainer.h"
 
 
+FSimpleMulticastDelegate& FImGuiDelegates::OnWorldEarlyDebug()
+{
+	return OnWorldEarlyDebug(GWorld);
+}
+
+FSimpleMulticastDelegate& FImGuiDelegates::OnWorldEarlyDebug(UWorld* World)
+{
+	return FImGuiDelegatesContainer::Get().OnWorldEarlyDebug(World);
+}
+
+FSimpleMulticastDelegate& FImGuiDelegates::OnMultiContextEarlyDebug()
+{
+	return FImGuiDelegatesContainer::Get().OnMultiContextEarlyDebug();
+}
+
 FSimpleMulticastDelegate& FImGuiDelegates::OnWorldDebug()
 {
 	return OnWorldDebug(GWorld);

@@ -25,13 +25,15 @@ void FImGuiDelegatesContainer::MoveContainer(FImGuiDelegatesContainer& Dst)
 	InstancePtr = &Dst;
 }
 
-FSimpleMulticastDelegate& FImGuiDelegatesContainer::OnWorldDebug(UWorld* World)
+int32 FImGuiDelegatesContainer::GetContextIndex(UWorld* World)
 {
-	return OnWorldDebug(Utilities::GetWorldContextIndex(*World));
+	return Utilities::GetWorldContextIndex(*World);
 }
 
 void FImGuiDelegatesContainer::Clear()
 {
-	WorldDelegates.Empty();
-	MultiContextDelegate.Clear();
+	WorldEarlyDebugDelegates.Empty();
+	WorldDebugDelegates.Empty();
+	MultiContextEarlyDebugDelegate.Clear();
+	MultiContextDebugDelegate.Clear();
 }

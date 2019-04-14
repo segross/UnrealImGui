@@ -16,21 +16,34 @@ public:
 	// If this is an active container move its data to a destination and redirect all future calls to that instance.
 	static void MoveContainer(FImGuiDelegatesContainer& Dst);
 
+	// Get delegate to ImGui world early debug event from known world instance.
+	FSimpleMulticastDelegate& OnWorldEarlyDebug(UWorld* World) { return OnWorldEarlyDebug(GetContextIndex(World)); }
+
+	// Get delegate to ImGui world early debug event from known context index.
+	FSimpleMulticastDelegate& OnWorldEarlyDebug(int32 ContextIndex) { return WorldEarlyDebugDelegates.FindOrAdd(ContextIndex); }
+
+	// Get delegate to ImGui multi-context early debug event.
+	FSimpleMulticastDelegate& OnMultiContextEarlyDebug() { return MultiContextEarlyDebugDelegate; }
+
 	// Get delegate to ImGui world debug event from known world instance.
-	FSimpleMulticastDelegate& OnWorldDebug(UWorld* World);
+	FSimpleMulticastDelegate& OnWorldDebug(UWorld* World) { return OnWorldDebug(GetContextIndex(World)); }
 
 	// Get delegate to ImGui world debug event from known context index.
-	FSimpleMulticastDelegate& OnWorldDebug(int32 ContextIndex) { return WorldDelegates.FindOrAdd(ContextIndex); }
+	FSimpleMulticastDelegate& OnWorldDebug(int32 ContextIndex) { return WorldDebugDelegates.FindOrAdd(ContextIndex); }
 
 	// Get delegate to ImGui multi-context debug event.
-	FSimpleMulticastDelegate& OnMultiContextDebug() { return MultiContextDelegate; }
+	FSimpleMulticastDelegate& OnMultiContextDebug() { return MultiContextDebugDelegate; }
 
 private:
 
+	int32 GetContextIndex(UWorld* World);
+
 	void Clear();
 
-	TMap<int32, FSimpleMulticastDelegate> WorldDelegates;
-	FSimpleMulticastDelegate MultiContextDelegate;
+	TMap<int32, FSimpleMulticastDelegate> WorldEarlyDebugDelegates;
+	TMap<int32, FSimpleMulticastDelegate> WorldDebugDelegates;
+	FSimpleMulticastDelegate MultiContextEarlyDebugDelegate;
+	FSimpleMulticastDelegate MultiContextDebugDelegate;
 
 	// Default container instance.
 	static FImGuiDelegatesContainer DefaultInstance;

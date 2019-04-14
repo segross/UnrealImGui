@@ -100,7 +100,7 @@ private:
 
 	void OnWorldTickStart(ELevelTick TickType, float DeltaSeconds);
 
-#if DRAW_EVENTS_ON_POST_ACTOR_TICK
+#if ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 	void OnWorldPostActorTick(UWorld* World, ELevelTick TickType, float DeltaSeconds);
 #endif
 

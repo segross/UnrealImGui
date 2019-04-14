@@ -84,9 +84,11 @@ public:
 	// Delegate called right before ending the frame to allows listeners draw their controls.
 	FSimpleMulticastDelegate& OnDraw() { return DrawEvent; }
 
-	// Call draw events to allow listeners draw their widgets. Only one call per frame is processed. If it is not
-	// called manually before, then it will be called from the Tick function.
-	void Draw();
+	// Call early debug events to allow listeners draw their debug widgets.
+	void DrawEarlyDebug();
+
+	// Call debug events to allow listeners draw their debug widgets.
+	void DrawDebug();
 
 	// Tick to advance context to the next frame. Only one call per frame will be processed.
 	void Tick(float DeltaSeconds);
@@ -98,8 +100,11 @@ private:
 
 	void UpdateDrawData(ImDrawData* DrawData);
 
-	void BroadcastWorldTick();
-	void BroadcastMultiContextTick();
+	void BroadcastWorldEarlyDebug();
+	void BroadcastMultiContextEarlyDebug();
+
+	void BroadcastWorldDebug();
+	void BroadcastMultiContextDebug();
 
 	FImGuiContextPtr Context;
 
@@ -109,7 +114,8 @@ private:
 	bool bHasActiveItem = false;
 
 	bool bIsFrameStarted = false;
-	bool bIsDrawCalled = false;
+	bool bIsDrawEarlyDebugCalled = false;
+	bool bIsDrawDebugCalled = false;
 
 	uint32 LastFrameNumber = 0;
 
