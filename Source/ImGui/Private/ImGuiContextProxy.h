@@ -117,17 +117,17 @@ private:
 	bool bIsDrawEarlyDebugCalled = false;
 	bool bIsDrawDebugCalled = false;
 
+	const FImGuiInputState* InputState = nullptr;
+
+	TArray<FImGuiDrawList> DrawLists;
+
+	FString Name;
+	int32 ContextIndex = Utilities::INVALID_CONTEXT_INDEX;
+
 	uint32 LastFrameNumber = 0;
 
 	FSimpleMulticastDelegate DrawEvent;
 	FSimpleMulticastDelegate* SharedDrawEvent = nullptr;
 
-	const FImGuiInputState* InputState = nullptr;
-
-	TArray<FImGuiDrawList> DrawLists;
-
-	int32 ContextIndex = Utilities::INVALID_CONTEXT_INDEX;
-
-	FString Name;
 	std::string IniFilename;
 };
