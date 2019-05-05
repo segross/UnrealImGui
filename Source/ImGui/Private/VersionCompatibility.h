@@ -23,3 +23,8 @@
 // that renames FStringClassReference to FSoftClassPath, so it is still possible tu use the old type name in code.
 // The old header forwards to the new one but if used it outputs a warning, so we want to avoid it.
 #define ENGINE_COMPATIBILITY_LEGACY_STRING_CLASS_REF    BELOW_ENGINE_VERSION(4, 18)
+
+// Starting from version 4.18 engine has a world post actor tick event which if available, provides a good opportunity
+// to call debug delegates after world actors are already updated.
+#define ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK FROM_ENGINE_VERSION(4, 18)
+

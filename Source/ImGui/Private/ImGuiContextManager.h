@@ -72,7 +72,7 @@ private:
 	{
 		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas, int32 InPIEInstance = -1)
 			: PIEInstance(InPIEInstance)
-			, ContextProxy(ContextName, &SharedDrawEvent, &FontAtlas)
+			, ContextProxy(ContextName, ContextIndex, &SharedDrawEvent, &FontAtlas)
 		{
 		}
 
@@ -87,7 +87,7 @@ private:
 	struct FContextData
 	{
 		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas)
-			: ContextProxy(ContextName, &SharedDrawEvent, &FontAtlas)
+			: ContextProxy(ContextName, ContextIndex, &SharedDrawEvent, &FontAtlas)
 		{
 		}
 
@@ -100,7 +100,7 @@ private:
 
 	void OnWorldTickStart(ELevelTick TickType, float DeltaSeconds);
 
-#if DRAW_EVENTS_ON_POST_ACTOR_TICK
+#if ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 	void OnWorldPostActorTick(UWorld* World, ELevelTick TickType, float DeltaSeconds);
 #endif
 

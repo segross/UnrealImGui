@@ -4,6 +4,7 @@
 
 #include "ImGuiModuleManager.h"
 
+#include "ImGuiDelegatesContainer.h"
 #include "ImGuiTextureHandle.h"
 #include "TextureManager.h"
 #include "Utilities/WorldContext.h"
@@ -15,6 +16,8 @@
 #endif
 
 #include <IPluginManager.h>
+
+#define IMGUI_REDIRECT_OBSOLETE_DELEGATES 1
 
 
 #define LOCTEXT_NAMESPACE "FImGuiModule"
@@ -38,18 +41,29 @@ static FImGuiModuleManager* ImGuiModuleManager = nullptr;
 static FImGuiEditor* ImGuiEditor = nullptr;
 #endif
 
+#if IMGUI_WITH_OBSOLETE_DELEGATES
+
 #if WITH_EDITOR
 FImGuiDelegateHandle FImGuiModule::AddEditorImGuiDelegate(const FImGuiDelegate& Delegate)
 {
+#if IMGUI_REDIRECT_OBSOLETE_DELEGATES
+	return { FImGuiDelegatesContainer::Get().OnWorldDebug(Utilities::EDITOR_CONTEXT_INDEX).Add(Delegate),
+		EDelegateCategory::Default, Utilities::EDITOR_CONTEXT_INDEX };
+#else
 	checkf(ImGuiModuleManager, TEXT("Null pointer to internal module implementation. Is module available?"));
 
 	return { ImGuiModuleManager->GetContextManager().GetEditorContextProxy().OnDraw().Add(Delegate),
 		EDelegateCategory::Default, Utilities::EDITOR_CONTEXT_INDEX };
+#endif // IMGUI_REDIRECT_OBSOLETE_DELEGATES
 }
 #endif
 
 FImGuiDelegateHandle FImGuiModule::AddWorldImGuiDelegate(const FImGuiDelegate& Delegate)
 {
+#if IMGUI_REDIRECT_OBSOLETE_DELEGATES
+	const int32 ContextIndex = Utilities::GetWorldContextIndex((UWorld*)GWorld);
+	return { FImGuiDelegatesContainer::Get().OnWorldDebug(ContextIndex).Add(Delegate), EDelegateCategory::Default, ContextIndex };
+#else
 	checkf(ImGuiModuleManager, TEXT("Null pointer to internal module implementation. Is module available?"));
 
 #if WITH_EDITOR
@@ -71,17 +85,32 @@ FImGuiDelegateHandle FImGuiModule::AddWorldImGuiDelegate(const FImGuiDelegate& D
 #endif
 
 	return{ Proxy.OnDraw().Add(Delegate), EDelegateCategory::Default, Index };
+#endif // IMGUI_REDIRECT_OBSOLETE_DELEGATES
 }
 
 FImGuiDelegateHandle FImGuiModule::AddMultiContextImGuiDelegate(const FImGuiDelegate& Delegate)
 {
+#if IMGUI_REDIRECT_OBSOLETE_DELEGATES
+	return { FImGuiDelegatesContainer::Get().OnMultiContextDebug().Add(Delegate), EDelegateCategory::MultiContext };
+#else
 	checkf(ImGuiModuleManager, TEXT("Null pointer to internal module implementation. Is module available?"));
 
 	return { ImGuiModuleManager->GetContextManager().OnDrawMultiContext().Add(Delegate), EDelegateCategory::MultiContext };
+#endif
 }
 
 void FImGuiModule::RemoveImGuiDelegate(const FImGuiDelegateHandle& Handle)
 {
+#if IMGUI_REDIRECT_OBSOLETE_DELEGATES
+	if (Handle.Category == EDelegateCategory::MultiContext)
+	{
+		FImGuiDelegatesContainer::Get().OnMultiContextDebug().Remove(Handle.Handle);
+	}
+	else
+	{
+		FImGuiDelegatesContainer::Get().OnWorldDebug(Handle.Index).Remove(Handle.Handle);
+	}
+#else
 	if (ImGuiModuleManager)
 	{
 		if (Handle.Category == EDelegateCategory::MultiContext)
@@ -93,7 +122,10 @@ void FImGuiModule::RemoveImGuiDelegate(const FImGuiDelegateHandle& Handle)
 			Proxy->OnDraw().Remove(Handle.Handle);
 		}
 	}
+#endif
 }
+
+#endif // IMGUI_WITH_OBSOLETE_DELEGATES
 
 FImGuiTextureHandle FImGuiModule::FindTextureHandle(const FName& Name)
 {
@@ -154,6 +186,10 @@ void FImGuiModule::ShutdownModule()
 	// deleted. This can cause troubles after hot-reload when code in other modules calls ImGui interface functions
 	// which are statically bound to the obsolete module. To keep ImGui code functional we can redirect context handle
 	// to point to the new module.
+
+	// When shutting down during hot-reloading, we might want to rewire handles used in statically bound functions
+	// or move data to a new module.
+
 	FModuleManager::Get().OnModulesChanged().AddLambda([this] (FName Name, EModuleChangeReason Reason)
 	{
 		if (Reason == EModuleChangeReason::ModuleLoaded && Name == "ImGui")
@@ -161,7 +197,10 @@ void FImGuiModule::ShutdownModule()
 			FImGuiModule& LoadedModule = FImGuiModule::Get();
 			if (&LoadedModule != this)
 			{
+				// Statically bound functions will be still made to the obsolete module so we need to  
 				ImGuiImplementation::SetImGuiContextHandle(LoadedModule.GetImGuiContextHandle());
+
+				FImGuiDelegatesContainer::MoveContainer(LoadedModule.GetDelegatesContainer());
 
 				if (bMoveProperties)
 				{
@@ -183,6 +222,11 @@ void FImGuiModule::SetProperties(const FImGuiModuleProperties& Properties)
 ImGuiContext** FImGuiModule::GetImGuiContextHandle()
 {
 	return ImGuiImplementation::GetImGuiContextHandle();
+}
+
+FImGuiDelegatesContainer& FImGuiModule::GetDelegatesContainer()
+{
+	return FImGuiDelegatesContainer::Get();
 }
 #endif
 

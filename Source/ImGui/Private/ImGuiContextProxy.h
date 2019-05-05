@@ -4,6 +4,8 @@
 
 #include "ImGuiDrawData.h"
 
+#include "Utilities/WorldContextIndex.h"
+
 #include <ICursor.h>
 
 #include <imgui.h>
@@ -41,7 +43,7 @@ class FImGuiContextProxy
 
 public:
 
-	FImGuiContextProxy(const FString& Name, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas);
+	FImGuiContextProxy(const FString& Name, int32 InContextIndex, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas);
 
 	FImGuiContextProxy(const FImGuiContextProxy&) = delete;
 	FImGuiContextProxy& operator=(const FImGuiContextProxy&) = delete;
@@ -82,9 +84,11 @@ public:
 	// Delegate called right before ending the frame to allows listeners draw their controls.
 	FSimpleMulticastDelegate& OnDraw() { return DrawEvent; }
 
-	// Call draw events to allow listeners draw their widgets. Only one call per frame is processed. If it is not
-	// called manually before, then it will be called from the Tick function.
-	void Draw();
+	// Call early debug events to allow listeners draw their debug widgets.
+	void DrawEarlyDebug();
+
+	// Call debug events to allow listeners draw their debug widgets.
+	void DrawDebug();
 
 	// Tick to advance context to the next frame. Only one call per frame will be processed.
 	void Tick(float DeltaSeconds);
@@ -96,6 +100,12 @@ private:
 
 	void UpdateDrawData(ImDrawData* DrawData);
 
+	void BroadcastWorldEarlyDebug();
+	void BroadcastMultiContextEarlyDebug();
+
+	void BroadcastWorldDebug();
+	void BroadcastMultiContextDebug();
+
 	FImGuiContextPtr Context;
 
 	FVector2D DisplaySize = FVector2D::ZeroVector;
@@ -104,17 +114,20 @@ private:
 	bool bHasActiveItem = false;
 
 	bool bIsFrameStarted = false;
-	bool bIsDrawCalled = false;
-
-	uint32 LastFrameNumber = 0;
-	FString Name;
-	FSimpleMulticastDelegate DrawEvent;
-	FSimpleMulticastDelegate* SharedDrawEvent = nullptr;
+	bool bIsDrawEarlyDebugCalled = false;
+	bool bIsDrawDebugCalled = false;
 
 	const FImGuiInputState* InputState = nullptr;
 
 	TArray<FImGuiDrawList> DrawLists;
 
+	FString Name;
+	int32 ContextIndex = Utilities::INVALID_CONTEXT_INDEX;
+
+	uint32 LastFrameNumber = 0;
+
+	FSimpleMulticastDelegate DrawEvent;
+	FSimpleMulticastDelegate* SharedDrawEvent = nullptr;
 
 	std::string IniFilename;
 };

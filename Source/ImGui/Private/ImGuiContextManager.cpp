@@ -4,6 +4,7 @@
 
 #include "ImGuiContextManager.h"
 
+#include "ImGuiDelegatesContainer.h"
 #include "ImGuiImplementation.h"
 #include "Utilities/ScopeGuards.h"
 #include "Utilities/WorldContext.h"
@@ -63,7 +64,7 @@ FImGuiContextManager::FImGuiContextManager()
 	FontAtlas.GetTexDataAsRGBA32(&Pixels, &Width, &Height, &Bpp);
 
 	FWorldDelegates::OnWorldTickStart.AddRaw(this, &FImGuiContextManager::OnWorldTickStart);
-#if DRAW_EVENTS_ON_POST_ACTOR_TICK
+#if ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 	FWorldDelegates::OnWorldPostActorTick.AddRaw(this, &FImGuiContextManager::OnWorldPostActorTick);
 #endif
 }
@@ -72,7 +73,7 @@ FImGuiContextManager::~FImGuiContextManager()
 {
 	// Order matters because contexts can be created during World Tick Start events.
 	FWorldDelegates::OnWorldTickStart.RemoveAll(this);
-#if DRAW_EVENTS_ON_POST_ACTOR_TICK
+#if ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 	FWorldDelegates::OnWorldPostActorTick.RemoveAll(this);
 #endif
 }
@@ -89,6 +90,11 @@ void FImGuiContextManager::Tick(float DeltaSeconds)
 		{
 			ContextData.ContextProxy.Tick(DeltaSeconds);
 		}
+		else
+		{
+			// Clear to make sure that we don't store objects registered for world that is no longer valid.
+			FImGuiDelegatesContainer::Get().OnWorldDebug(Pair.Key).Clear();
+		}
 	}
 }
 
@@ -97,22 +103,23 @@ void FImGuiContextManager::OnWorldTickStart(ELevelTick TickType, float DeltaSeco
 	if (GWorld)
 	{
 		FImGuiContextProxy& ContextProxy = GetWorldContextProxy(*GWorld);
+
+		// Set as current, so we have right context ready when updating world objects.
 		ContextProxy.SetAsCurrent();
 
-#if DRAW_EVENTS_ON_WORLD_TICK_START
-		ContextProxy.Draw();
+		ContextProxy.DrawEarlyDebug();
+#if !ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
+		ContextProxy.DrawDebug();
 #endif
 	}
 }
 
-#if DRAW_EVENTS_ON_POST_ACTOR_TICK
+#if ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 void FImGuiContextManager::OnWorldPostActorTick(UWorld* World, ELevelTick TickType, float DeltaSeconds)
 {
-	FImGuiContextProxy& ContextProxy = GetWorldContextProxy(*GWorld);
-	ContextProxy.SetAsCurrent();
-	ContextProxy.Draw();
+	GetWorldContextProxy(*GWorld).DrawDebug();
 }
-#endif // DRAW_EVENTS_ON_POST_ACTOR_TICK
+#endif // ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 
 #if WITH_EDITOR
 FImGuiContextManager::FContextData& FImGuiContextManager::GetEditorContextData()
