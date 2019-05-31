@@ -26,11 +26,13 @@ void SImGuiLayout::Construct(const FArguments& InArgs)
 		.IgnoreInheritedScale(true)
 		.HAlign(HAlign_Fill)
 		.VAlign(VAlign_Fill)
+		.Visibility(EVisibility::SelfHitTestInvisible)
 		[
 			// Apply custom scale if necessary.
 			// TODO: Bind to relevant parameter.
 			SNew(SDPIScaler)
 			.DPIScale(1.f)
+			.Visibility(EVisibility::SelfHitTestInvisible)
 			[
 				SNew(SConstraintCanvas)
 				+ SConstraintCanvas::Slot()
@@ -51,5 +53,7 @@ void SImGuiLayout::Construct(const FArguments& InArgs)
 			]
 		]
 	];
+
+	SetVisibility(EVisibility::SelfHitTestInvisible);
 }
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION

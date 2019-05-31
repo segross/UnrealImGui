@@ -5,6 +5,9 @@ Versions marked as 'unofficial' are labelled only for the needs of this changelo
 Change History
 --------------
 
+Version: 1.16 (2019/05)
+- Fixed issue with SImGuiLayout blocking mouse input for other Slate widgets, which was introduced by refactorization of widgets (version 1.14, commit c144658f).
+
 Version: 1.15 (2019/04)
 - Added new FImGuiDelegates interface for ImGui debug delegates.
 - Added code preserving delegates during hot-reloading and moving them to a new module.
