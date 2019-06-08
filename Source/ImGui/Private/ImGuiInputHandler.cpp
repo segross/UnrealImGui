@@ -1,8 +1,7 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ImGuiPrivatePCH.h"
-
 #include "ImGuiInputHandler.h"
+#include "ImGuiPrivatePCH.h"
 
 #include "ImGuiContextProxy.h"
 #include "ImGuiModuleManager.h"
@@ -12,9 +11,9 @@
 #include <Input/Events.h>
 
 #if WITH_EDITOR
-#include <Commands/InputBindingManager.h>
-#include <Commands/InputChord.h>
-#include <DebuggerCommands.h>
+#include <Framework/Commands/InputBindingManager.h>
+#include <Framework/Commands/InputChord.h>
+#include <Kismet2/DebuggerCommands.h>
 #endif // WITH_EDITOR
 
 

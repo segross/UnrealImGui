@@ -1,8 +1,7 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ImGuiPrivatePCH.h"
-
 #include "ImGuiContextProxy.h"
+#include "ImGuiPrivatePCH.h"
 
 #include "ImGuiDelegatesContainer.h"
 #include "ImGuiImplementation.h"

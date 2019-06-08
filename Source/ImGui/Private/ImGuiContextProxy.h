@@ -6,7 +6,7 @@
 
 #include "Utilities/WorldContextIndex.h"
 
-#include <ICursor.h>
+#include <GenericPlatform/ICursor.h>
 
 #include <imgui.h>
 

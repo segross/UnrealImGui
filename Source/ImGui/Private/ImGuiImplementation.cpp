@@ -1,5 +1,6 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
+#include "ImGuiImplementation.h"
 #include "ImGuiPrivatePCH.h"
 
 // We build ImGui source code as part of this module. This is for convenience (no need to manually build libraries for
@@ -25,7 +26,7 @@ ImGuiContext** GImGuiContextPtrHandle = &GImGuiContextPtr;
 #endif // WITH_EDITOR
 
 #if PLATFORM_WINDOWS
-#include <AllowWindowsPlatformTypes.h>
+#include <Windows/AllowWindowsPlatformTypes.h>
 #endif // PLATFORM_WINDOWS
 
 #include "imgui.cpp"
@@ -35,7 +36,7 @@ ImGuiContext** GImGuiContextPtrHandle = &GImGuiContextPtr;
 #include "misc/stl/imgui_stl.cpp"
 
 #if PLATFORM_WINDOWS
-#include <HideWindowsPlatformTypes.h>
+#include <Windows/HideWindowsPlatformTypes.h>
 #endif // PLATFORM_WINDOWS
 
 #include "ImGuiInteroperability.h"

@@ -1,5 +1,6 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
+#include "ImGuiModule.h"
 #include "ImGuiPrivatePCH.h"
 
 #include "ImGuiModuleManager.h"
@@ -15,7 +16,7 @@
 #include "Editor/ImGuiEditor.h"
 #endif
 
-#include <IPluginManager.h>
+#include <Interfaces/IPluginManager.h>
 
 #define IMGUI_REDIRECT_OBSOLETE_DELEGATES 1
 

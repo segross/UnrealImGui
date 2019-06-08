@@ -1,8 +1,7 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ImGuiPrivatePCH.h"
-
 #include "ImGuiDrawData.h"
+#include "ImGuiPrivatePCH.h"
 
 
 #if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
