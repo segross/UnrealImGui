@@ -54,8 +54,6 @@ private:
 	void CreateTickInitializer();
 	void ReleaseTickInitializer();
 
-	bool IsInUpdateThread();
-
 	void Tick(float DeltaSeconds);
 
 	void OnViewportCreated();
