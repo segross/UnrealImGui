@@ -10,6 +10,7 @@
 #include "ImGuiImplementation.h"
 #include "ImGuiInputHandler.h"
 #include "ImGuiInputHandlerFactory.h"
+#include "ImGuiInputState.h"
 #include "ImGuiInteroperability.h"
 #include "ImGuiModuleManager.h"
 #include "ImGuiModuleSettings.h"
@@ -83,7 +84,7 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 #if IMGUI_WIDGET_DEBUG
 	ContextProxy->OnDraw().AddRaw(this, &SImGuiWidget::OnDebugDraw);
 #endif // IMGUI_WIDGET_DEBUG
-	ContextProxy->SetInputState(&InputState);
+	InputState = &ContextProxy->GetInputState();
 
 	// Register for settings change.
 	RegisterImGuiSettingsDelegates();
@@ -119,7 +120,6 @@ SImGuiWidget::~SImGuiWidget()
 #if IMGUI_WIDGET_DEBUG
 		ContextProxy->OnDraw().RemoveAll(this);
 #endif // IMGUI_WIDGET_DEBUG
-		ContextProxy->RemoveInputState(&InputState);
 	}
 
 	// Unregister from post-update notifications.
@@ -148,7 +148,7 @@ FReply SImGuiWidget::OnKeyChar(const FGeometry& MyGeometry, const FCharacterEven
 	const FImGuiInputResponse Response = InputHandler->OnKeyChar(CharacterEvent);
 	if (Response.HasProcessingRequest())
 	{
-		InputState.AddCharacter(CharacterEvent.GetCharacter());
+		InputState->AddCharacter(CharacterEvent.GetCharacter());
 	}
 
 	return ToSlateReply(Response);
@@ -158,12 +158,12 @@ FReply SImGuiWidget::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Key
 {
 	if (KeyEvent.GetKey().IsGamepadKey())
 	{
-		if (InputState.IsGamepadNavigationEnabled())
+		if (InputState->IsGamepadNavigationEnabled())
 		{
 			const FImGuiInputResponse Response = InputHandler->OnGamepadKeyDown(KeyEvent);
 			if (Response.HasProcessingRequest())
 			{
-				InputState.SetGamepadNavigationKey(KeyEvent, true);
+				InputState->SetGamepadNavigationKey(KeyEvent, true);
 			}
 
 			return ToSlateReply(Response);
@@ -180,7 +180,7 @@ FReply SImGuiWidget::OnKeyDown(const FGeometry& MyGeometry, const FKeyEvent& Key
 		const FImGuiInputResponse Response = InputHandler->OnKeyDown(KeyEvent);
 		if (Response.HasProcessingRequest())
 		{
-			InputState.SetKeyDown(KeyEvent, true);
+			InputState->SetKeyDown(KeyEvent, true);
 			CopyModifierKeys(KeyEvent);
 		}
 
@@ -192,10 +192,10 @@ FReply SImGuiWidget::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& KeyEv
 {
 	if (KeyEvent.GetKey().IsGamepadKey())
 	{
-		if (InputState.IsGamepadNavigationEnabled())
+		if (InputState->IsGamepadNavigationEnabled())
 		{
 			// Always handle key up events to protect from leaving accidental keys not cleared in ImGui input state.
-			InputState.SetGamepadNavigationKey(KeyEvent, false);
+			InputState->SetGamepadNavigationKey(KeyEvent, false);
 
 			return ToSlateReply(InputHandler->OnGamepadKeyUp(KeyEvent));
 		}
@@ -209,7 +209,7 @@ FReply SImGuiWidget::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& KeyEv
 		UpdateCanvasControlMode(KeyEvent);
 
 		// Always handle key up events to protect from leaving accidental keys not cleared in ImGui input state.
-		InputState.SetKeyDown(KeyEvent, false);
+		InputState->SetKeyDown(KeyEvent, false);
 		CopyModifierKeys(KeyEvent);
 
 		return ToSlateReply(InputHandler->OnKeyUp(KeyEvent));
@@ -218,12 +218,12 @@ FReply SImGuiWidget::OnKeyUp(const FGeometry& MyGeometry, const FKeyEvent& KeyEv
 
 FReply SImGuiWidget::OnAnalogValueChanged(const FGeometry& MyGeometry, const FAnalogInputEvent& AnalogInputEvent)
 {
-	if (AnalogInputEvent.GetKey().IsGamepadKey() && InputState.IsGamepadNavigationEnabled())
+	if (AnalogInputEvent.GetKey().IsGamepadKey() && InputState->IsGamepadNavigationEnabled())
 	{
 		const FImGuiInputResponse Response = InputHandler->OnGamepadAxis(AnalogInputEvent);
 		if (Response.HasProcessingRequest())
 		{
-			InputState.SetGamepadNavigationAxis(AnalogInputEvent, AnalogInputEvent.GetAnalogValue());
+			InputState->SetGamepadNavigationAxis(AnalogInputEvent, AnalogInputEvent.GetAnalogValue());
 		}
 
 		return ToSlateReply(Response);
@@ -236,32 +236,32 @@ FReply SImGuiWidget::OnAnalogValueChanged(const FGeometry& MyGeometry, const FAn
 
 FReply SImGuiWidget::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	InputState.SetMouseDown(MouseEvent, true);
+	InputState->SetMouseDown(MouseEvent, true);
 	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	InputState.SetMouseDown(MouseEvent, true);
+	InputState->SetMouseDown(MouseEvent, true);
 	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	InputState.SetMouseDown(MouseEvent, false);
+	InputState->SetMouseDown(MouseEvent, false);
 	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	InputState.AddMouseWheelDelta(MouseEvent.GetWheelDelta());
+	InputState->AddMouseWheelDelta(MouseEvent.GetWheelDelta());
 	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	const FSlateRenderTransform ImGuiToScreen = ImGuiTransform.Concatenate(MyGeometry.GetAccumulatedRenderTransform());
-	InputState.SetMousePosition(ImGuiToScreen.Inverse().TransformPoint(MouseEvent.GetScreenSpacePosition()));
+	InputState->SetMousePosition(ImGuiToScreen.Inverse().TransformPoint(MouseEvent.GetScreenSpacePosition()));
 	return FReply::Handled();
 }
 
@@ -300,7 +300,7 @@ void SImGuiWidget::OnMouseEnter(const FGeometry& MyGeometry, const FPointerEvent
 	{
 		for (const FKey& Button : { EKeys::LeftMouseButton, EKeys::MiddleMouseButton, EKeys::RightMouseButton, EKeys::ThumbMouseButton, EKeys::ThumbMouseButton2 })
 		{
-			InputState.SetMouseDown(Button, MouseEvent.IsMouseButtonDown(Button));
+			InputState->SetMouseDown(Button, MouseEvent.IsMouseButtonDown(Button));
 		}
 	}
 
@@ -375,9 +375,9 @@ void SImGuiWidget::UnregisterImGuiSettingsDelegates()
 
 void SImGuiWidget::CopyModifierKeys(const FInputEvent& InputEvent)
 {
-	InputState.SetControlDown(InputEvent.IsControlDown());
-	InputState.SetShiftDown(InputEvent.IsShiftDown());
-	InputState.SetAltDown(InputEvent.IsAltDown());
+	InputState->SetControlDown(InputEvent.IsControlDown());
+	InputState->SetShiftDown(InputEvent.IsShiftDown());
+	InputState->SetAltDown(InputEvent.IsAltDown());
 }
 
 bool SImGuiWidget::IsConsoleOpened() const
@@ -493,10 +493,10 @@ void SImGuiWidget::UpdateInputEnabled()
 
 	if (bInputEnabled)
 	{
-		InputState.SetKeyboardNavigationEnabled(ModuleManager && ModuleManager->GetProperties().IsKeyboardNavigationEnabled());
-		InputState.SetGamepadNavigationEnabled(ModuleManager && ModuleManager->GetProperties().IsGamepadNavigationEnabled());
+		InputState->SetKeyboardNavigationEnabled(ModuleManager && ModuleManager->GetProperties().IsKeyboardNavigationEnabled());
+		InputState->SetGamepadNavigationEnabled(ModuleManager && ModuleManager->GetProperties().IsGamepadNavigationEnabled());
 		const auto& Application = FSlateApplication::Get().GetPlatformApplication();
-		InputState.SetGamepad(Application.IsValid() && Application->IsGamepadAttached());
+		InputState->SetGamepad(Application.IsValid() && Application->IsGamepadAttached());
 	}
 }
 
@@ -516,18 +516,18 @@ void SImGuiWidget::UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer
 		// mouse-only input mode.
 		if (NewInputMode == EInputMode::None)
 		{
-			InputState.ResetState();
+			InputState->Reset();
 		}
 		else if (InputMode == EInputMode::Full)
 		{
-			InputState.ResetKeyboardState();
-			InputState.ResetNavigationState();
+			InputState->ResetKeyboard();
+			InputState->ResetGamepadNavigation();
 		}
 
 		InputMode = NewInputMode;
 	}
 
-	InputState.SetMousePointer(bUseSoftwareCursor && bHasMousePointer);
+	InputState->SetMousePointer(bUseSoftwareCursor && bHasMousePointer);
 }
 
 void SImGuiWidget::UpdateCanvasControlMode(const FInputEvent& InputEvent)
@@ -537,11 +537,6 @@ void SImGuiWidget::UpdateCanvasControlMode(const FInputEvent& InputEvent)
 
 void SImGuiWidget::OnPostImGuiUpdate()
 {
-	if (InputMode != EInputMode::None)
-	{
-		InputState.ClearUpdateState();
-	}
-
 	ImGuiRenderTransform = ImGuiTransform;
 }
 
@@ -780,7 +775,7 @@ void SImGuiWidget::OnDebugDraw()
 			{
 				TwoColumns::Value("Input Enabled", bInputEnabled);
 				TwoColumns::Value("Input Mode", TEXT_INPUT_MODE(InputMode));
-				TwoColumns::Value("Input Has Mouse Pointer", InputState.HasMousePointer());
+				TwoColumns::Value("Input Has Mouse Pointer", InputState->HasMousePointer());
 			});
 
 			TwoColumns::CollapsingGroup("Widget", [&]()
@@ -837,7 +832,7 @@ void SImGuiWidget::OnDebugDraw()
 						{
 							const FKey& Key = Keys[Idx];
 							const uint32 KeyIndex = ImGuiInterops::GetKeyIndex(Key);
-							Styles::TextHighlight(InputState.GetKeys()[KeyIndex], [&]()
+							Styles::TextHighlight(InputState->GetKeys()[KeyIndex], [&]()
 							{
 								TwoColumns::Value(*Key.GetDisplayName().ToString(), KeyIndex);
 							});
@@ -852,9 +847,9 @@ void SImGuiWidget::OnDebugDraw()
 
 			Columns::CollapsingGroup("Modifier Keys", 4, [&]()
 			{
-				Styles::TextHighlight(InputState.IsShiftDown(), [&]() { ImGui::Text("Shift"); }); ImGui::NextColumn();
-				Styles::TextHighlight(InputState.IsControlDown(), [&]() { ImGui::Text("Control"); }); ImGui::NextColumn();
-				Styles::TextHighlight(InputState.IsAltDown(), [&]() { ImGui::Text("Alt"); }); ImGui::NextColumn();
+				Styles::TextHighlight(InputState->IsShiftDown(), [&]() { ImGui::Text("Shift"); }); ImGui::NextColumn();
+				Styles::TextHighlight(InputState->IsControlDown(), [&]() { ImGui::Text("Control"); }); ImGui::NextColumn();
+				Styles::TextHighlight(InputState->IsAltDown(), [&]() { ImGui::Text("Alt"); }); ImGui::NextColumn();
 				ImGui::NextColumn();
 			});
 
@@ -877,7 +872,7 @@ void SImGuiWidget::OnDebugDraw()
 						{
 							const FKey& Button = Buttons[Idx];
 							const uint32 MouseIndex = ImGuiInterops::GetMouseIndex(Button);
-							Styles::TextHighlight(InputState.GetMouseButtons()[MouseIndex], [&]()
+							Styles::TextHighlight(InputState->GetMouseButtons()[MouseIndex], [&]()
 							{
 								TwoColumns::Value(*Button.GetDisplayName().ToString(), MouseIndex);
 							});
@@ -892,9 +887,9 @@ void SImGuiWidget::OnDebugDraw()
 
 			Columns::CollapsingGroup("Mouse Axes", 4, [&]()
 			{
-				TwoColumns::Value("Position X", InputState.GetMousePosition().X);
-				TwoColumns::Value("Position Y", InputState.GetMousePosition().Y);
-				TwoColumns::Value("Wheel Delta", InputState.GetMouseWheelDelta());
+				TwoColumns::Value("Position X", InputState->GetMousePosition().X);
+				TwoColumns::Value("Position Y", InputState->GetMousePosition().Y);
+				TwoColumns::Value("Wheel Delta", InputState->GetMouseWheelDelta());
 				ImGui::NextColumn(); ImGui::NextColumn();
 			});
 

@@ -151,17 +151,34 @@ public:
 	// @param bInHasGamepad - True, if gamepad is attached
 	void SetGamepad(bool bInHasGamepad) { bHasGamepad = bInHasGamepad; }
 
-	// Reset the whole state and mark as dirty.
-	void ResetState() { Reset(true, true, true); }
+	// Reset the whole input state and mark it as dirty.
+	void Reset()
+	{
+		ResetKeyboard();
+		ResetMouse();
+		ResetGamepadNavigation();
+	}
 
-	// Reset keyboard state and mark as dirty.
-	void ResetKeyboardState() { Reset(true, false, false); }
+	// Reset the keyboard input state and mark it as dirty.
+	void ResetKeyboard()
+	{
+		ClearCharacters();
+		ClearKeys();
+		ClearModifierKeys();
+	}
 
-	// Reset mouse state and mark as dirty.
-	void ResetMouseState() { Reset(false, true, false); }
+	// Reset the mouse input state and mark it as dirty.
+	void ResetMouse()
+	{
+		ClearMouseButtons();
+		ClearMouseAnalogue();
+	}
 
-	// Reset navigation state.
-	void ResetNavigationState() { Reset(false, false, true); }
+	// Reset the gamepad navigation state.
+	void ResetGamepadNavigation()
+	{
+		ClearNavigationInputs();
+	}
 
 	// Clear part of the state that is meant to be updated in every frame like: accumulators, buffers, navigation data
 	// and information about dirty parts of keys or mouse buttons arrays.
@@ -171,8 +188,6 @@ private:
 
 	void SetKeyDown(uint32 KeyIndex, bool bIsDown);
 	void SetMouseDown(uint32 MouseIndex, bool IsDown);
-
-	void Reset(bool bKeyboard, bool bMouse, bool bNavigation);
 
 	void ClearCharacters();
 	void ClearKeys();

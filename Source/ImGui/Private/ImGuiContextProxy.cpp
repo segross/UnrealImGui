@@ -151,10 +151,8 @@ void FImGuiContextProxy::BeginFrame(float DeltaTime)
 		ImGuiIO& IO = ImGui::GetIO();
 		IO.DeltaTime = DeltaTime;
 
-		if (InputState)
-		{
-			ImGuiInterops::CopyInput(IO, *InputState);
-		}
+		ImGuiInterops::CopyInput(IO, InputState);
+		InputState.ClearUpdateState();
 
 		ImGui::NewFrame();
 

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "ImGuiDrawData.h"
-
+#include "ImGuiInputState.h"
 #include "Utilities/WorldContextIndex.h"
 
 #include <ICursor.h>
@@ -12,8 +12,6 @@
 
 #include <string>
 
-
-class FImGuiInputState;
 
 // Represents a single ImGui context. All the context updates should be done through this proxy. During update it
 // broadcasts draw events to allow listeners draw their controls. After update it stores draw data.
@@ -58,13 +56,8 @@ public:
 	const TArray<FImGuiDrawList>& GetDrawData() const { return DrawLists; }
 
 	// Get input state used by this context.
-	const FImGuiInputState* GetInputState() const { return InputState; }
-
-	// Set input state to be used by this context.
-	void SetInputState(const FImGuiInputState* SourceInputState) { InputState = SourceInputState; }
-
-	// If context is currently using input state to remove then remove that binding.
-	void RemoveInputState(const FImGuiInputState* InputStateToRemove) { if (InputState == InputStateToRemove) InputState = nullptr; }
+	FImGuiInputState& GetInputState() { return InputState; }
+	const FImGuiInputState& GetInputState() const { return InputState; }
 
 	// Is this context the current ImGui context.
 	bool IsCurrentContext() const { return ImGui::GetCurrentContext() == Context.Get(); }
@@ -117,7 +110,7 @@ private:
 	bool bIsDrawEarlyDebugCalled = false;
 	bool bIsDrawDebugCalled = false;
 
-	const FImGuiInputState* InputState = nullptr;
+	FImGuiInputState InputState;
 
 	TArray<FImGuiDrawList> DrawLists;
 

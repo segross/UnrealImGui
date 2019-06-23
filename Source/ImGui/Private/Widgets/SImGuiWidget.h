@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "ImGuiInputState.h"
 #include "ImGuiModuleDebug.h"
 #include "ImGuiModuleSettings.h"
 
@@ -12,6 +11,7 @@
 // Hide ImGui Widget debug in non-developer mode.
 #define IMGUI_WIDGET_DEBUG IMGUI_MODULE_DEVELOPER
 
+class FImGuiInputState;
 class FImGuiModuleManager;
 class SImGuiCanvasControl;
 class UImGuiInputHandler;
@@ -36,9 +36,6 @@ public:
 
 	// Get index of the context that this widget is targeting.
 	int32 GetContextIndex() const { return ContextIndex; }
-
-	// Get input state associated with this widget.
-	const FImGuiInputState& GetInputState() const { return InputState; }
 
 	//----------------------------------------------------------------------------------------------------
 	// SWidget overrides
@@ -137,7 +134,7 @@ private:
 
 	int32 ContextIndex = 0;
 
-	FImGuiInputState InputState;
+	FImGuiInputState* InputState;
 
 	EInputMode InputMode = EInputMode::None;
 	bool bInputEnabled = false;
