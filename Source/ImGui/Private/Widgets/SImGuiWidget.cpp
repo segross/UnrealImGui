@@ -130,8 +130,6 @@ void SImGuiWidget::Tick(const FGeometry& AllottedGeometry, const double InCurren
 {
 	Super::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
 
-	UpdateMouseStatus();
-
 	// Note: Moving that update to console variable sink or callback might seem like a better alternative but input
 	// setup in this function is better handled here.
 	UpdateInputEnabled();
@@ -239,32 +237,24 @@ FReply SImGuiWidget::OnAnalogValueChanged(const FGeometry& MyGeometry, const FAn
 FReply SImGuiWidget::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	InputState.SetMouseDown(MouseEvent, true);
-	CopyModifierKeys(MouseEvent);
-
 	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	InputState.SetMouseDown(MouseEvent, true);
-	CopyModifierKeys(MouseEvent);
-
 	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	InputState.SetMouseDown(MouseEvent, false);
-	CopyModifierKeys(MouseEvent);
-
 	return FReply::Handled();
 }
 
 FReply SImGuiWidget::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
 	InputState.AddMouseWheelDelta(MouseEvent.GetWheelDelta());
-	CopyModifierKeys(MouseEvent);
-
 	return FReply::Handled();
 }
 
@@ -272,11 +262,6 @@ FReply SImGuiWidget::OnMouseMove(const FGeometry& MyGeometry, const FPointerEven
 {
 	const FSlateRenderTransform ImGuiToScreen = ImGuiTransform.Concatenate(MyGeometry.GetAccumulatedRenderTransform());
 	InputState.SetMousePosition(ImGuiToScreen.Inverse().TransformPoint(MouseEvent.GetScreenSpacePosition()));
-	CopyModifierKeys(MouseEvent);
-
-	// This event is called in every frame when we have a mouse, so we can use it to raise notifications.
-	NotifyMouseEvent();
-
 	return FReply::Handled();
 }
 
@@ -393,14 +378,6 @@ void SImGuiWidget::CopyModifierKeys(const FInputEvent& InputEvent)
 	InputState.SetControlDown(InputEvent.IsControlDown());
 	InputState.SetShiftDown(InputEvent.IsShiftDown());
 	InputState.SetAltDown(InputEvent.IsAltDown());
-}
-
-void SImGuiWidget::CopyModifierKeys(const FPointerEvent& MouseEvent)
-{
-	if (InputMode == EInputMode::MousePointerOnly)
-	{
-		CopyModifierKeys(static_cast<const FInputEvent&>(MouseEvent));
-	}
 }
 
 bool SImGuiWidget::IsConsoleOpened() const
@@ -548,27 +525,9 @@ void SImGuiWidget::UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer
 		}
 
 		InputMode = NewInputMode;
-
-		ClearMouseEventNotification();
 	}
 
 	InputState.SetMousePointer(bUseSoftwareCursor && bHasMousePointer);
-}
-
-void SImGuiWidget::UpdateMouseStatus()
-{
-	// Note: Mouse leave events can get lost if other viewport takes mouse capture (for instance console is opened by
-	// different viewport when this widget is hovered). With that we lose a chance to cleanup and hide ImGui pointer.
-	// We could either update ImGui pointer in every frame or like below, use mouse events to catch when mouse is lost.
-
-	if (InputMode == EInputMode::MousePointerOnly)
-	{
-		if (!HasMouseEventNotification())
-		{
-			UpdateInputMode(false, IsDirectlyHovered());
-		}
-		ClearMouseEventNotification();
-	}
 }
 
 void SImGuiWidget::UpdateCanvasControlMode(const FInputEvent& InputEvent)

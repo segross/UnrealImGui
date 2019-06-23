@@ -96,7 +96,6 @@ private:
 	void UnregisterImGuiSettingsDelegates();
 
 	FORCEINLINE void CopyModifierKeys(const FInputEvent& InputEvent);
-	FORCEINLINE void CopyModifierKeys(const FPointerEvent& MouseEvent);
 
 	bool IsConsoleOpened() const;
 
@@ -107,17 +106,10 @@ private:
 	void TakeFocus();
 	void ReturnFocus();
 
-	// Update input enabled state from console variable.
 	void UpdateInputEnabled();
 
 	// Determine new input mode based on hints.
 	void UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer);
-
-	void UpdateMouseStatus();
-
-	FORCEINLINE bool HasMouseEventNotification() const { return bReceivedMouseEvent; }
-	FORCEINLINE void NotifyMouseEvent() { bReceivedMouseEvent = true; }
-	FORCEINLINE void ClearMouseEventNotification() { bReceivedMouseEvent = false; }
 
 	void UpdateCanvasControlMode(const FInputEvent& InputEvent);
 
@@ -149,7 +141,6 @@ private:
 
 	EInputMode InputMode = EInputMode::None;
 	bool bInputEnabled = false;
-	bool bReceivedMouseEvent = false;
 
 	// Whether or not ImGui should draw its own cursor.
 	bool bUseSoftwareCursor = false;
