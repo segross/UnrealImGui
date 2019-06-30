@@ -11,7 +11,6 @@
 // Hide ImGui Widget debug in non-developer mode.
 #define IMGUI_WIDGET_DEBUG IMGUI_MODULE_DEVELOPER
 
-class FImGuiInputState;
 class FImGuiModuleManager;
 class SImGuiCanvasControl;
 class UImGuiInputHandler;
@@ -71,42 +70,31 @@ public:
 
 	virtual void OnMouseLeave(const FPointerEvent& MouseEvent) override;
 
-	virtual FCursorReply OnCursorQuery(const FGeometry& MyGeometry, const FPointerEvent& CursorEvent) const override;
-
 private:
-
-	enum class EInputMode : uint8
-	{
-		None,
-		// Mouse pointer only without user focus
-		MousePointerOnly,
-		// Full input with user focus (mouse, keyboard and depending on navigation mode gamepad)
-		Full
-	};
 
 	void CreateInputHandler(const FStringClassReference& HandlerClassReference);
 	void ReleaseInputHandler();
 
-	void SetUseSoftwareCursor(bool bUse) { bUseSoftwareCursor = bUse; }
-
 	void RegisterImGuiSettingsDelegates();
 	void UnregisterImGuiSettingsDelegates();
 
-	FORCEINLINE void CopyModifierKeys(const FInputEvent& InputEvent);
+	void SetHideMouseCursor(bool bHide);
 
 	bool IsConsoleOpened() const;
 
-	// Update visibility based on input enabled state.
+	// Update visibility based on input state.
 	void UpdateVisibility();
+
+	// Update cursor based on input state.
+	void UpdateMouseCursor();
 
 	ULocalPlayer* GetLocalPlayer() const;
 	void TakeFocus();
 	void ReturnFocus();
 
-	void UpdateInputEnabled();
-
-	// Determine new input mode based on hints.
-	void UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer);
+	// Update input state.
+	void UpdateInputState();
+	void HandleWindowFocusLost();
 
 	void UpdateCanvasControlMode(const FInputEvent& InputEvent);
 
@@ -134,13 +122,9 @@ private:
 
 	int32 ContextIndex = 0;
 
-	FImGuiInputState* InputState;
-
-	EInputMode InputMode = EInputMode::None;
 	bool bInputEnabled = false;
-
-	// Whether or not ImGui should draw its own cursor.
-	bool bUseSoftwareCursor = false;
+	bool bForegroundWindow = false;
+	bool bHideMouseCursor = true;
 
 	TSharedPtr<SImGuiCanvasControl> CanvasControlWidget;
 	TWeakPtr<SWidget> PreviousUserFocusedWidget;
