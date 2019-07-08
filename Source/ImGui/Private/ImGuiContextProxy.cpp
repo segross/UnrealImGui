@@ -7,6 +7,7 @@
 #include "ImGuiDelegatesContainer.h"
 #include "ImGuiImplementation.h"
 #include "ImGuiInteroperability.h"
+#include "Utilities/Arrays.h"
 
 #include <Runtime/Launch/Resources/Version.h>
 
@@ -136,6 +137,7 @@ void FImGuiContextProxy::Tick(float DeltaSeconds)
 		// Update context information (some data, like mouse cursor, may be cleaned in new frame, so we should collect it
 		// beforehand).
 		bHasActiveItem = ImGui::IsAnyItemActive();
+		bIsMouseHoveringAnyWindow = ImGui::IsMouseHoveringAnyWindow();
 		MouseCursor = ImGuiInterops::ToSlateMouseCursor(ImGui::GetMouseCursor());
 		DisplaySize = ImGuiInterops::ToVector2D(ImGui::GetIO().DisplaySize);
 

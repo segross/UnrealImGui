@@ -65,13 +65,16 @@ public:
 	// Set this context as current ImGui context.
 	void SetAsCurrent() { ImGui::SetCurrentContext(Context.Get()); }
 
-	// Context display size (read once per frame during context update and cached here for easy access).
+	// Context display size (read once per frame during context update).
 	const FVector2D& GetDisplaySize() const { return DisplaySize; }
 
-	// Whether this context has an active item (read once per frame during context update and cached here for easy access).
+	// Whether this context has an active item (read once per frame during context update).
 	bool HasActiveItem() const { return bHasActiveItem; }
 
-	// Cursor type desired by this context (this is updated during ImGui frame and cached here during context update, before it is reset).
+	// Whether this context has mouse hovering any window (read once per frame during context update).
+	bool IsMouseHoveringAnyWindow() const { return bIsMouseHoveringAnyWindow; }
+
+	// Cursor type desired by this context (updated once per frame during context update).
 	EMouseCursor::Type GetMouseCursor() const { return MouseCursor;  }
 
 	// Delegate called right before ending the frame to allows listeners draw their controls.
@@ -105,6 +108,7 @@ private:
 
 	EMouseCursor::Type MouseCursor = EMouseCursor::None;
 	bool bHasActiveItem = false;
+	bool bIsMouseHoveringAnyWindow = false;
 
 	bool bIsFrameStarted = false;
 	bool bIsDrawEarlyDebugCalled = false;

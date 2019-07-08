@@ -123,6 +123,7 @@ void SImGuiWidget::Tick(const FGeometry& AllottedGeometry, const double InCurren
 	Super::Tick(AllottedGeometry, InCurrentTime, InDeltaTime);
 
 	UpdateInputState();
+	UpdateTransparentMouseInput(AllottedGeometry);
 	HandleWindowFocusLost();
 }
 
@@ -291,8 +292,9 @@ bool SImGuiWidget::IsConsoleOpened() const
 
 void SImGuiWidget::UpdateVisibility()
 {
-	// If we don't use input disable hit test to make this widget invisible for cursors hit detection.
-	SetVisibility(bInputEnabled ? EVisibility::Visible : EVisibility::HitTestInvisible);
+	// Make sure that we do not occlude other widgets, if input is disabled or if mouse is set to work in a transparent
+	// mode (hit-test invisible).
+	SetVisibility(bInputEnabled && !bTransparentMouseInput ? EVisibility::Visible : EVisibility::HitTestInvisible);
 
 	IMGUI_WIDGET_LOG(VeryVerbose, TEXT("ImGui Widget %d - Visibility updated to '%s'."),
 		ContextIndex, *GetVisibility().ToString());
@@ -372,13 +374,26 @@ void SImGuiWidget::ReturnFocus()
 
 void SImGuiWidget::UpdateInputState()
 {
-	const bool bEnabled = ModuleManager && ModuleManager->GetProperties().IsInputEnabled();
-	if (bInputEnabled != bEnabled)
+	auto& Properties = ModuleManager->GetProperties();
+	auto* ContextPropxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex);
+
+	const bool bEnableTransparentMouseInput = Properties.IsMouseInputShared() && !ContextPropxy->IsMouseHoveringAnyWindow();
+	if (bTransparentMouseInput != bEnableTransparentMouseInput)
+	{
+		bTransparentMouseInput = bEnableTransparentMouseInput;
+		if (bInputEnabled)
+		{
+			UpdateVisibility();
+		}
+	}
+
+	const bool bEnableInput = Properties.IsInputEnabled();
+	if (bInputEnabled != bEnableInput)
 	{
 		IMGUI_WIDGET_LOG(Log, TEXT("ImGui Widget %d - Input Enabled changed to '%s'."),
-			ContextIndex, TEXT_BOOL(bEnabled));
+			ContextIndex, TEXT_BOOL(bEnableInput));
 
-		bInputEnabled = bEnabled;
+		bInputEnabled = bEnableInput;
 
 		UpdateVisibility();
 		UpdateMouseCursor();
@@ -391,23 +406,47 @@ void SImGuiWidget::UpdateInputState()
 				InputHandler->OnMouseInputEnabled();
 			}
 
-			// Focus is handled later as it can depend on additional factors.
+			TakeFocus();
 		}
 		else
 		{
 			ReturnFocus();
 		}
 	}
-
-	// We should request a focus, if we are in the input mode and don't have one. But we should wait, if this is not
-	// a foreground window (application), if viewport doesn't have a focus or if console is opened. Note that this
-	// will keep this widget from releasing focus to viewport or other widgets as long as we are in the input mode.
-	if (bInputEnabled && GameViewport->Viewport->IsForegroundWindow() && !HasKeyboardFocus() && !IsConsoleOpened())
+	else if(bInputEnabled)
 	{
 		const auto& ViewportWidget = GameViewport->GetGameViewportWidget();
-		if (ViewportWidget->HasKeyboardFocus() || ViewportWidget->HasFocusedDescendants())
+
+		if (bTransparentMouseInput)
 		{
-			TakeFocus();
+			// If mouse is in transparent input mode and focus is lost to viewport, let viewport keep it and disable
+			// the whole input to match that state.
+			if (GameViewport->GetGameViewportWidget()->HasMouseCapture())
+			{
+				Properties.SetInputEnabled(false);
+				UpdateInputState();
+			}
+		}
+		else
+		{
+			// Widget tends to lose keyboard focus after console is opened. With non-transparent mouse we can fix that
+			// by manually restoring it.
+			if (!HasKeyboardFocus() && !IsConsoleOpened() && (ViewportWidget->HasKeyboardFocus() || ViewportWidget->HasFocusedDescendants()))
+			{
+				TakeFocus();
+			}
+		}
+	}
+}
+
+void SImGuiWidget::UpdateTransparentMouseInput(const FGeometry& AllottedGeometry)
+{
+	if (bInputEnabled && bTransparentMouseInput)
+	{
+		if (!GameViewport->GetGameViewportWidget()->HasMouseCapture())
+		{
+			const FSlateRenderTransform ImGuiToScreen = ImGuiTransform.Concatenate(AllottedGeometry.GetAccumulatedRenderTransform());
+			InputHandler->OnMouseMove(ImGuiToScreen.Inverse().TransformPoint(FSlateApplication::Get().GetCursorPos()));
 		}
 	}
 }

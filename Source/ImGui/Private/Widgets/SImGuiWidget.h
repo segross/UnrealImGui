@@ -94,6 +94,7 @@ private:
 
 	// Update input state.
 	void UpdateInputState();
+	void UpdateTransparentMouseInput(const FGeometry& AllottedGeometry);
 	void HandleWindowFocusLost();
 
 	void UpdateCanvasControlMode(const FInputEvent& InputEvent);
@@ -125,6 +126,7 @@ private:
 	bool bInputEnabled = false;
 	bool bForegroundWindow = false;
 	bool bHideMouseCursor = true;
+	bool bTransparentMouseInput = false;
 
 	TSharedPtr<SImGuiCanvasControl> CanvasControlWidget;
 	TWeakPtr<SWidget> PreviousUserFocusedWidget;
