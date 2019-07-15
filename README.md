@@ -9,7 +9,7 @@ Dear ImGui is an immediate-mode graphical user interface library that is very li
 
 Status
 ------
-Version: 1.16
+Version: 1.17 WIP
 
 ImGui version: 1.65
 
@@ -172,9 +172,7 @@ In input mode, ImGui will consume all input events. The reason behind the input 
 
 It is possible to modify rules to share keyboard or gamepad inputs.
 
-The default behaviour can be configured in [input settings](#input) and changed runtime using `Keyboard Input Shared` and `Gamepad Input Shared` [properties](#properties) or `ImGui.ToggleKeyboardInputSharing`and `ImGui.ToggleGamepadInputSharing` [commands](#console-commands).
-
->*More work is needed for mouse input. Originally I didn't plan this feature so most probably I will come back to it after refactoring input handling. Ideally, I would like something that is more customizable from code with potentially a few implementations rather than one implementation with growing number of properties. In the meantime, if more control is needed, then `SImGuiWidget` is a good place to look at.*
+The default behaviour can be configured in [input settings](#input) and changed during runtime by modifying `Keyboard Input Shared`, `Gamepad Input Shared` and `Mouse Input Shared` [properties](#properties) or `ImGui.ToggleKeyboardInputSharing`, `ImGui.ToggleGamepadInputSharing` and `ImGui.ToggleMouseInputSharing` [commands](#console-commands).
 
 #### Keyboard and gamepad navigation
 

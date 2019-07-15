@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "ImGuiInputState.h"
 #include "ImGuiModuleDebug.h"
 #include "ImGuiModuleSettings.h"
 
@@ -36,9 +35,6 @@ public:
 
 	// Get index of the context that this widget is targeting.
 	int32 GetContextIndex() const { return ContextIndex; }
-
-	// Get input state associated with this widget.
-	const FImGuiInputState& GetInputState() const { return InputState; }
 
 	//----------------------------------------------------------------------------------------------------
 	// SWidget overrides
@@ -74,50 +70,32 @@ public:
 
 	virtual void OnMouseLeave(const FPointerEvent& MouseEvent) override;
 
-	virtual FCursorReply OnCursorQuery(const FGeometry& MyGeometry, const FPointerEvent& CursorEvent) const override;
-
 private:
-
-	enum class EInputMode : uint8
-	{
-		None,
-		// Mouse pointer only without user focus
-		MousePointerOnly,
-		// Full input with user focus (mouse, keyboard and depending on navigation mode gamepad)
-		Full
-	};
 
 	void CreateInputHandler(const FStringClassReference& HandlerClassReference);
 	void ReleaseInputHandler();
 
-	void SetUseSoftwareCursor(bool bUse) { bUseSoftwareCursor = bUse; }
-
 	void RegisterImGuiSettingsDelegates();
 	void UnregisterImGuiSettingsDelegates();
 
-	FORCEINLINE void CopyModifierKeys(const FInputEvent& InputEvent);
-	FORCEINLINE void CopyModifierKeys(const FPointerEvent& MouseEvent);
+	void SetHideMouseCursor(bool bHide);
 
 	bool IsConsoleOpened() const;
 
-	// Update visibility based on input enabled state.
+	// Update visibility based on input state.
 	void UpdateVisibility();
+
+	// Update cursor based on input state.
+	void UpdateMouseCursor();
 
 	ULocalPlayer* GetLocalPlayer() const;
 	void TakeFocus();
 	void ReturnFocus();
 
-	// Update input enabled state from console variable.
-	void UpdateInputEnabled();
-
-	// Determine new input mode based on hints.
-	void UpdateInputMode(bool bHasKeyboardFocus, bool bHasMousePointer);
-
-	void UpdateMouseStatus();
-
-	FORCEINLINE bool HasMouseEventNotification() const { return bReceivedMouseEvent; }
-	FORCEINLINE void NotifyMouseEvent() { bReceivedMouseEvent = true; }
-	FORCEINLINE void ClearMouseEventNotification() { bReceivedMouseEvent = false; }
+	// Update input state.
+	void UpdateInputState();
+	void UpdateTransparentMouseInput(const FGeometry& AllottedGeometry);
+	void HandleWindowFocusLost();
 
 	void UpdateCanvasControlMode(const FInputEvent& InputEvent);
 
@@ -145,14 +123,10 @@ private:
 
 	int32 ContextIndex = 0;
 
-	FImGuiInputState InputState;
-
-	EInputMode InputMode = EInputMode::None;
 	bool bInputEnabled = false;
-	bool bReceivedMouseEvent = false;
-
-	// Whether or not ImGui should draw its own cursor.
-	bool bUseSoftwareCursor = false;
+	bool bForegroundWindow = false;
+	bool bHideMouseCursor = true;
+	bool bTransparentMouseInput = false;
 
 	TSharedPtr<SImGuiCanvasControl> CanvasControlWidget;
 	TWeakPtr<SWidget> PreviousUserFocusedWidget;

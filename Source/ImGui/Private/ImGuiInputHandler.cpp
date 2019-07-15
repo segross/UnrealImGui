@@ -4,6 +4,7 @@
 #include "ImGuiPrivatePCH.h"
 
 #include "ImGuiContextProxy.h"
+#include "ImGuiInputState.h"
 #include "ImGuiModuleManager.h"
 #include "ImGuiModuleSettings.h"
 
@@ -19,44 +20,182 @@
 
 DEFINE_LOG_CATEGORY(LogImGuiInputHandler);
 
-static FImGuiInputResponse IgnoreResponse{ false, false };
-
-FImGuiInputResponse UImGuiInputHandler::OnKeyDown(const FKeyEvent& KeyEvent)
+namespace
 {
-	// Ignore console events, so we don't block it from opening.
-	if (IsConsoleEvent(KeyEvent))
+	FReply ToReply(bool bConsume)
 	{
-		return IgnoreResponse;
+		return bConsume ? FReply::Handled() : FReply::Unhandled();
 	}
+}
+
+FReply UImGuiInputHandler::OnKeyChar(const struct FCharacterEvent& CharacterEvent)
+{
+	InputState->AddCharacter(CharacterEvent.GetCharacter());
+	return ToReply(!ModuleManager->GetProperties().IsKeyboardInputShared());
+}
+
+FReply UImGuiInputHandler::OnKeyDown(const FKeyEvent& KeyEvent)
+{
+	if (KeyEvent.GetKey().IsGamepadKey())
+	{
+		bool bConsume = false;
+		if (InputState->IsGamepadNavigationEnabled())
+		{
+			InputState->SetGamepadNavigationKey(KeyEvent, true);
+			bConsume = !ModuleManager->GetProperties().IsGamepadInputShared();
+		}
+
+		return ToReply(bConsume);
+	}
+	else
+	{
+		// Ignore console events, so we don't block it from opening.
+		if (IsConsoleEvent(KeyEvent))
+		{
+			return ToReply(false);
+		}
 
 #if WITH_EDITOR
-	// If there is no active ImGui control that would get precedence and this key event is bound to a stop play session
-	// command, then ignore that event and let the command execute.
-	if (!HasImGuiActiveItem() && IsStopPlaySessionEvent(KeyEvent))
-	{
-		return IgnoreResponse;
-	}
+		// If there is no active ImGui control that would get precedence and this key event is bound to a stop play session
+		// command, then ignore that event and let the command execute.
+		if (!HasImGuiActiveItem() && IsStopPlaySessionEvent(KeyEvent))
+		{
+			return ToReply(false);
+		}
 #endif // WITH_EDITOR
 
-	const FImGuiInputResponse Response = GetDefaultKeyboardResponse();
+		const bool bConsume = !ModuleManager->GetProperties().IsKeyboardInputShared();
 
-	// With shared input we can leave command bindings for DebugExec to handle, otherwise we need to do it here.
-	if (Response.HasConsumeRequest() && IsToggleInputEvent(KeyEvent))
+		// With shared input we can leave command bindings for DebugExec to handle, otherwise we need to do it here.
+		if (bConsume && IsToggleInputEvent(KeyEvent))
+		{
+			ModuleManager->GetProperties().ToggleInput();
+		}
+
+		InputState->SetKeyDown(KeyEvent, true);
+		CopyModifierKeys(KeyEvent);
+
+		return ToReply(bConsume);
+	}
+}
+
+FReply UImGuiInputHandler::OnKeyUp(const FKeyEvent& KeyEvent)
+{
+	if (KeyEvent.GetKey().IsGamepadKey())
 	{
-		ModuleManager->GetProperties().ToggleInput();
+		bool bConsume = false;
+		if (InputState->IsGamepadNavigationEnabled())
+		{
+			InputState->SetGamepadNavigationKey(KeyEvent, false);
+			bConsume = !ModuleManager->GetProperties().IsGamepadInputShared();
+		}
+
+		return ToReply(bConsume);
+	}
+	else
+	{
+		InputState->SetKeyDown(KeyEvent, false);
+		CopyModifierKeys(KeyEvent);
+
+		return ToReply(!ModuleManager->GetProperties().IsKeyboardInputShared());
+	}
+}
+
+FReply UImGuiInputHandler::OnAnalogValueChanged(const FAnalogInputEvent& AnalogInputEvent)
+{
+	bool bConsume = false;
+
+	if (AnalogInputEvent.GetKey().IsGamepadKey() && InputState->IsGamepadNavigationEnabled())
+	{
+		InputState->SetGamepadNavigationAxis(AnalogInputEvent, AnalogInputEvent.GetAnalogValue());
+		bConsume = !ModuleManager->GetProperties().IsGamepadInputShared();
 	}
 
-	return Response;
+	return ToReply(bConsume);
 }
 
-FImGuiInputResponse UImGuiInputHandler::GetDefaultKeyboardResponse() const
+FReply UImGuiInputHandler::OnMouseButtonDown(const FPointerEvent& MouseEvent)
 {
-	return FImGuiInputResponse{ true, !ModuleManager->GetProperties().IsKeyboardInputShared() };
+	InputState->SetMouseDown(MouseEvent, true);
+	return ToReply(true);
 }
 
-FImGuiInputResponse UImGuiInputHandler::GetDefaultGamepadResponse() const
+FReply UImGuiInputHandler::OnMouseButtonDoubleClick(const FPointerEvent& MouseEvent)
 {
-	return FImGuiInputResponse{ true, !ModuleManager->GetProperties().IsGamepadInputShared() };
+	InputState->SetMouseDown(MouseEvent, true);
+	return ToReply(true);
+}
+
+FReply UImGuiInputHandler::OnMouseButtonUp(const FPointerEvent& MouseEvent)
+{
+	InputState->SetMouseDown(MouseEvent, false);
+	return ToReply(true);
+}
+
+FReply UImGuiInputHandler::OnMouseWheel(const FPointerEvent& MouseEvent)
+{
+	InputState->AddMouseWheelDelta(MouseEvent.GetWheelDelta());
+	return ToReply(true);
+}
+
+FReply UImGuiInputHandler::OnMouseMove(const FVector2D& MousePosition)
+{
+	InputState->SetMousePosition(MousePosition);
+	return ToReply(true);
+}
+
+void UImGuiInputHandler::OnKeyboardInputEnabled()
+{
+	bKeyboardInputEnabled = true;
+}
+
+void UImGuiInputHandler::OnKeyboardInputDisabled()
+{
+	if (bKeyboardInputEnabled)
+	{
+		bKeyboardInputEnabled = false;
+		InputState->ResetKeyboard();
+	}
+}
+
+void UImGuiInputHandler::OnGamepadInputEnabled()
+{
+	bGamepadInputEnabled = true;
+}
+
+void UImGuiInputHandler::OnGamepadInputDisabled()
+{
+	if (bGamepadInputEnabled)
+	{
+		bGamepadInputEnabled = false;
+		InputState->ResetGamepadNavigation();
+	}
+}
+
+void UImGuiInputHandler::OnMouseInputEnabled()
+{
+	if (!bMouseInputEnabled)
+	{
+		bMouseInputEnabled = true;
+		UpdateInputStatePointer();
+	}
+}
+
+void UImGuiInputHandler::OnMouseInputDisabled()
+{
+	if (bMouseInputEnabled)
+	{
+		bMouseInputEnabled = false;
+		InputState->ResetMouse();
+		UpdateInputStatePointer();
+	}
+}
+
+void UImGuiInputHandler::CopyModifierKeys(const FInputEvent& InputEvent)
+{
+	InputState->SetControlDown(InputEvent.IsControlDown());
+	InputState->SetShiftDown(InputEvent.IsShiftDown());
+	InputState->SetAltDown(InputEvent.IsAltDown());
 }
 
 bool UImGuiInputHandler::IsConsoleEvent(const FKeyEvent& KeyEvent) const
@@ -112,11 +251,46 @@ bool UImGuiInputHandler::HasImGuiActiveItem() const
 	return ContextProxy && ContextProxy->HasActiveItem();
 }
 
+void UImGuiInputHandler::UpdateInputStatePointer()
+{
+	InputState->SetMousePointer(bMouseInputEnabled && ModuleManager->GetSettings().UseSoftwareCursor());
+}
+
+void UImGuiInputHandler::OnSoftwareCursorChanged(bool)
+{
+	UpdateInputStatePointer();
+}
+
+void UImGuiInputHandler::OnPostImGuiUpdate()
+{
+	InputState->ClearUpdateState();
+
+	// TODO Replace with delegates after adding property change events.
+	InputState->SetKeyboardNavigationEnabled(ModuleManager->GetProperties().IsKeyboardNavigationEnabled());
+	InputState->SetGamepadNavigationEnabled(ModuleManager->GetProperties().IsGamepadNavigationEnabled());
+
+	const auto& PlatformApplication = FSlateApplication::Get().GetPlatformApplication();
+	InputState->SetGamepad(PlatformApplication.IsValid() && PlatformApplication->IsGamepadAttached());
+}
+
 void UImGuiInputHandler::Initialize(FImGuiModuleManager* InModuleManager, UGameViewportClient* InGameViewport, int32 InContextIndex)
 {
 	ModuleManager = InModuleManager;
 	GameViewport = InGameViewport;
 	ContextIndex = InContextIndex;
+
+	auto* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex);
+	checkf(ContextProxy, TEXT("Missing context during initialization of input handler: ContextIndex = %d"), ContextIndex);
+	InputState = &ContextProxy->GetInputState();
+
+	// Register to get post-update notifications, so we can clean frame updates.
+	ModuleManager->OnPostImGuiUpdate().AddUObject(this, &UImGuiInputHandler::OnPostImGuiUpdate);
+
+	auto& Settings = ModuleManager->GetSettings();
+	if (!Settings.OnUseSoftwareCursorChanged.IsBoundToObject(this))
+	{
+		Settings.OnUseSoftwareCursorChanged.AddUObject(this, &UImGuiInputHandler::OnSoftwareCursorChanged);
+	}
 
 #if WITH_EDITOR
 	StopPlaySessionCommandInfo = FInputBindingManager::Get().FindCommandInContext("PlayWorld", "StopPlaySession");
@@ -127,3 +301,14 @@ void UImGuiInputHandler::Initialize(FImGuiModuleManager* InModuleManager, UGameV
 	}
 #endif // WITH_EDITOR
 }
+
+void UImGuiInputHandler::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	if (ModuleManager)
+	{
+		ModuleManager->GetSettings().OnUseSoftwareCursorChanged.RemoveAll(this);
+	}
+}
+

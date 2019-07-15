@@ -21,77 +21,9 @@ class FUICommandInfo;
 #endif // WITH_EDITOR
 
 
-/** Response used by ImGui Input Handler to communicate input handling requests. */
-struct IMGUI_API FImGuiInputResponse
-{
-	/** Create empty response with no requests. */
-	FImGuiInputResponse() = default;
-
-	/**
-	 * Create response with custom request configuration.
-	 *
-	 * @param bInProcess - State of the processing request.
-	 * @param bInConsume - State of the consume request.
-	 */
-	FImGuiInputResponse(bool bInProcess, bool bInConsume)
-		: bProcess(bInProcess)
-		, bConsume(bInConsume)
-	{}
-
-	/**
-	 * Check whether this response contains processing request.
-	 *
-	 * @returns True, if processing was requested and false otherwise.
-	 */
-	FORCEINLINE bool HasProcessingRequest() const { return bProcess; }
-
-	/**
-	 * Check whether this response contains consume request.
-	 *
-	 * @returns True, if consume was requested and false otherwise.
-	 */
-	FORCEINLINE bool HasConsumeRequest() const { return bConsume; }
-
-	/**
-	 * Set the processing request.
-	 *
-	 * @param bInProcess - True, to request input processing (implicit) and false otherwise.
-	 * @returns Reference to this response (for chaining requests).
-	 */
-	FORCEINLINE FImGuiInputResponse& RequestProcessing(bool bInProcess = true) { bProcess = bInProcess; return *this; }
-
-	/**
-	 * Set the consume request.
-	 *
-	 * @param bInConsume - True, to request input consume (implicit) and false otherwise.
-	 * @returns Reference to this response (for chaining requests).
-	 */
-	FORCEINLINE FImGuiInputResponse& RequestConsume(bool bInConsume = true) { bConsume = bInConsume; return *this; }
-
-private:
-
-	bool bProcess = false;
-
-	bool bConsume = false;
-};
-
 /**
- * Defines behaviour when handling input events. It allows to customize handling of the keyboard and gamepad input,
- * primarily to support shortcuts in ImGui input mode. Since mouse is not really needed for this functionality and
- * mouse pointer state and focus are closely connected to input mode, mouse events are left out of this interface.
- *
- * When receiving keyboard and gamepad events ImGui Widget calls input handler to query expected behaviour. By default,
- * with a few exceptions (see @ OnKeyDown) all events are expected to be processed and consumed. Custom implementations
- * may tweak that behaviour and/or inject custom code.
- *
- * Note that returned response is only treated as a hint. In current implementation all consume requests are respected
- * but to protect from locking ImGui input states, key up events are always processed. Decision about blocking certain
- * inputs can be taken during key down events and processing corresponding key up events should not make difference.
- *
- * Also note that input handler functions are only called when ImGui Widget is receiving input events, what can be for
- * instance suppressed by opening console.
- *
- * See @ Project Settings/Plugins/ImGui/Extensions/ImGuiInputHandlerClass property to set custom implementation.
+ * Handles input and sends it to the input state, which is copied to the ImGui IO at the beginning of the frame.
+ * Implementation of the input handler can be changed in the ImGui project settings by changing ImGuiInputHandlerClass.
  */
 UCLASS()
 class IMGUI_API UImGuiInputHandler : public UObject
@@ -101,77 +33,85 @@ class IMGUI_API UImGuiInputHandler : public UObject
 public:
 
 	/**
-	 * Called when handling character events.
-	 *
-	 * @returns Response with rules how input should be handled. Default implementation contains requests to process
-	 * and consume this event.
+	 * Called to handle character events.
+	 * @returns Response whether the event was handled
 	 */
-	virtual FImGuiInputResponse OnKeyChar(const struct FCharacterEvent& CharacterEvent) { return GetDefaultKeyboardResponse(); }
+	virtual FReply OnKeyChar(const struct FCharacterEvent& CharacterEvent);
 
 	/**
-	 * Called when handling keyboard key down events.
-	 *
-	 * @returns Response with rules how input should be handled. Default implementation contains requests to process
-	 * and consume most of the key, but unlike other cases it requests to ignore certain events, like those that are
-	 * needed to open console or close PIE session in editor.
+	 * Called to handle key down events.
+	 * @returns Response whether the event was handled
 	 */
-	virtual FImGuiInputResponse OnKeyDown(const FKeyEvent& KeyEvent);
+	virtual FReply OnKeyDown(const FKeyEvent& KeyEvent);
 
 	/**
-	 * Called when handling keyboard key up events.
-	 *
-	 * Note that regardless of returned response, key up events are always processed by ImGui Widget.
-	 *
-	 * @returns Response with rules how input should be handled. Default implementation contains requests to consume
-	 * this event.
+	 * Called to handle key up events.
+	 * @returns Response whether the event was handled
 	 */
-	virtual FImGuiInputResponse OnKeyUp(const FKeyEvent& KeyEvent) { return GetDefaultKeyboardResponse(); }
+	virtual FReply OnKeyUp(const FKeyEvent& KeyEvent);
 
 	/**
-	 * Called when handling gamepad key down events.
-	 *
-	 * @returns Response with rules how input should be handled. Default implementation contains requests to process
-	 * and consume this event.
+	 * Called to handle analog value change events.
+	 * @returns Response whether the event was handled
 	 */
-	virtual FImGuiInputResponse OnGamepadKeyDown(const FKeyEvent& GamepadKeyEvent) { return GetDefaultGamepadResponse(); }
+	virtual FReply OnAnalogValueChanged(const FAnalogInputEvent& AnalogInputEvent);
 
 	/**
-	 * Called when handling gamepad key up events.
-	 *
-	 * Note that regardless of returned response, key up events are always processed by ImGui Widget.
-	 *
-	 * @returns Response with rules how input should be handled. Default implementation contains requests to consume
-	 * this event.
+	 * Called to handle mouse button down events.
+	 * @returns Response whether the event was handled
 	 */
-	virtual FImGuiInputResponse OnGamepadKeyUp(const FKeyEvent& GamepadKeyEvent) { return GetDefaultGamepadResponse(); }
+	virtual FReply OnMouseButtonDown(const FPointerEvent& MouseEvent);
 
 	/**
-	 * Called when handling gamepad analog events.
-	 *
-	 * @returns Response with rules how input should be handled. Default implementation contains requests to process
-	 * and consume this event.
+	 * Called to handle mouse button double-click events.
+	 * @returns Response whether the event was handled
 	 */
-	virtual FImGuiInputResponse OnGamepadAxis(const FAnalogInputEvent& GamepadAxisEvent) { return GetDefaultGamepadResponse(); }
+	virtual FReply OnMouseButtonDoubleClick(const FPointerEvent& MouseEvent);
+
+	/**
+	 * Called to handle mouse button up events.
+	 * @returns Response whether the event was handled
+	 */
+	virtual FReply OnMouseButtonUp(const FPointerEvent& MouseEvent);
+
+	/**
+	 * Called to handle mouse wheel events.
+	 * @returns Response whether the event was handled
+	 */
+	virtual FReply OnMouseWheel(const FPointerEvent& MouseEvent);
+
+	/**
+	 * Called to handle mouse move events.
+	 * @param Mouse position (in ImGui space)
+	 * @returns Response whether the event was handled
+	 */
+	virtual FReply OnMouseMove(const FVector2D& MousePosition);
+
+	/** Called to handle activation of the keyboard input. */
+	virtual void OnKeyboardInputEnabled();
+
+	/** Called to handle deactivation of the keyboard input. */
+	virtual void OnKeyboardInputDisabled();
+
+	/** Called to handle activation of the gamepad input. */
+	virtual void OnGamepadInputEnabled();
+
+	/** Called to handle deactivation of the gamepad input. */
+	virtual void OnGamepadInputDisabled();
+
+	/** Called to handle activation of the mouse input. */
+	virtual void OnMouseInputEnabled();
+
+	/** Called to handle deactivation of the mouse input. */
+	virtual void OnMouseInputDisabled();
 
 protected:
 
-	/**
-	 * Get default keyboard response, with consume request based on IsKeyboardInputShared property.
-	 *
-	 * @returns Default response for keyboard inputs.
-	 */
-	FImGuiInputResponse GetDefaultKeyboardResponse() const;
-
-	/**
-	 * Get default gamepad response, with consume request based on IsGamepadInputShared property.
-	 *
-	 * @returns Default response for gamepad inputs.
-	 */
-	FImGuiInputResponse GetDefaultGamepadResponse() const;
+	/** Copy state of modifier keys to input state. */
+	void CopyModifierKeys(const FInputEvent& InputEvent);
 
 	/**
 	 * Checks whether this is a key event that can open console.
-	 *
 	 * @param KeyEvent - Key event to test.
 	 * @returns True, if this key event can open console.
 	 */
@@ -180,7 +120,6 @@ protected:
 #if WITH_EDITOR
 	/**
 	 * Checks whether this is a key event that can stop PIE session.
-	 *
 	 * @param KeyEvent - Key event to test.
 	 * @returns True, if this key event can stop PIE session.
 	 */
@@ -189,7 +128,6 @@ protected:
 
 	/**
 	 * Checks whether this key event can toggle ImGui input (as defined in settings).
-	 *
 	 * @param KeyEvent - Key event to test.
 	 * @returns True, if this key is bound to 'ImGui.ToggleInput' command that switches ImGui input mode.
 	 */
@@ -197,14 +135,27 @@ protected:
 
 	/**
 	 * Checks whether corresponding ImGui context has an active item (holding cursor focus).
-	 *
 	 * @returns True, if corresponding context has an active item.
 	 */
 	bool HasImGuiActiveItem() const;
 
 private:
 
+	void UpdateInputStatePointer();
+
+	void OnSoftwareCursorChanged(bool);
+
+	void OnPostImGuiUpdate();
+
 	void Initialize(FImGuiModuleManager* InModuleManager, UGameViewportClient* InGameViewport, int32 InContextIndex);
+
+	virtual void BeginDestroy() override;
+
+	class FImGuiInputState* InputState = nullptr;
+
+	bool bMouseInputEnabled = false;
+	bool bKeyboardInputEnabled = false;
+	bool bGamepadInputEnabled = false;
 
 	FImGuiModuleManager* ModuleManager = nullptr;
 

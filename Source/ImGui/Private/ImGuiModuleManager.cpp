@@ -146,16 +146,9 @@ void FImGuiModuleManager::ReleaseTickInitializer()
 	}
 }
 
-bool FImGuiModuleManager::IsInUpdateThread()
-{
-	// We can get ticks from the Game thread and Slate loading thread. In both cases IsInGameThread() is true, so we
-	// need to make additional test to filter out loading thread.
-	return IsInGameThread() && !IsInSlateThread();
-}
-
 void FImGuiModuleManager::Tick(float DeltaSeconds)
 {
-	if (IsInUpdateThread())
+	if (IsInGameThread())
 	{
 		// Update context manager to advance all ImGui contexts to the next frame.
 		ContextManager.Tick(DeltaSeconds);

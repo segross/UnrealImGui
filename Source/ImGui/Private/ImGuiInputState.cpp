@@ -45,7 +45,7 @@ namespace
 
 FImGuiInputState::FImGuiInputState()
 {
-	ResetState();
+	Reset();
 }
 
 void FImGuiInputState::AddCharacter(TCHAR Char)
@@ -81,31 +81,6 @@ void FImGuiInputState::SetMouseDown(uint32 MouseIndex, bool bIsDown)
 	}
 }
 
-void FImGuiInputState::Reset(bool bKeyboard, bool bMouse, bool bNavigation)
-{
-	if (bKeyboard)
-	{
-		ClearCharacters();
-		ClearKeys();
-	}
-
-	if (bMouse)
-	{
-		ClearMouseButtons();
-		ClearMouseAnalogue();
-	}
-
-	if (bKeyboard && bMouse)
-	{
-		ClearModifierKeys();
-	}
-
-	if (bNavigation)
-	{
-		ClearNavigationInputs();
-	}
-}
-
 void FImGuiInputState::ClearUpdateState()
 {
 	if (InputCharactersNum > 0)
@@ -131,7 +106,7 @@ void FImGuiInputState::ClearKeys()
 	using std::fill;
 	fill(KeysDown, &KeysDown[Utilities::GetArraySize(KeysDown)], false);
 
-	// Expand update range because keys array has been updated.
+	// Mark the whole array as dirty because potentially each entry could be affected.
 	KeysUpdateRange.SetFull();
 }
 
@@ -140,7 +115,7 @@ void FImGuiInputState::ClearMouseButtons()
 	using std::fill;
 	fill(MouseButtonsDown, &MouseButtonsDown[Utilities::GetArraySize(MouseButtonsDown)], false);
 
-	// Expand update range because mouse buttons array has been updated.
+	// Mark the whole array as dirty because potentially each entry could be affected.
 	MouseButtonsUpdateRange.SetFull();
 }
 

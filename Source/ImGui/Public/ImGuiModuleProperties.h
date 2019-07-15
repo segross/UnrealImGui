@@ -53,6 +53,15 @@ public:
 	/** Toggle whether gamepad input should be shared with game. */
 	void ToggleGamepadInputSharing() { SetGamepadInputShared(!IsGamepadInputShared()); }
 
+	/** Check whether mouse input is shared with game. */
+	bool IsMouseInputShared() const { return bMouseInputShared; }
+
+	/** Set whether mouse input should be shared with game. */
+	void SetMouseInputShared(bool bShared) { bMouseInputShared = bShared; }
+
+	/** Toggle whether mouse input should be shared with game. */
+	void ToggleMouseInputSharing() { SetMouseInputShared(!IsMouseInputShared()); }
+
 	/** Check whether ImGui demo is visible. */
 	bool ShowDemo() const { return bShowDemo; }
 
@@ -71,6 +80,7 @@ private:
 
 	bool bKeyboardInputShared = false;
 	bool bGamepadInputShared = false;
+	bool bMouseInputShared = false;
 
 	bool bShowDemo = false;
 };

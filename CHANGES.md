@@ -5,6 +5,10 @@ Versions marked as 'unofficial' are labelled only for the needs of this changelo
 Change History
 --------------
 
+Version: 1.17 (2019/04)
+- Added support for sharing with game mouse input.
+- Refactorization of input handling, with changes in SImGuiWidget and compatibility breaking changes in UImGuiInputHandler.
+
 Version: 1.16 (2019/05)
 - Fixed issue with SImGuiLayout blocking mouse input for other Slate widgets, which was introduced by refactorization of widgets (version 1.14, commit c144658f).
 

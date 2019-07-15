@@ -99,6 +99,7 @@ void FImGuiModuleSettings::UpdateSettings()
 		SetImGuiInputHandlerClass(SettingsObject->ImGuiInputHandlerClass);
 		SetShareKeyboardInput(SettingsObject->bShareKeyboardInput);
 		SetShareGamepadInput(SettingsObject->bShareGamepadInput);
+		SetShareMouseInput(SettingsObject->bShareMouseInput);
 		SetUseSoftwareCursor(SettingsObject->bUseSoftwareCursor);
 		SetToggleInputKey(SettingsObject->ToggleInput);
 	}
@@ -128,6 +129,15 @@ void FImGuiModuleSettings::SetShareGamepadInput(bool bShare)
 	{
 		bShareGamepadInput = bShare;
 		Properties.SetGamepadInputShared(bShare);
+	}
+}
+
+void FImGuiModuleSettings::SetShareMouseInput(bool bShare)
+{
+	if (bShareMouseInput != bShare)
+	{
+		bShareMouseInput = bShare;
+		Properties.SetMouseInputShared(bShare);
 	}
 }
 
