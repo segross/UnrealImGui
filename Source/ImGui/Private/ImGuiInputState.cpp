@@ -1,7 +1,8 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ImGuiInputState.h"
 #include "ImGuiPrivatePCH.h"
+
+#include "ImGuiInputState.h"
 
 #include <algorithm>
 #include <limits>

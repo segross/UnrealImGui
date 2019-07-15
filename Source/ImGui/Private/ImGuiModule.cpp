@@ -1,6 +1,5 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ImGuiModule.h"
 #include "ImGuiPrivatePCH.h"
 
 #include "ImGuiModuleManager.h"

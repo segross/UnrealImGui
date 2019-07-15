@@ -1,6 +1,5 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ImGuiImplementation.h"
 #include "ImGuiPrivatePCH.h"
 
 // We build ImGui source code as part of this module. This is for convenience (no need to manually build libraries for

@@ -1,7 +1,8 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ImGuiInputHandler.h"
 #include "ImGuiPrivatePCH.h"
+
+#include "ImGuiInputHandler.h"
 
 #include "ImGuiContextProxy.h"
 #include "ImGuiInputState.h"

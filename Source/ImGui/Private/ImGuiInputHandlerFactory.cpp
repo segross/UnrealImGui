@@ -1,7 +1,8 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ImGuiInputHandlerFactory.h"
 #include "ImGuiPrivatePCH.h"
+
+#include "ImGuiInputHandlerFactory.h"
 
 #include "ImGuiInputHandler.h"
 

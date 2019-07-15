@@ -1,9 +1,10 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
+#include "ImGuiPrivatePCH.h"
+
 #if WITH_EDITOR
 
 #include "ImGuiKeyInfoCustomization.h"
-#include "ImGuiPrivatePCH.h"
 
 #include "ImGuiModuleSettings.h"
 
