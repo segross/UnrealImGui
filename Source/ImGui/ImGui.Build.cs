@@ -24,6 +24,7 @@ public class ImGui : ModuleRules
 		bool bEnableRuntimeLoader = true;
 
 #if UE_4_21_OR_LATER
+		PCHUsage = PCHUsageMode.UseSharedPCHs;
 		PrivatePCHHeaderFile = "Private/ImGuiPrivatePCH.h";
 #endif
 
