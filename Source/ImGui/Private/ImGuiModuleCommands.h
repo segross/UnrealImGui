@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <IConsoleManager.h>
+#include <HAL/IConsoleManager.h>
 
 
 struct FImGuiKeyInfo;

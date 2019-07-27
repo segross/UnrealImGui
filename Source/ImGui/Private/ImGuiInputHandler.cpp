@@ -13,9 +13,9 @@
 #include <Input/Events.h>
 
 #if WITH_EDITOR
-#include <Commands/InputBindingManager.h>
-#include <Commands/InputChord.h>
-#include <DebuggerCommands.h>
+#include <Framework/Commands/InputBindingManager.h>
+#include <Framework/Commands/InputChord.h>
+#include <Kismet2/DebuggerCommands.h>
 #endif // WITH_EDITOR
 
 

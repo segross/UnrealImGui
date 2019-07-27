@@ -17,19 +17,19 @@ struct FImGuiKeyInfo
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Input")
 	FKey Key;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Input")
 	ECheckBoxState Shift = ECheckBoxState::Undetermined;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Input")
 	ECheckBoxState Ctrl = ECheckBoxState::Undetermined;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Input")
 	ECheckBoxState Alt = ECheckBoxState::Undetermined;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Input")
 	ECheckBoxState Cmd = ECheckBoxState::Undetermined;
 
 	friend bool operator==(const FImGuiKeyInfo& Lhs, const FImGuiKeyInfo& Rhs)

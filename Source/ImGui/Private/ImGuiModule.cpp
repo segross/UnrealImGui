@@ -15,7 +15,7 @@
 #include "Editor/ImGuiEditor.h"
 #endif
 
-#include <IPluginManager.h>
+#include <Interfaces/IPluginManager.h>
 
 #define IMGUI_REDIRECT_OBSOLETE_DELEGATES 1
 

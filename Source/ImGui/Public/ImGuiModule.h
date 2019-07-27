@@ -6,7 +6,7 @@
 #include "ImGuiModuleProperties.h"
 #include "ImGuiTextureHandle.h"
 
-#include <ModuleManager.h>
+#include <Modules/ModuleManager.h>
 
 
 class FImGuiModule : public IModuleInterface
