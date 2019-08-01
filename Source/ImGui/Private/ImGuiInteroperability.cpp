@@ -247,16 +247,6 @@ namespace ImGuiInterops
 		static const uint32 LeftAlt = GetKeyIndex(EKeys::LeftAlt);
 		static const uint32 RightAlt = GetKeyIndex(EKeys::RightAlt);
 
-		// Check whether we need to draw cursor.
-		IO.MouseDrawCursor = InputState.HasMousePointer();
-
-		// Copy mouse position.
-		IO.MousePos.x = InputState.GetMousePosition().X;
-		IO.MousePos.y = InputState.GetMousePosition().Y;
-
-		// Copy mouse wheel delta.
-		IO.MouseWheel += InputState.GetMouseWheelDelta();
-
 		// Copy key modifiers.
 		IO.KeyCtrl = InputState.IsControlDown();
 		IO.KeyShift = InputState.IsShiftDown();
@@ -287,5 +277,28 @@ namespace ImGuiInterops
 		SetFlag(IO.ConfigFlags, ImGuiConfigFlags_NavEnableKeyboard, InputState.IsKeyboardNavigationEnabled());
 		SetFlag(IO.ConfigFlags, ImGuiConfigFlags_NavEnableGamepad, InputState.IsGamepadNavigationEnabled());
 		SetFlag(IO.BackendFlags, ImGuiBackendFlags_HasGamepad, InputState.HasGamepad());
+
+		// Check whether we need to draw cursor.
+		IO.MouseDrawCursor = InputState.HasMousePointer();
+
+		// If touch is enabled and active, give it a precedence.
+		if (InputState.IsTouchActive())
+		{
+			// Copy the touch position to mouse position.
+			IO.MousePos.x = InputState.GetTouchPosition().X;
+			IO.MousePos.y = InputState.GetTouchPosition().Y;
+
+			// With touch active one frame longer than it is down, we have one frame to processed touch up.
+			IO.MouseDown[0] = InputState.IsTouchDown();
+		}
+		else
+		{
+			// Copy the mouse position.
+			IO.MousePos.x = InputState.GetMousePosition().X;
+			IO.MousePos.y = InputState.GetMousePosition().Y;
+
+			// Copy mouse wheel delta.
+			IO.MouseWheel += InputState.GetMouseWheelDelta();
+		}
 	}
 }

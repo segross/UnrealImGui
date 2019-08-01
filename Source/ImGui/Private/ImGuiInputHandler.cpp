@@ -145,6 +145,25 @@ FReply UImGuiInputHandler::OnMouseMove(const FVector2D& MousePosition)
 	return ToReply(true);
 }
 
+FReply UImGuiInputHandler::OnTouchStarted(const FVector2D& CursorPosition, const FPointerEvent& TouchEvent)
+{
+	InputState->SetTouchDown(true);
+	InputState->SetTouchPosition(CursorPosition);
+	return ToReply(true);
+}
+
+FReply UImGuiInputHandler::OnTouchMoved(const FVector2D& CursorPosition, const FPointerEvent& TouchEvent)
+{
+	InputState->SetTouchPosition(CursorPosition);
+	return ToReply(true);
+}
+
+FReply UImGuiInputHandler::OnTouchEnded(const FVector2D& CursorPosition, const FPointerEvent& TouchEvent)
+{
+	InputState->SetTouchDown(false);
+	return ToReply(true);
+}
+
 void UImGuiInputHandler::OnKeyboardInputEnabled()
 {
 	bKeyboardInputEnabled = true;

@@ -93,6 +93,8 @@ void FImGuiInputState::ClearUpdateState()
 	MouseButtonsUpdateRange.SetEmpty();
 
 	MouseWheelDelta = 0.f;
+
+	bTouchProcessed = bTouchDown;
 }
 
 void FImGuiInputState::ClearCharacters()
