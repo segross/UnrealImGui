@@ -17,37 +17,16 @@
 // broadcasts draw events to allow listeners draw their controls. After update it stores draw data.
 class FImGuiContextProxy
 {
-	class FImGuiContextPtr
-	{
-	public:
-
-		FImGuiContextPtr() = default;
-		FImGuiContextPtr(ImGuiContext* InContext) : Context(InContext) {}
-
-		FImGuiContextPtr(const FImGuiContextPtr&) = delete;
-		FImGuiContextPtr& operator=(const FImGuiContextPtr&) = delete;
-
-		FImGuiContextPtr(FImGuiContextPtr&& Other) : Context(Other.Context) { Other.Context = nullptr; }
-		FImGuiContextPtr& operator=(FImGuiContextPtr&& Other) { std::swap(Context, Other.Context); return *this; }
-
-		~FImGuiContextPtr();
-
-		ImGuiContext* Get() const { return Context; }
-
-	private:
-
-		ImGuiContext* Context = nullptr;
-	};
-
 public:
 
 	FImGuiContextProxy(const FString& Name, int32 InContextIndex, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas);
+	~FImGuiContextProxy();
 
 	FImGuiContextProxy(const FImGuiContextProxy&) = delete;
 	FImGuiContextProxy& operator=(const FImGuiContextProxy&) = delete;
 
-	FImGuiContextProxy(FImGuiContextProxy&&) = default;
-	FImGuiContextProxy& operator=(FImGuiContextProxy&&) = default;
+	FImGuiContextProxy(FImGuiContextProxy&&) = delete;
+	FImGuiContextProxy& operator=(FImGuiContextProxy&&) = delete;
 
 	// Get the name of this context.
 	const FString& GetName() const { return Name; }
@@ -60,10 +39,10 @@ public:
 	const FImGuiInputState& GetInputState() const { return InputState; }
 
 	// Is this context the current ImGui context.
-	bool IsCurrentContext() const { return ImGui::GetCurrentContext() == Context.Get(); }
+	bool IsCurrentContext() const { return ImGui::GetCurrentContext() == Context; }
 
 	// Set this context as current ImGui context.
-	void SetAsCurrent() { ImGui::SetCurrentContext(Context.Get()); }
+	void SetAsCurrent() { ImGui::SetCurrentContext(Context); }
 
 	// Context display size (read once per frame during context update).
 	const FVector2D& GetDisplaySize() const { return DisplaySize; }
@@ -102,7 +81,7 @@ private:
 	void BroadcastWorldDebug();
 	void BroadcastMultiContextDebug();
 
-	FImGuiContextPtr Context;
+	ImGuiContext* Context;
 
 	FVector2D DisplaySize = FVector2D::ZeroVector;
 

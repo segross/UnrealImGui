@@ -88,7 +88,7 @@ void FImGuiContextManager::Tick(float DeltaSeconds)
 		auto& ContextData = Pair.Value;
 		if (ContextData.CanTick())
 		{
-			ContextData.ContextProxy.Tick(DeltaSeconds);
+			ContextData.ContextProxy->Tick(DeltaSeconds);
 		}
 		else
 		{
@@ -129,7 +129,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetEditorContextData()
 	if (UNLIKELY(!Data))
 	{
 		Data = &Contexts.Emplace(Utilities::EDITOR_CONTEXT_INDEX, FContextData{ GetEditorContextName(), Utilities::EDITOR_CONTEXT_INDEX, DrawMultiContextEvent, FontAtlas, -1 });
-		ContextProxyCreatedEvent.Broadcast(Utilities::EDITOR_CONTEXT_INDEX, Data->ContextProxy);
+		ContextProxyCreatedEvent.Broadcast(Utilities::EDITOR_CONTEXT_INDEX, *Data->ContextProxy);
 	}
 
 	return *Data;
@@ -144,7 +144,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetStandaloneWorldCont
 	if (UNLIKELY(!Data))
 	{
 		Data = &Contexts.Emplace(Utilities::STANDALONE_GAME_CONTEXT_INDEX, FContextData{ GetWorldContextName(), Utilities::STANDALONE_GAME_CONTEXT_INDEX, DrawMultiContextEvent, FontAtlas });
-		ContextProxyCreatedEvent.Broadcast(Utilities::STANDALONE_GAME_CONTEXT_INDEX, Data->ContextProxy);
+		ContextProxyCreatedEvent.Broadcast(Utilities::STANDALONE_GAME_CONTEXT_INDEX, *Data->ContextProxy);
 	}
 
 	return *Data;
@@ -185,7 +185,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 	if (UNLIKELY(!Data))
 	{
 		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, DrawMultiContextEvent, FontAtlas, WorldContext->PIEInstance });
-		ContextProxyCreatedEvent.Broadcast(Index, Data->ContextProxy);
+		ContextProxyCreatedEvent.Broadcast(Index, *Data->ContextProxy);
 	}
 	else
 	{
@@ -196,7 +196,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 	if (UNLIKELY(!Data))
 	{
 		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, DrawMultiContextEvent, FontAtlas });
-		ContextProxyCreatedEvent.Broadcast(Index, Data->ContextProxy);
+		ContextProxyCreatedEvent.Broadcast(Index, *Data->ContextProxy);
 	}
 #endif
 

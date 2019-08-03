@@ -34,25 +34,25 @@ public:
 
 #if WITH_EDITOR
 	// Get or create editor ImGui context proxy.
-	FORCEINLINE FImGuiContextProxy& GetEditorContextProxy() { return GetEditorContextData().ContextProxy; }
+	FORCEINLINE FImGuiContextProxy& GetEditorContextProxy() { return *GetEditorContextData().ContextProxy; }
 #endif
 
 #if !WITH_EDITOR
 	// Get or create standalone game ImGui context proxy.
-	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy() { return GetStandaloneWorldContextData().ContextProxy; }
+	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy() { return *GetStandaloneWorldContextData().ContextProxy; }
 #endif
 
 	// Get or create ImGui context proxy for given world.
-	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy(const UWorld& World) { return GetWorldContextData(World).ContextProxy; }
+	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy(const UWorld& World) { return *GetWorldContextData(World).ContextProxy; }
 
 	// Get or create ImGui context proxy for given world. Additionally get context index for that proxy.
-	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy(const UWorld& World, int32& OutContextIndex) { return GetWorldContextData(World, &OutContextIndex).ContextProxy; }
+	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy(const UWorld& World, int32& OutContextIndex) { return *GetWorldContextData(World, &OutContextIndex).ContextProxy; }
 
 	// Get context proxy by index, or null if context with that index doesn't exist.
 	FORCEINLINE FImGuiContextProxy* GetContextProxy(int32 ContextIndex)
 	{
 		FContextData* Data = Contexts.Find(ContextIndex);
-		return Data ? &(Data->ContextProxy) : nullptr;
+		return Data ? Data->ContextProxy.Get() : nullptr;
 	}
 
 	// Delegate called for all contexts in manager, right after calling context specific draw event. Allows listeners
@@ -66,37 +66,19 @@ public:
 
 private:
 
-#if WITH_EDITOR
-
 	struct FContextData
 	{
 		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas, int32 InPIEInstance = -1)
 			: PIEInstance(InPIEInstance)
-			, ContextProxy(ContextName, ContextIndex, &SharedDrawEvent, &FontAtlas)
+			, ContextProxy(new FImGuiContextProxy(ContextName, ContextIndex, &SharedDrawEvent, &FontAtlas))
 		{
 		}
 
 		FORCEINLINE bool CanTick() const { return PIEInstance < 0 || GEngine->GetWorldContextFromPIEInstance(PIEInstance); }
 
 		int32 PIEInstance = -1;
-		FImGuiContextProxy ContextProxy;
+		TUniquePtr<FImGuiContextProxy> ContextProxy;
 	};
-
-#else
-
-	struct FContextData
-	{
-		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas)
-			: ContextProxy(ContextName, ContextIndex, &SharedDrawEvent, &FontAtlas)
-		{
-		}
-
-		FORCEINLINE bool CanTick() const { return true; }
-
-		FImGuiContextProxy ContextProxy;
-	};
-
-#endif // WITH_EDITOR
 
 	void OnWorldTickStart(ELevelTick TickType, float DeltaSeconds);
 
