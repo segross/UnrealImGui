@@ -9,7 +9,7 @@ Dear ImGui is an immediate-mode graphical user interface library that is very li
 
 Status
 ------
-Version: 1.17 WIP
+Version: 1.17
 
 ImGui version: 1.65
 
@@ -166,11 +166,9 @@ ImGui::Image(TextureHandle, Size);
 
 Right after the start ImGui will work in render-only mode. To interact with it, you need to activate input mode either by changing `Input Enabled` [property](#properties) from code, using `ImGui.ToggleInput` [command](#console-commands) or with a [keyboard shortcut](#keyboard-shortcuts).
 
-In input mode, ImGui will consume all input events. The reason behind the input mode and its default behaviour is a separation between debug and game inputs to prevent accidental changes in both layers.
-
 #### Sharing input
 
-It is possible to modify rules to share keyboard or gamepad inputs.
+It is possible to enable input sharing features to pass keyboard, gamepad or mouse events to the game. Note, that the original design assumed that plugin should consume all input to isolate debug from game. While sharing keyboard or gamepad is pretty straightforward and works by passing input events to the viewport, mouse sharing works in a bit different way. Since the ImGui widget overlays the whole viewport, widget needs to switch hit visibility and update position in the background. It might be possible to generate a custom collision geometry matching ImGui and simplifying working with mouse and touch inputs, but I don't plan to work on this right now.
 
 The default behaviour can be configured in [input settings](#input) and changed during runtime by modifying `Keyboard Input Shared`, `Gamepad Input Shared` and `Mouse Input Shared` [properties](#properties) or `ImGui.ToggleKeyboardInputSharing`, `ImGui.ToggleGamepadInputSharing` and `ImGui.ToggleMouseInputSharing` [commands](#console-commands).
 
@@ -203,6 +201,7 @@ ImGui module has a set of properties that allow to modify its behaviour:
 - `Gamepad Navigation` - Whether ImGui [gamepad navigation feature](#keyboard-and-gamepad-navigation) is enabled.
 - `Keyboard Input Shared` - Whether keyboard input should be [shared with the game](#sharing-input). Default behaviour can be configured in [input settings](#input).
 - `Gamepad Input Shared` - Whether gamepad input should be [shared with the game](#sharing-input). Default behaviour can be configured in [input settings](#input).
+- `Mouse Input Shared` - Whether mouse input should be [shared with the game](#sharing-input). Default behaviour can be configured in [input settings](#input).
 - `Show Demo` - Whether to show ImGui demo.
 
 All properties can be changed by corresponding [console commands](#console-commands) or from code.
@@ -220,6 +219,7 @@ FImGuiModule::Get().GetProperties();
 - `ImGui.ToggleGamepadNavigation` - Toggle ImGui gamepad navigation.
 - `ImGui.ToggleKeyboardInputSharing` - Toggle ImGui keyboard input sharing.
 - `ImGui.ToggleGamepadInputSharing` - Toggle ImGui gamepad input sharing.
+- `ImGui.ToggleMouseInputSharing` - Toggle ImGui mouse input sharing.
 - `ImGui.ToggleDemo` - Toggle ImGui demo.
 
 ### Console debug variables
@@ -238,8 +238,9 @@ Plugin settings can be found in *Project Settings/Plugins/ImGui* panel. Right no
 >*If you decide to implement an own handler, please keep in mind that I'm thinking about replacing it.*
 
 ##### Input
-- `Share Keyboard Input` - Whether by default, ImGui should [shared with game](#sharing-input) keyboard input.
-- `Share Gamepad Input` - Whether by default, ImGui should [shared with game](#sharing-input) gamepad input.
+- `Share Keyboard Input` - Whether by default, ImGui should [share with game](#sharing-input) keyboard input.
+- `Share Gamepad Input` - Whether by default, ImGui should [share with game](#sharing-input) gamepad input.
+- `Share Mouse Input` - Whether by default, ImGui should [share with game](#sharing-input) mouse input.
 - `Use Software Cursor` - Whether ImGui should draw its own cursor in place of the hardware one.
 
 ##### Keyboard shortcuts
