@@ -83,8 +83,10 @@ public:
 	/**
 	 * Called to handle mouse move events.
 	 * @param MousePosition Mouse position (in ImGui space)
+	 * @param MouseEvent Optional mouse event passed from Slate
 	 * @returns Response whether the event was handled
 	 */
+	virtual FReply OnMouseMove(const FVector2D& MousePosition, const FPointerEvent& MouseEvent);
 	virtual FReply OnMouseMove(const FVector2D& MousePosition);
 
 	/**

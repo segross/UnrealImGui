@@ -117,6 +117,11 @@ FReply UImGuiInputHandler::OnAnalogValueChanged(const FAnalogInputEvent& AnalogI
 
 FReply UImGuiInputHandler::OnMouseButtonDown(const FPointerEvent& MouseEvent)
 {
+	if (MouseEvent.IsTouchEvent())
+	{
+		return ToReply(false);
+	}
+
 	InputState->SetMouseDown(MouseEvent, true);
 	return ToReply(true);
 }
@@ -129,6 +134,11 @@ FReply UImGuiInputHandler::OnMouseButtonDoubleClick(const FPointerEvent& MouseEv
 
 FReply UImGuiInputHandler::OnMouseButtonUp(const FPointerEvent& MouseEvent)
 {
+	if (MouseEvent.IsTouchEvent())
+	{
+		return ToReply(false);
+	}
+
 	InputState->SetMouseDown(MouseEvent, false);
 	return ToReply(true);
 }
@@ -137,6 +147,16 @@ FReply UImGuiInputHandler::OnMouseWheel(const FPointerEvent& MouseEvent)
 {
 	InputState->AddMouseWheelDelta(MouseEvent.GetWheelDelta());
 	return ToReply(true);
+}
+
+FReply UImGuiInputHandler::OnMouseMove(const FVector2D& MousePosition, const FPointerEvent& MouseEvent)
+{
+	if (MouseEvent.IsTouchEvent())
+	{
+		return ToReply(false);
+	}
+
+	return OnMouseMove(MousePosition);
 }
 
 FReply UImGuiInputHandler::OnMouseMove(const FVector2D& MousePosition)
