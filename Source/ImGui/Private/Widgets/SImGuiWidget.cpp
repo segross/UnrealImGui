@@ -393,6 +393,9 @@ void SImGuiWidget::UpdateInputState()
 	auto* ContextPropxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex);
 
 	const bool bEnableTransparentMouseInput = Properties.IsMouseInputShared()
+#if PLATFORM_ANDROID || PLATFORM_IOS
+		&& (FSlateApplication::Get().GetCursorPos() != FVector2D::ZeroVector)
+#endif
 		&& !(ContextPropxy->IsMouseHoveringAnyWindow() || ContextPropxy->HasActiveItem());
 	if (bTransparentMouseInput != bEnableTransparentMouseInput)
 	{
