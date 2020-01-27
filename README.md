@@ -13,7 +13,7 @@ Version: 1.17
 
 ImGui version: 1.65
 
-Supported engine version: 4.22*
+Supported engine version: 4.24*
 
 \* *Plugin has been tested and if necessary updated to compile and work with this engine version. As long as possible I will try to maintain backward compatibility of existing features and possibly but not necessarily when adding new features. Right now it should be at least backward compatible with the engine version 4.15.*
 
@@ -40,6 +40,12 @@ To use this plug-in, you will need a C++ Unreal project.
 Content of this repository needs to be placed in the *Plugins* directory under the project root: *[Project Root]/Plugins/ImGui/*. After you compile and run you should notice that *ImGui* module is now available.
 
 Note that plugins can be also placed in the engine directory *[UE4 Root]/Engine/Plugins/* but I didn't try it with this project.
+
+### Setting module type
+
+The *ImGui* module type is set to **Developer**, what means that if it is not referenced by other runtime modules, it can be automatically excluded from shipping builds. This is convenient when using this plugging for debugging but if you want to change it to other type, you can do it in module description section in `ImGui.uplugin` file.
+
+**Developer** type was depreciated in UE 4.24. I keep it for backward compatibility while I can, but if you get a UBT warning about module type, simply change it to **DeveloperTool** or **Runtime**.
 
 ### Setting up module dependencies
 

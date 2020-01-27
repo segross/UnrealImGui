@@ -98,11 +98,18 @@ void FImGuiContextManager::Tick(float DeltaSeconds)
 	}
 }
 
+#if ENGINE_COMPATIBILITY_LEGACY_WORLD_ACTOR_TICK
 void FImGuiContextManager::OnWorldTickStart(ELevelTick TickType, float DeltaSeconds)
 {
-	if (GWorld)
+	OnWorldTickStart(GWorld, TickType, DeltaSeconds);
+}
+#endif
+
+void FImGuiContextManager::OnWorldTickStart(UWorld* World, ELevelTick TickType, float DeltaSeconds)
+{
+	if (World)
 	{
-		FImGuiContextProxy& ContextProxy = GetWorldContextProxy(*GWorld);
+		FImGuiContextProxy& ContextProxy = GetWorldContextProxy(*World);
 
 		// Set as current, so we have right context ready when updating world objects.
 		ContextProxy.SetAsCurrent();
@@ -117,7 +124,7 @@ void FImGuiContextManager::OnWorldTickStart(ELevelTick TickType, float DeltaSeco
 #if ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 void FImGuiContextManager::OnWorldPostActorTick(UWorld* World, ELevelTick TickType, float DeltaSeconds)
 {
-	GetWorldContextProxy(*GWorld).DrawDebug();
+	GetWorldContextProxy(*World).DrawDebug();
 }
 #endif // ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 

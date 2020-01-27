@@ -5,6 +5,9 @@ Versions marked as 'unofficial' are labelled only for the needs of this changelo
 Change History
 --------------
 
+Version: 1.18 (2020/01)
+- Updated to engine version 4.24.
+
 Version: 1.17 (2019/04)
 - Added experimental support for touch input.
 - Integrated fixes allowing to build this as an engine plugin:
