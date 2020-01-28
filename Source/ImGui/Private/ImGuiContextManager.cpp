@@ -13,6 +13,8 @@
 #include <imgui.h>
 
 
+// TODO: Refactor ImGui Context Manager, to handle different types of worlds.
+
 namespace
 {
 #if WITH_EDITOR
@@ -107,7 +109,8 @@ void FImGuiContextManager::OnWorldTickStart(ELevelTick TickType, float DeltaSeco
 
 void FImGuiContextManager::OnWorldTickStart(UWorld* World, ELevelTick TickType, float DeltaSeconds)
 {
-	if (World)
+	if (World && (World->WorldType == EWorldType::Game || World->WorldType == EWorldType::PIE
+		|| World->WorldType == EWorldType::Editor))
 	{
 		FImGuiContextProxy& ContextProxy = GetWorldContextProxy(*World);
 
@@ -124,7 +127,11 @@ void FImGuiContextManager::OnWorldTickStart(UWorld* World, ELevelTick TickType, 
 #if ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 void FImGuiContextManager::OnWorldPostActorTick(UWorld* World, ELevelTick TickType, float DeltaSeconds)
 {
-	GetWorldContextProxy(*World).DrawDebug();
+	if (World && (World->WorldType == EWorldType::Game || World->WorldType == EWorldType::PIE
+		|| World->WorldType == EWorldType::Editor))
+	{
+		GetWorldContextProxy(*World).DrawDebug();
+	}
 }
 #endif // ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 
@@ -163,7 +170,8 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 	using namespace Utilities;
 
 #if WITH_EDITOR
-	if (World.WorldType == EWorldType::Editor)
+	// Default to editor context for anything other than a game world.
+	if (World.WorldType != EWorldType::Game && World.WorldType != EWorldType::PIE)
 	{
 		if (OutIndex)
 		{
