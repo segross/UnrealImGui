@@ -7,6 +7,7 @@ Change History
 
 Version: 1.18 (2020/01)
 - Updated to engine version 4.24.
+- Updated to ImGui version 1.74.
 
 Version: 1.17 (2019/04)
 - Added experimental support for touch input.

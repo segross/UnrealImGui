@@ -137,7 +137,7 @@ void FImGuiContextProxy::Tick(float DeltaSeconds)
 		// Update context information (some data, like mouse cursor, may be cleaned in new frame, so we should collect it
 		// beforehand).
 		bHasActiveItem = ImGui::IsAnyItemActive();
-		bIsMouseHoveringAnyWindow = ImGui::IsMouseHoveringAnyWindow();
+		bIsMouseHoveringAnyWindow = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
 		MouseCursor = ImGuiInterops::ToSlateMouseCursor(ImGui::GetMouseCursor());
 		DisplaySize = ImGuiInterops::ToVector2D(ImGui::GetIO().DisplaySize);
 

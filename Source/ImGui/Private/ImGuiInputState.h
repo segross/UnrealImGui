@@ -5,6 +5,8 @@
 #include "ImGuiInteroperability.h"
 #include "Utilities/Arrays.h"
 
+#include <Containers/Array.h>
+
 
 // Collects and stores input state and updates for ImGui IO.
 class FImGuiInputState
@@ -12,7 +14,7 @@ class FImGuiInputState
 public:
 
 	// Characters buffer.
-	using FCharactersBuffer = ImGuiInterops::ImGuiTypes::FInputCharactersBuffer;
+	using FCharactersBuffer = TArray<TCHAR, TInlineAllocator<8>>;
 
 	// Array for mouse button states.
 	using FMouseButtonsArray = ImGuiInterops::ImGuiTypes::FMouseButtonsArray;
@@ -34,9 +36,6 @@ public:
 
 	// Get reference to input characters buffer.
 	const FCharactersBuffer& GetCharacters() const { return InputCharacters; }
-
-	// Get number of characters in input characters buffer.
-	int32 GetCharactersNum()  const { return InputCharactersNum; }
 
 	// Add a character to the characters buffer. We can store and send to ImGui up to 16 characters per frame. Any
 	// character beyond that limit will be discarded.
@@ -222,7 +221,6 @@ private:
 	FMouseButtonsIndexRange MouseButtonsUpdateRange;
 
 	FCharactersBuffer InputCharacters;
-	uint32 InputCharactersNum = 0;
 
 	FKeysArray KeysDown;
 	FKeysIndexRange KeysUpdateRange;
