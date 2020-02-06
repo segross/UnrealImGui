@@ -158,6 +158,8 @@ void FImGuiContextProxy::BeginFrame(float DeltaTime)
 
 		ImGui::NewFrame();
 
+		bWantsMouseCapture = IO.WantCaptureMouse;
+
 		bIsFrameStarted = true;
 		bIsDrawEarlyDebugCalled = false;
 		bIsDrawDebugCalled = false;
