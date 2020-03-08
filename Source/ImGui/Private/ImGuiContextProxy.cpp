@@ -41,19 +41,6 @@ namespace
 	}
 }
 
-FImGuiContextProxy::FImGuiContextPtr::~FImGuiContextPtr()
-{
-	if (Context)
-	{
-		// Setting this as a current context. is still required in the current framework version to properly shutdown
-		// and save data.
-		ImGui::SetCurrentContext(Context);
-
-		// Save context data and destroy.
-		ImGui::DestroyContext(Context);
-	}
-}
-
 FImGuiContextProxy::FImGuiContextProxy(const FString& InName, int32 InContextIndex, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas)
 	: Name(InName)
 	, ContextIndex(InContextIndex)
@@ -61,7 +48,7 @@ FImGuiContextProxy::FImGuiContextProxy(const FString& InName, int32 InContextInd
 	, IniFilename(TCHAR_TO_ANSI(*GetIniFile(InName)))
 {
 	// Create context.
-	Context = FImGuiContextPtr(ImGui::CreateContext(InFontAtlas));
+	Context = ImGui::CreateContext(InFontAtlas);
 
 	// Set this context in ImGui for initialization (any allocations will be tracked in this context).
 	SetAsCurrent();
@@ -82,6 +69,19 @@ FImGuiContextProxy::FImGuiContextProxy(const FString& InName, int32 InContextInd
 	// Begin frame to complete context initialization (this is to avoid problems with other systems calling to ImGui
 	// during startup).
 	BeginFrame();
+}
+
+FImGuiContextProxy::~FImGuiContextProxy()
+{
+	if (Context)
+	{
+		// It seems that to properly shutdown context we need to set it as the current one (at least in this framework
+		// version), even though we can pass it to the destroy function.
+		SetAsCurrent();
+
+		// Save context data and destroy.
+		ImGui::DestroyContext(Context);
+	}
 }
 
 void FImGuiContextProxy::DrawEarlyDebug()
@@ -137,7 +137,7 @@ void FImGuiContextProxy::Tick(float DeltaSeconds)
 		// Update context information (some data, like mouse cursor, may be cleaned in new frame, so we should collect it
 		// beforehand).
 		bHasActiveItem = ImGui::IsAnyItemActive();
-		bIsMouseHoveringAnyWindow = ImGui::IsMouseHoveringAnyWindow();
+		bIsMouseHoveringAnyWindow = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
 		MouseCursor = ImGuiInterops::ToSlateMouseCursor(ImGui::GetMouseCursor());
 		DisplaySize = ImGuiInterops::ToVector2D(ImGui::GetIO().DisplaySize);
 

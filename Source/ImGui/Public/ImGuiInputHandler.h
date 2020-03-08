@@ -82,10 +82,36 @@ public:
 
 	/**
 	 * Called to handle mouse move events.
-	 * @param Mouse position (in ImGui space)
+	 * @param MousePosition Mouse position (in ImGui space)
+	 * @param MouseEvent Optional mouse event passed from Slate
 	 * @returns Response whether the event was handled
 	 */
+	virtual FReply OnMouseMove(const FVector2D& MousePosition, const FPointerEvent& MouseEvent);
 	virtual FReply OnMouseMove(const FVector2D& MousePosition);
+
+	/**
+	 * Called to handle touch started event.
+	 * @param TouchPosition Touch position (in ImGui space)
+	 * @param TouchEvent Touch event passed from Slate
+	 * @returns Response whether the event was handled
+	 */
+	virtual FReply OnTouchStarted(const FVector2D& TouchPosition, const FPointerEvent& TouchEvent);
+
+	/**
+	 * Called to handle touch moved event.
+	 * @param TouchPosition Touch position (in ImGui space)
+	 * @param TouchEvent Touch event passed from Slate
+	 * @returns Response whether the event was handled
+	 */
+	virtual FReply OnTouchMoved(const FVector2D& TouchPosition, const FPointerEvent& TouchEvent);
+
+	/**
+	 * Called to handle touch ended event.
+	 * @param TouchPosition Touch position (in ImGui space)
+	 * @param TouchEvent Touch event passed from Slate
+	 * @returns Response whether the event was handled
+	 */
+	virtual FReply OnTouchEnded(const FVector2D& TouchPosition, const FPointerEvent& TouchEvent);
 
 	/** Called to handle activation of the keyboard input. */
 	virtual void OnKeyboardInputEnabled();

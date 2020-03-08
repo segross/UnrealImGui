@@ -33,7 +33,7 @@ void FImGuiDemo::DrawControls(int32 ContextIndex)
 		// 2. Show another simple window, this time using an explicit Begin/End pair
 		if (ShowAnotherWindowMask & ContextBit)
 		{
-			ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
+			ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_FirstUseEver);
 			ImGui::Begin("Another Window");
 			ImGui::Text("Hello");
 			ImGui::End();
@@ -76,7 +76,7 @@ void FImGuiDemo::DrawControls(int32 ContextIndex)
 			}
 
 			// Draw demo window.
-			ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+			ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
 			ImGui::ShowDemoWindow();
 		}
 	}

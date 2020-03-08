@@ -5,6 +5,8 @@
 #include "ImGuiInteroperability.h"
 #include "Utilities/Arrays.h"
 
+#include <Containers/Array.h>
+
 
 // Collects and stores input state and updates for ImGui IO.
 class FImGuiInputState
@@ -12,7 +14,7 @@ class FImGuiInputState
 public:
 
 	// Characters buffer.
-	using FCharactersBuffer = ImGuiInterops::ImGuiTypes::FInputCharactersBuffer;
+	using FCharactersBuffer = TArray<TCHAR, TInlineAllocator<8>>;
 
 	// Array for mouse button states.
 	using FMouseButtonsArray = ImGuiInterops::ImGuiTypes::FMouseButtonsArray;
@@ -34,9 +36,6 @@ public:
 
 	// Get reference to input characters buffer.
 	const FCharactersBuffer& GetCharacters() const { return InputCharacters; }
-
-	// Get number of characters in input characters buffer.
-	int32 GetCharactersNum()  const { return InputCharactersNum; }
 
 	// Add a character to the characters buffer. We can store and send to ImGui up to 16 characters per frame. Any
 	// character beyond that limit will be discarded.
@@ -82,11 +81,11 @@ public:
 	// @param DeltaValue - Mouse wheel delta to add
 	void AddMouseWheelDelta(float DeltaValue) { MouseWheelDelta += DeltaValue; }
 
-	// Get the current mouse position.
+	// Get the mouse position.
 	const FVector2D& GetMousePosition() const { return MousePosition; }
 
-	// Set mouse position.
-	// @param Position - New mouse position
+	// Set the mouse position.
+	// @param Position - Mouse position
 	void SetMousePosition(const FVector2D& Position) { MousePosition = Position; }
 
 	// Check whether input has active mouse pointer.
@@ -95,6 +94,24 @@ public:
 	// Set whether input has active mouse pointer.
 	// @param bHasPointer - True, if input has active mouse pointer
 	void SetMousePointer(bool bInHasMousePointer) { bHasMousePointer = bInHasMousePointer; }
+
+	// Check whether touch input is in progress. True, after touch is started until one frame after it has ended.
+	// One frame delay is used to process mouse release in ImGui since touch-down is simulated with mouse-down.
+	bool IsTouchActive() const { return bTouchDown || bTouchProcessed; }
+
+	// Check whether touch input is down.
+	bool IsTouchDown() const { return bTouchDown; }
+
+	// Set whether touch input is down.
+	// @param bIsDown - True, if touch is down (or started) and false, if touch is up (or ended)
+	void SetTouchDown(bool bIsDown) { bTouchDown = bIsDown; }
+
+	// Get the touch position.
+	const FVector2D& GetTouchPosition() const { return TouchPosition; }
+
+	// Set the touch position.
+	// @param Position - Touch position
+	void SetTouchPosition(const FVector2D& Position) { TouchPosition = Position; }
 
 	// Get Control down state.
 	bool IsControlDown() const { return bIsControlDown; }
@@ -197,13 +214,13 @@ private:
 	void ClearNavigationInputs();
 
 	FVector2D MousePosition = FVector2D::ZeroVector;
+	FVector2D TouchPosition = FVector2D::ZeroVector;
 	float MouseWheelDelta = 0.f;
 
 	FMouseButtonsArray MouseButtonsDown;
 	FMouseButtonsIndexRange MouseButtonsUpdateRange;
 
 	FCharactersBuffer InputCharacters;
-	uint32 InputCharactersNum = 0;
 
 	FKeysArray KeysDown;
 	FKeysIndexRange KeysUpdateRange;
@@ -211,6 +228,8 @@ private:
 	FNavInputArray NavigationInputs;
 
 	bool bHasMousePointer = false;
+	bool bTouchDown = false;
+	bool bTouchProcessed = false;
 
 	bool bIsControlDown = false;
 	bool bIsShiftDown = false;

@@ -189,8 +189,7 @@ FReply SImGuiWidget::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEve
 
 FReply SImGuiWidget::OnMouseMove(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	const FSlateRenderTransform ImGuiToScreen = ImGuiTransform.Concatenate(MyGeometry.GetAccumulatedRenderTransform());
-	return InputHandler->OnMouseMove(ImGuiToScreen.Inverse().TransformPoint(MouseEvent.GetScreenSpacePosition()));
+	return InputHandler->OnMouseMove(TransformScreenPointToImGui(MyGeometry, MouseEvent.GetScreenSpacePosition()), MouseEvent);
 }
 
 FReply SImGuiWidget::OnFocusReceived(const FGeometry& MyGeometry, const FFocusEvent& FocusEvent)
@@ -233,6 +232,22 @@ void SImGuiWidget::OnMouseLeave(const FPointerEvent& MouseEvent)
 	IMGUI_WIDGET_LOG(VeryVerbose, TEXT("ImGui Widget %d - Mouse Leave."), ContextIndex);
 
 	InputHandler->OnMouseInputDisabled();
+}
+
+FReply SImGuiWidget::OnTouchStarted(const FGeometry& MyGeometry, const FPointerEvent& TouchEvent)
+{
+	return InputHandler->OnTouchStarted(TransformScreenPointToImGui(MyGeometry, TouchEvent.GetScreenSpacePosition()), TouchEvent);
+}
+
+FReply SImGuiWidget::OnTouchMoved(const FGeometry& MyGeometry, const FPointerEvent& TouchEvent)
+{
+	return InputHandler->OnTouchMoved(TransformScreenPointToImGui(MyGeometry, TouchEvent.GetScreenSpacePosition()), TouchEvent);
+}
+
+FReply SImGuiWidget::OnTouchEnded(const FGeometry& MyGeometry, const FPointerEvent& TouchEvent)
+{
+	UpdateVisibility();
+	return InputHandler->OnTouchEnded(TransformScreenPointToImGui(MyGeometry, TouchEvent.GetScreenSpacePosition()), TouchEvent);
 }
 
 void SImGuiWidget::CreateInputHandler(const FStringClassReference& HandlerClassReference)
@@ -377,7 +392,11 @@ void SImGuiWidget::UpdateInputState()
 	auto& Properties = ModuleManager->GetProperties();
 	auto* ContextPropxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex);
 
-	const bool bEnableTransparentMouseInput = Properties.IsMouseInputShared() && !ContextPropxy->IsMouseHoveringAnyWindow();
+	const bool bEnableTransparentMouseInput = Properties.IsMouseInputShared()
+#if PLATFORM_ANDROID || PLATFORM_IOS
+		&& (FSlateApplication::Get().GetCursorPos() != FVector2D::ZeroVector)
+#endif
+		&& !(ContextPropxy->IsMouseHoveringAnyWindow() || ContextPropxy->HasActiveItem());
 	if (bTransparentMouseInput != bEnableTransparentMouseInput)
 	{
 		bTransparentMouseInput = bEnableTransparentMouseInput;
@@ -445,8 +464,7 @@ void SImGuiWidget::UpdateTransparentMouseInput(const FGeometry& AllottedGeometry
 	{
 		if (!GameViewport->GetGameViewportWidget()->HasMouseCapture())
 		{
-			const FSlateRenderTransform ImGuiToScreen = ImGuiTransform.Concatenate(AllottedGeometry.GetAccumulatedRenderTransform());
-			InputHandler->OnMouseMove(ImGuiToScreen.Inverse().TransformPoint(FSlateApplication::Get().GetCursorPos()));
+			InputHandler->OnMouseMove(TransformScreenPointToImGui(AllottedGeometry, FSlateApplication::Get().GetCursorPos()));
 		}
 	}
 }
@@ -487,6 +505,12 @@ void SImGuiWidget::OnPostImGuiUpdate()
 {
 	ImGuiRenderTransform = ImGuiTransform;
 	UpdateMouseCursor();
+}
+
+FVector2D SImGuiWidget::TransformScreenPointToImGui(const FGeometry& MyGeometry, const FVector2D& Point) const
+{
+	const FSlateRenderTransform ImGuiToScreen = ImGuiTransform.Concatenate(MyGeometry.GetAccumulatedRenderTransform());
+	return ImGuiToScreen.Inverse().TransformPoint(Point);
 }
 
 namespace

@@ -70,6 +70,12 @@ public:
 
 	virtual void OnMouseLeave(const FPointerEvent& MouseEvent) override;
 
+	virtual FReply OnTouchStarted(const FGeometry& MyGeometry, const FPointerEvent& TouchEvent) override;
+
+	virtual FReply OnTouchMoved(const FGeometry& MyGeometry, const FPointerEvent& TouchEvent) override;
+
+	virtual FReply OnTouchEnded(const FGeometry& MyGeometry, const FPointerEvent& TouchEvent) override;
+
 private:
 
 	void CreateInputHandler(const FStringClassReference& HandlerClassReference);
@@ -100,6 +106,8 @@ private:
 	void UpdateCanvasControlMode(const FInputEvent& InputEvent);
 
 	void OnPostImGuiUpdate();
+
+	FVector2D TransformScreenPointToImGui(const FGeometry& MyGeometry, const FVector2D& Point) const;
 
 	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyClippingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& WidgetStyle, bool bParentEnabled) const override;
 

@@ -13,6 +13,8 @@
 #include <imgui.h>
 
 
+// TODO: Refactor ImGui Context Manager, to handle different types of worlds.
+
 namespace
 {
 #if WITH_EDITOR
@@ -88,7 +90,7 @@ void FImGuiContextManager::Tick(float DeltaSeconds)
 		auto& ContextData = Pair.Value;
 		if (ContextData.CanTick())
 		{
-			ContextData.ContextProxy.Tick(DeltaSeconds);
+			ContextData.ContextProxy->Tick(DeltaSeconds);
 		}
 		else
 		{
@@ -98,11 +100,19 @@ void FImGuiContextManager::Tick(float DeltaSeconds)
 	}
 }
 
+#if ENGINE_COMPATIBILITY_LEGACY_WORLD_ACTOR_TICK
 void FImGuiContextManager::OnWorldTickStart(ELevelTick TickType, float DeltaSeconds)
 {
-	if (GWorld)
+	OnWorldTickStart(GWorld, TickType, DeltaSeconds);
+}
+#endif
+
+void FImGuiContextManager::OnWorldTickStart(UWorld* World, ELevelTick TickType, float DeltaSeconds)
+{
+	if (World && (World->WorldType == EWorldType::Game || World->WorldType == EWorldType::PIE
+		|| World->WorldType == EWorldType::Editor))
 	{
-		FImGuiContextProxy& ContextProxy = GetWorldContextProxy(*GWorld);
+		FImGuiContextProxy& ContextProxy = GetWorldContextProxy(*World);
 
 		// Set as current, so we have right context ready when updating world objects.
 		ContextProxy.SetAsCurrent();
@@ -117,7 +127,11 @@ void FImGuiContextManager::OnWorldTickStart(ELevelTick TickType, float DeltaSeco
 #if ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 void FImGuiContextManager::OnWorldPostActorTick(UWorld* World, ELevelTick TickType, float DeltaSeconds)
 {
-	GetWorldContextProxy(*GWorld).DrawDebug();
+	if (World && (World->WorldType == EWorldType::Game || World->WorldType == EWorldType::PIE
+		|| World->WorldType == EWorldType::Editor))
+	{
+		GetWorldContextProxy(*World).DrawDebug();
+	}
 }
 #endif // ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 
@@ -129,7 +143,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetEditorContextData()
 	if (UNLIKELY(!Data))
 	{
 		Data = &Contexts.Emplace(Utilities::EDITOR_CONTEXT_INDEX, FContextData{ GetEditorContextName(), Utilities::EDITOR_CONTEXT_INDEX, DrawMultiContextEvent, FontAtlas, -1 });
-		ContextProxyCreatedEvent.Broadcast(Utilities::EDITOR_CONTEXT_INDEX, Data->ContextProxy);
+		ContextProxyCreatedEvent.Broadcast(Utilities::EDITOR_CONTEXT_INDEX, *Data->ContextProxy);
 	}
 
 	return *Data;
@@ -144,7 +158,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetStandaloneWorldCont
 	if (UNLIKELY(!Data))
 	{
 		Data = &Contexts.Emplace(Utilities::STANDALONE_GAME_CONTEXT_INDEX, FContextData{ GetWorldContextName(), Utilities::STANDALONE_GAME_CONTEXT_INDEX, DrawMultiContextEvent, FontAtlas });
-		ContextProxyCreatedEvent.Broadcast(Utilities::STANDALONE_GAME_CONTEXT_INDEX, Data->ContextProxy);
+		ContextProxyCreatedEvent.Broadcast(Utilities::STANDALONE_GAME_CONTEXT_INDEX, *Data->ContextProxy);
 	}
 
 	return *Data;
@@ -156,7 +170,8 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 	using namespace Utilities;
 
 #if WITH_EDITOR
-	if (World.WorldType == EWorldType::Editor)
+	// Default to editor context for anything other than a game world.
+	if (World.WorldType != EWorldType::Game && World.WorldType != EWorldType::PIE)
 	{
 		if (OutIndex)
 		{
@@ -185,7 +200,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 	if (UNLIKELY(!Data))
 	{
 		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, DrawMultiContextEvent, FontAtlas, WorldContext->PIEInstance });
-		ContextProxyCreatedEvent.Broadcast(Index, Data->ContextProxy);
+		ContextProxyCreatedEvent.Broadcast(Index, *Data->ContextProxy);
 	}
 	else
 	{
@@ -196,7 +211,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 	if (UNLIKELY(!Data))
 	{
 		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, DrawMultiContextEvent, FontAtlas });
-		ContextProxyCreatedEvent.Broadcast(Index, Data->ContextProxy);
+		ContextProxyCreatedEvent.Broadcast(Index, *Data->ContextProxy);
 	}
 #endif
 

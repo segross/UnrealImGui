@@ -5,7 +5,13 @@ Versions marked as 'unofficial' are labelled only for the needs of this changelo
 Change History
 --------------
 
+Version: 1.18 (2020/01)
+- Updated to engine version 4.24.
+- Updated to ImGui version 1.74.
+
 Version: 1.17 (2019/04)
+- Added experimental support for touch input.
+- Integrated fixes allowing to build this as an engine plugin:
 - Added support for sharing with game mouse input.
 - Refactorization of input handling, with changes in SImGuiWidget and compatibility breaking changes in UImGuiInputHandler.
 
