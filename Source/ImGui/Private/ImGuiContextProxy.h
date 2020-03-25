@@ -53,6 +53,9 @@ public:
 	// Whether this context has mouse hovering any window (read once per frame during context update).
 	bool IsMouseHoveringAnyWindow() const { return bIsMouseHoveringAnyWindow; }
 
+	// Whether ImGui will use the mouse inputs.
+	bool WantsMouseCapture() const { return bWantsMouseCapture; }
+
 	// Cursor type desired by this context (updated once per frame during context update).
 	EMouseCursor::Type GetMouseCursor() const { return MouseCursor;  }
 
@@ -92,6 +95,8 @@ private:
 	bool bIsFrameStarted = false;
 	bool bIsDrawEarlyDebugCalled = false;
 	bool bIsDrawDebugCalled = false;
+
+	bool bWantsMouseCapture = false;
 
 	FImGuiInputState InputState;
 

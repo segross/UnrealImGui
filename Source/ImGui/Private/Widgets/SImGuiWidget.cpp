@@ -390,13 +390,13 @@ void SImGuiWidget::ReturnFocus()
 void SImGuiWidget::UpdateInputState()
 {
 	auto& Properties = ModuleManager->GetProperties();
-	auto* ContextPropxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex);
+	auto* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex);
 
 	const bool bEnableTransparentMouseInput = Properties.IsMouseInputShared()
 #if PLATFORM_ANDROID || PLATFORM_IOS
 		&& (FSlateApplication::Get().GetCursorPos() != FVector2D::ZeroVector)
 #endif
-		&& !(ContextPropxy->IsMouseHoveringAnyWindow() || ContextPropxy->HasActiveItem());
+		&& !(ContextProxy->WantsMouseCapture() || ContextProxy->HasActiveItem());
 	if (bTransparentMouseInput != bEnableTransparentMouseInput)
 	{
 		bTransparentMouseInput = bEnableTransparentMouseInput;
