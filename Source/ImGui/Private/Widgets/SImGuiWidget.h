@@ -103,6 +103,9 @@ private:
 	void UpdateTransparentMouseInput(const FGeometry& AllottedGeometry);
 	void HandleWindowFocusLost();
 
+	void SetAdaptiveCanvasSize(bool bEnabled);
+	void UpdateCanvasSize();
+
 	void UpdateCanvasControlMode(const FInputEvent& InputEvent);
 
 	void OnPostImGuiUpdate();
@@ -135,6 +138,8 @@ private:
 	bool bForegroundWindow = false;
 	bool bHideMouseCursor = true;
 	bool bTransparentMouseInput = false;
+	bool bAdaptiveCanvasSize = false;
+	bool bUpdateCanvasSize = false;
 
 	TSharedPtr<SImGuiCanvasControl> CanvasControlWidget;
 	TWeakPtr<SWidget> PreviousUserFocusedWidget;

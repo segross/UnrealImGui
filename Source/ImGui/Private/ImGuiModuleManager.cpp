@@ -175,7 +175,6 @@ void FImGuiModuleManager::AddWidgetToViewport(UGameViewportClient* GameViewport)
 	// Make sure that we have a context for this viewport's world and get its index.
 	int32 ContextIndex;
 	auto& ContextProxy = ContextManager.GetWorldContextProxy(*GameViewport->GetWorld(), ContextIndex);
-	ContextProxy.SetAdaptiveCanvasSize(Settings.AdaptiveCanvasSize());
 
 	// Make sure that textures are loaded before the first Slate widget is created.
 	LoadTextures();

@@ -84,6 +84,7 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 	const auto& Settings = ModuleManager->GetSettings();
 	SetHideMouseCursor(Settings.UseSoftwareCursor());
 	CreateInputHandler(Settings.GetImGuiInputHandlerClass());
+	SetAdaptiveCanvasSize(Settings.AdaptiveCanvasSize());
 
 	// Initialize state.
 	UpdateVisibility();
@@ -125,6 +126,7 @@ void SImGuiWidget::Tick(const FGeometry& AllottedGeometry, const double InCurren
 	UpdateInputState();
 	UpdateTransparentMouseInput(AllottedGeometry);
 	HandleWindowFocusLost();
+	UpdateCanvasSize();
 }
 
 FReply SImGuiWidget::OnKeyChar(const FGeometry& MyGeometry, const FCharacterEvent& CharacterEvent)
@@ -496,9 +498,44 @@ void SImGuiWidget::HandleWindowFocusLost()
 	}
 }
 
+void SImGuiWidget::SetAdaptiveCanvasSize(bool bEnabled)
+{
+	if (bAdaptiveCanvasSize != bEnabled)
+	{
+		bAdaptiveCanvasSize = bEnabled;
+		bUpdateCanvasSize = true;
+		UpdateCanvasSize();
+	}
+}
+
+void SImGuiWidget::UpdateCanvasSize()
+{
+	if (bUpdateCanvasSize)
+	{
+		if (auto* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex))
+		{
+			if (bAdaptiveCanvasSize)
+			{
+				if (GameViewport.IsValid())
+				{
+					FVector2D DisplaySize;
+					GameViewport->GetViewportSize(DisplaySize);
+					ContextProxy->SetDisplaySize(DisplaySize);
+				}
+			}
+			else
+			{
+				ContextProxy->ResetDisplaySize();
+				// No need for more updates, if we successfully processed fixed-canvas mode.
+				bUpdateCanvasSize = false;
+			}
+		}
+	}
+}
+
 void SImGuiWidget::UpdateCanvasControlMode(const FInputEvent& InputEvent)
 {
-	CanvasControlWidget->SetActive(InputEvent.IsLeftAltDown() && InputEvent.IsLeftShiftDown());
+	CanvasControlWidget->SetActive(!bAdaptiveCanvasSize && InputEvent.IsLeftAltDown() && InputEvent.IsLeftShiftDown());
 }
 
 void SImGuiWidget::OnPostImGuiUpdate()

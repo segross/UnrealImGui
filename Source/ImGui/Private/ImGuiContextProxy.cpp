@@ -59,9 +59,9 @@ FImGuiContextProxy::FImGuiContextProxy(const FString& InName, int32 InContextInd
 	// Set session data storage.
 	IO.IniFilename = IniFilename.c_str();
 
-	// Use pre-defined canvas size.
-	IO.DisplaySize = { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT };
-	DisplaySize = ImGuiInterops::ToVector2D(IO.DisplaySize);
+	// Start with the default canvas size.
+	ResetDisplaySize();
+	IO.DisplaySize = { DisplaySize.X, DisplaySize.Y };
 
 	// Initialize key mapping, so context can correctly interpret input state.
 	ImGuiInterops::SetUnrealKeyMap(IO);
@@ -82,6 +82,11 @@ FImGuiContextProxy::~FImGuiContextProxy()
 		// Save context data and destroy.
 		ImGui::DestroyContext(Context);
 	}
+}
+
+void FImGuiContextProxy::ResetDisplaySize()
+{
+	DisplaySize = { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT };
 }
 
 void FImGuiContextProxy::DrawEarlyDebug()
@@ -147,11 +152,6 @@ void FImGuiContextProxy::Tick(float DeltaSeconds)
 	}
 }
 
-void FImGuiContextProxy::SetAdaptiveCanvasSize(bool bAdaptive)
-{
-    bAdaptiveCanvasSize = bAdaptive;
-}
-
 void FImGuiContextProxy::BeginFrame(float DeltaTime)
 {
 	if (!bIsFrameStarted)
@@ -162,16 +162,7 @@ void FImGuiContextProxy::BeginFrame(float DeltaTime)
 		ImGuiInterops::CopyInput(IO, InputState);
 		InputState.ClearUpdateState();
 
-		if (bAdaptiveCanvasSize) {
-			if (GEngine && GEngine->GameViewport)
-			{
-				GEngine->GameViewport->GetViewportSize(DisplaySize);
-				IO.DisplaySize = ImVec2(DisplaySize.X, DisplaySize.Y);
-			}
-		} else {
-			IO.DisplaySize = { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT };
-			DisplaySize = ImGuiInterops::ToVector2D(IO.DisplaySize);
-		}
+		IO.DisplaySize = { DisplaySize.X, DisplaySize.Y };
 
 		ImGui::NewFrame();
 

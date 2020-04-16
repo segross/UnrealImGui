@@ -44,8 +44,14 @@ public:
 	// Set this context as current ImGui context.
 	void SetAsCurrent() { ImGui::SetCurrentContext(Context); }
 
-	// Context display size (read once per frame during context update).
+	// Get the desired context display size.
 	const FVector2D& GetDisplaySize() const { return DisplaySize; }
+
+	// Set the desired context display size.
+	void SetDisplaySize(const FVector2D& Size) { DisplaySize = Size; }
+
+	// Reset the desired context display size to default size.
+	void ResetDisplaySize();
 
 	// Whether this context has an active item (read once per frame during context update).
 	bool HasActiveItem() const { return bHasActiveItem; }
@@ -67,9 +73,6 @@ public:
 
 	// Tick to advance context to the next frame. Only one call per frame will be processed.
 	void Tick(float DeltaSeconds);
-
-	// Set the adaptive canvas size configuration.
-	void SetAdaptiveCanvasSize(bool);
 
 private:
 
@@ -109,6 +112,4 @@ private:
 	FSimpleMulticastDelegate* SharedDrawEvent = nullptr;
 
 	std::string IniFilename;
-
-	bool bAdaptiveCanvasSize = false;
 };
