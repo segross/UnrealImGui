@@ -9,7 +9,7 @@ Dear ImGui is an immediate-mode graphical user interface library that is very li
 
 Status
 ------
-Version: 1.18
+Version: 1.19 WIP
 
 ImGui version: 1.74
 
