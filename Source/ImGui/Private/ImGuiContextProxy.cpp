@@ -134,14 +134,16 @@ void FImGuiContextProxy::Tick(float DeltaSeconds)
 			EndFrame();
 		}
 
-		// Update context information (some data, like mouse cursor, may be cleaned in new frame, so we should collect it
-		// beforehand).
+		// Update context information (some data need to be collected before starting a new frame while some other data
+		// may need to be collected after).
 		bHasActiveItem = ImGui::IsAnyItemActive();
-		bIsMouseHoveringAnyWindow = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
 		MouseCursor = ImGuiInterops::ToSlateMouseCursor(ImGui::GetMouseCursor());
 
 		// Begin a new frame and set the context back to a state in which it allows to draw controls.
 		BeginFrame(DeltaSeconds);
+
+		// Update remaining context information.
+		bWantsMouseCapture = ImGui::GetIO().WantCaptureMouse;
 	}
 }
 
@@ -172,8 +174,6 @@ void FImGuiContextProxy::BeginFrame(float DeltaTime)
 		}
 
 		ImGui::NewFrame();
-
-		bWantsMouseCapture = IO.WantCaptureMouse;
 
 		bIsFrameStarted = true;
 		bIsDrawEarlyDebugCalled = false;

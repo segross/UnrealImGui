@@ -50,10 +50,7 @@ public:
 	// Whether this context has an active item (read once per frame during context update).
 	bool HasActiveItem() const { return bHasActiveItem; }
 
-	// Whether this context has mouse hovering any window (read once per frame during context update).
-	bool IsMouseHoveringAnyWindow() const { return bIsMouseHoveringAnyWindow; }
-
-	// Whether ImGui will use the mouse inputs.
+	// Whether ImGui will use the mouse inputs (read once per frame during context update).
 	bool WantsMouseCapture() const { return bWantsMouseCapture; }
 
 	// Cursor type desired by this context (updated once per frame during context update).
@@ -93,13 +90,11 @@ private:
 
 	EMouseCursor::Type MouseCursor = EMouseCursor::None;
 	bool bHasActiveItem = false;
-	bool bIsMouseHoveringAnyWindow = false;
+	bool bWantsMouseCapture = false;
 
 	bool bIsFrameStarted = false;
 	bool bIsDrawEarlyDebugCalled = false;
 	bool bIsDrawDebugCalled = false;
-
-	bool bWantsMouseCapture = false;
 
 	FImGuiInputState InputState;
 
