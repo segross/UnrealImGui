@@ -103,6 +103,10 @@ protected:
 	UPROPERTY(EditAnywhere, config, Category = "Keyboard Shortcuts")
 	FImGuiKeyInfo ToggleInput;
 
+	// If true, the size of ImGui canvas will be adaptive to game viewport.
+	UPROPERTY(EditAnywhere, config, Category = "Canvas Size")
+	bool bAdaptiveCanvasSize = false;
+
 	// Deprecated name for ToggleInput. Kept temporarily to automatically move old configuration.
 	UPROPERTY(config)
 	FImGuiKeyInfo SwitchInputModeKey_DEPRECATED;
@@ -148,6 +152,9 @@ public:
 	// Get the shortcut configuration for 'ImGui.ToggleInput' command.
 	const FImGuiKeyInfo& GetToggleInputKey() const { return ToggleInputKey; }
 
+	// Get the adaptive canvas size configuration.
+	bool AdaptiveCanvasSize() const { return bAdaptiveCanvasSize; }
+
 	// Delegate raised when ImGui Input Handle is changed.
 	FStringClassReferenceChangeDelegate OnImGuiInputHandlerClassChanged;
 
@@ -164,6 +171,7 @@ private:
 	void SetShareMouseInput(bool bShare);
 	void SetUseSoftwareCursor(bool bUse);
 	void SetToggleInputKey(const FImGuiKeyInfo& KeyInfo);
+	void SetAdaptiveCanvasSize(bool bAdaptive);
 
 #if WITH_EDITOR
 	void OnPropertyChanged(class UObject* ObjectBeingModified, struct FPropertyChangedEvent& PropertyChangedEvent);
@@ -178,4 +186,5 @@ private:
 	bool bShareGamepadInput = false;
 	bool bShareMouseInput = false;
 	bool bUseSoftwareCursor = false;
+	bool bAdaptiveCanvasSize = false;
 };

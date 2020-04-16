@@ -103,6 +103,7 @@ void FImGuiModuleSettings::UpdateSettings()
 		SetShareMouseInput(SettingsObject->bShareMouseInput);
 		SetUseSoftwareCursor(SettingsObject->bUseSoftwareCursor);
 		SetToggleInputKey(SettingsObject->ToggleInput);
+		SetAdaptiveCanvasSize(SettingsObject->bAdaptiveCanvasSize);
 	}
 }
 
@@ -157,6 +158,14 @@ void FImGuiModuleSettings::SetToggleInputKey(const FImGuiKeyInfo& KeyInfo)
 	{
 		ToggleInputKey = KeyInfo;
 		Commands.SetKeyBinding(FImGuiModuleCommands::ToggleInput, ToggleInputKey);
+	}
+}
+
+void FImGuiModuleSettings::SetAdaptiveCanvasSize(bool bAdaptive)
+{
+	if (bAdaptiveCanvasSize != bAdaptive)
+	{
+		bAdaptiveCanvasSize = bAdaptive;
 	}
 }
 

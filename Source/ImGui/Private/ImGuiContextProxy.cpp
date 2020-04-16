@@ -139,11 +139,15 @@ void FImGuiContextProxy::Tick(float DeltaSeconds)
 		bHasActiveItem = ImGui::IsAnyItemActive();
 		bIsMouseHoveringAnyWindow = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
 		MouseCursor = ImGuiInterops::ToSlateMouseCursor(ImGui::GetMouseCursor());
-		DisplaySize = ImGuiInterops::ToVector2D(ImGui::GetIO().DisplaySize);
 
 		// Begin a new frame and set the context back to a state in which it allows to draw controls.
 		BeginFrame(DeltaSeconds);
 	}
+}
+
+void FImGuiContextProxy::SetAdaptiveCanvasSize(bool bAdaptive)
+{
+    bAdaptiveCanvasSize = bAdaptive;
 }
 
 void FImGuiContextProxy::BeginFrame(float DeltaTime)
@@ -155,6 +159,17 @@ void FImGuiContextProxy::BeginFrame(float DeltaTime)
 
 		ImGuiInterops::CopyInput(IO, InputState);
 		InputState.ClearUpdateState();
+
+		if (bAdaptiveCanvasSize) {
+			if (GEngine && GEngine->GameViewport)
+			{
+				GEngine->GameViewport->GetViewportSize(DisplaySize);
+				IO.DisplaySize = ImVec2(DisplaySize.X, DisplaySize.Y);
+			}
+		} else {
+			IO.DisplaySize = { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT };
+			DisplaySize = ImGuiInterops::ToVector2D(IO.DisplaySize);
+		}
 
 		ImGui::NewFrame();
 
