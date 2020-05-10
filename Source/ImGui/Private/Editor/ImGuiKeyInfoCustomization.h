@@ -8,10 +8,6 @@
 #include <PropertyHandle.h>
 
 
-class FDetailWidgetRow;
-class IDetailChildrenBuilder;
-class IPropertyHandle;
-
 // Property type customization for FImGuiKeyInfo.
 class FImGuiKeyInfoCustomization : public IPropertyTypeCustomization
 {

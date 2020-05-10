@@ -137,7 +137,7 @@ namespace
 
 namespace InputConstants
 {
-	static const FMargin PropertyPadding(2.0f, 0.0f, 2.0f, 0.0f);
+	static const FMargin PropertyPadding(0.0f, 0.0f, 4.0f, 0.0f);
 }
 
 TSharedRef<IPropertyTypeCustomization> FImGuiKeyInfoCustomization::MakeInstance()
