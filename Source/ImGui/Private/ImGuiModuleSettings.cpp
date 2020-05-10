@@ -166,6 +166,7 @@ void FImGuiModuleSettings::SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasS
 	if (CanvasSize != CanvasSizeInfo)
 	{
 		CanvasSize = CanvasSizeInfo;
+		OnCanvasSizeInfoChangeDelegate.Broadcast(CanvasSize);
 	}
 }
 

@@ -171,6 +171,7 @@ public:
 	// Generic delegate used to notify changes of boolean properties.
 	DECLARE_MULTICAST_DELEGATE_OneParam(FBoolChangeDelegate, bool);
 	DECLARE_MULTICAST_DELEGATE_OneParam(FStringClassReferenceChangeDelegate, const FStringClassReference&);
+	DECLARE_MULTICAST_DELEGATE_OneParam(FImGuiCanvasSizeInfoChangeDelegate, const FImGuiCanvasSizeInfo&);
 
 	// Constructor for ImGui module settings. It will bind to instances of module properties and commands and will
 	// update them every time when settings are changed.
@@ -201,6 +202,9 @@ public:
 
 	// Delegate raised when software cursor configuration is changed.
 	FBoolChangeDelegate OnUseSoftwareCursorChanged;
+
+	// Delegate raised when information how to calculate the canvas size is changed.
+	FImGuiCanvasSizeInfoChangeDelegate OnCanvasSizeInfoChangeDelegate;
 
 private:
 

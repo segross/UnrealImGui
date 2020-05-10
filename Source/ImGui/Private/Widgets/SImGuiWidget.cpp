@@ -283,6 +283,10 @@ void SImGuiWidget::RegisterImGuiSettingsDelegates()
 	{
 		Settings.OnUseSoftwareCursorChanged.AddRaw(this, &SImGuiWidget::SetHideMouseCursor);
 	}
+	if (!Settings.OnCanvasSizeInfoChangeDelegate.IsBoundToObject(this))
+	{
+		Settings.OnCanvasSizeInfoChangeDelegate.AddRaw(this, &SImGuiWidget::SetCanvasSizeInfo);
+	}
 }
 
 void SImGuiWidget::UnregisterImGuiSettingsDelegates()
@@ -291,6 +295,7 @@ void SImGuiWidget::UnregisterImGuiSettingsDelegates()
 
 	Settings.OnImGuiInputHandlerClassChanged.RemoveAll(this);
 	Settings.OnUseSoftwareCursorChanged.RemoveAll(this);
+	Settings.OnCanvasSizeInfoChangeDelegate.RemoveAll(this);
 }
 
 void SImGuiWidget::SetHideMouseCursor(bool bHide)
