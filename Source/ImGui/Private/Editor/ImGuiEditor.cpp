@@ -6,6 +6,7 @@
 
 #include "ImGuiEditor.h"
 
+#include "ImGuiCanvasSizeInfoCustomization.h"
 #include "ImGuiKeyInfoCustomization.h"
 #include "ImGuiModuleSettings.h"
 
@@ -69,6 +70,8 @@ void FImGuiEditor::Register()
 		{
 			bCustomPropertyTypeLayoutsRegistered = true;
 
+			PropertyModule->RegisterCustomPropertyTypeLayout("ImGuiCanvasSizeInfo",
+				FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FImGuiCanvasSizeInfoCustomization::MakeInstance));
 			PropertyModule->RegisterCustomPropertyTypeLayout("ImGuiKeyInfo",
 				FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FImGuiKeyInfoCustomization::MakeInstance));
 		}
@@ -93,6 +96,7 @@ void FImGuiEditor::Unregister()
 
 		if (FPropertyEditorModule* PropertyModule = GetPropertyEditorModule())
 		{
+			PropertyModule->UnregisterCustomPropertyTypeLayout("ImGuiCanvasSizeInfo");
 			PropertyModule->UnregisterCustomPropertyTypeLayout("ImGuiKeyInfo");
 		}
 	}

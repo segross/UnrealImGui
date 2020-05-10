@@ -84,7 +84,7 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 	const auto& Settings = ModuleManager->GetSettings();
 	SetHideMouseCursor(Settings.UseSoftwareCursor());
 	CreateInputHandler(Settings.GetImGuiInputHandlerClass());
-	SetAdaptiveCanvasSize(Settings.AdaptiveCanvasSize());
+	SetCanvasSizeInfo(Settings.GetCanvasSizeInfo());
 
 	// Initialize state.
 	UpdateVisibility();
@@ -498,14 +498,39 @@ void SImGuiWidget::HandleWindowFocusLost()
 	}
 }
 
-void SImGuiWidget::SetAdaptiveCanvasSize(bool bEnabled)
+void SImGuiWidget::SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasSizeInfo)
 {
-	if (bAdaptiveCanvasSize != bEnabled)
+	switch (CanvasSizeInfo.SizeType)
 	{
-		bAdaptiveCanvasSize = bEnabled;
-		bUpdateCanvasSize = true;
-		UpdateCanvasSize();
+		case EImGuiCanvasSizeType::Custom:
+			MinCanvasSize = { static_cast<float>(CanvasSizeInfo.Width), static_cast<float>(CanvasSizeInfo.Height) };
+			bAdaptiveCanvasSize = CanvasSizeInfo.bExtendToViewport;
+			bCanvasControlEnabled = true;
+			break;
+
+		case EImGuiCanvasSizeType::Desktop:
+			MinCanvasSize = (GEngine && GEngine->GameUserSettings)
+				? GEngine->GameUserSettings->GetDesktopResolution() : FVector2D::ZeroVector;
+			bAdaptiveCanvasSize = CanvasSizeInfo.bExtendToViewport;
+			bCanvasControlEnabled = true;
+			break;
+
+		case EImGuiCanvasSizeType::Viewport:
+		default:
+			MinCanvasSize = FVector2D::ZeroVector;
+			bAdaptiveCanvasSize = true;
+			bCanvasControlEnabled = false;
 	}
+
+	// We only update canvas control widget when canvas control is enabled. Make sure that we will not leave
+	// that widget active after disabling canvas control.
+	if (CanvasControlWidget && !bCanvasControlEnabled)
+	{
+		CanvasControlWidget->SetActive(false);
+	}
+
+	bUpdateCanvasSize = true;
+	UpdateCanvasSize();
 }
 
 void SImGuiWidget::UpdateCanvasSize()
@@ -514,28 +539,30 @@ void SImGuiWidget::UpdateCanvasSize()
 	{
 		if (auto* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex))
 		{
-			if (bAdaptiveCanvasSize)
+			CanvasSize = MinCanvasSize;
+			if (bAdaptiveCanvasSize && GameViewport.IsValid())
 			{
-				if (GameViewport.IsValid())
-				{
-					FVector2D DisplaySize;
-					GameViewport->GetViewportSize(DisplaySize);
-					ContextProxy->SetDisplaySize(DisplaySize);
-				}
+				FVector2D ViewportSize;
+				GameViewport->GetViewportSize(ViewportSize);
+				CanvasSize = FVector2D::Max(CanvasSize, ViewportSize);
 			}
 			else
 			{
-				ContextProxy->ResetDisplaySize();
-				// No need for more updates, if we successfully processed fixed-canvas mode.
+				// No need for more updates, if we successfully processed fixed-canvas size.
 				bUpdateCanvasSize = false;
 			}
+
+			ContextProxy->SetDisplaySize(CanvasSize);
 		}
 	}
 }
 
 void SImGuiWidget::UpdateCanvasControlMode(const FInputEvent& InputEvent)
 {
-	CanvasControlWidget->SetActive(!bAdaptiveCanvasSize && InputEvent.IsLeftAltDown() && InputEvent.IsLeftShiftDown());
+	if (bCanvasControlEnabled)
+	{
+		CanvasControlWidget->SetActive(InputEvent.IsLeftAltDown() && InputEvent.IsLeftShiftDown());
+	}
 }
 
 void SImGuiWidget::OnPostImGuiUpdate()
@@ -628,7 +655,7 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 
 FVector2D SImGuiWidget::ComputeDesiredSize(float Scale) const
 {
-	return FVector2D{ 3840.f, 2160.f } * Scale;
+	return CanvasSize * Scale;
 }
 
 #if IMGUI_WIDGET_DEBUG
@@ -744,6 +771,13 @@ namespace TwoColumns
 		LabelText(Label); ImGui::NextColumn();
 		ImGui::Text("%ls", Value); ImGui::NextColumn();
 	}
+
+	template<typename LabelType>
+	static void ValueWidthHeight(LabelType&& Label, const FVector2D& Value)
+	{
+		LabelText(Label); ImGui::NextColumn();
+		ImGui::Text("Width = %.0f, Height = %.0f", Value.X, Value.Y); ImGui::NextColumn();
+	}
 }
 
 namespace Styles
@@ -770,10 +804,18 @@ void SImGuiWidget::OnDebugDraw()
 	if (CVars::DebugWidget.GetValueOnGameThread() > 0)
 	{
 		bool bDebug = true;
-		ImGui::SetNextWindowSize(ImVec2(380, 480), ImGuiSetCond_Once);
+		ImGui::SetNextWindowSize(ImVec2(380, 480), ImGuiCond_Once);
 		if (ImGui::Begin("ImGui Widget Debug", &bDebug))
 		{
 			ImGui::Spacing();
+
+			TwoColumns::CollapsingGroup("Canvas Size", [&]()
+			{
+				TwoColumns::Value("Is Adaptive", bAdaptiveCanvasSize);
+				TwoColumns::Value("Is Updating", bUpdateCanvasSize);
+				TwoColumns::ValueWidthHeight("Min Canvas Size", MinCanvasSize);
+				TwoColumns::ValueWidthHeight("Canvas Size", CanvasSize);
+			});
 
 			TwoColumns::CollapsingGroup("Context", [&]()
 			{
@@ -821,7 +863,7 @@ void SImGuiWidget::OnDebugDraw()
 		FImGuiInputState& InputState = ContextProxy->GetInputState();
 
 		bool bDebug = true;
-		ImGui::SetNextWindowSize(ImVec2(460, 480), ImGuiSetCond_Once);
+		ImGui::SetNextWindowSize(ImVec2(460, 480), ImGuiCond_Once);
 		if (ImGui::Begin("ImGui Input State", &bDebug))
 		{
 			const ImVec4 HiglightColor{ 1.f, 1.f, 0.5f, 1.f };

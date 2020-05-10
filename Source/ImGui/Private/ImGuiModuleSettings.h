@@ -47,6 +47,47 @@ struct FImGuiKeyInfo
 	}
 };
 
+UENUM(BlueprintType)
+enum class EImGuiCanvasSizeType : uint8
+{
+	Custom UMETA(ToolTip = "Canvas will have a custom width and height."),
+	Desktop UMETA(ToolTip = "Canvas will have the same width and height as the desktop."),
+	Viewport UMETA(ToolTip = "Canvas will always have the same width and height as the viewport."),
+};
+
+/**
+ * Struct with information how to calculate canvas size. 
+ */
+USTRUCT()
+struct FImGuiCanvasSizeInfo
+{
+	GENERATED_BODY()
+
+	// Select how to specify canvas size.
+	UPROPERTY(EditAnywhere, Category = "Canvas Size")
+	EImGuiCanvasSizeType SizeType = EImGuiCanvasSizeType::Desktop;
+
+	// Custom canvas width.
+	UPROPERTY(EditAnywhere, Category = "Canvas Size", meta = (ClampMin = 0, UIMin = 0))
+	int32 Width = 3840;
+
+	// Custom canvas height.
+	UPROPERTY(EditAnywhere, Category = "Canvas Size", meta = (ClampMin = 0, UIMin = 0))
+	int32 Height = 2160;
+
+	// If this is true, canvas width or height may be extended, if the viewport size is larger.
+	UPROPERTY(EditAnywhere, Category = "Canvas Size", meta = (ClampMin = 0, UIMin = 0))
+	bool bExtendToViewport = true;
+
+	bool operator==(const FImGuiCanvasSizeInfo& Other) const
+	{
+		return (SizeType == Other.SizeType) && (Width == Other.Width)
+			&& (Height == Other.Height) && (bExtendToViewport == Other.bExtendToViewport);
+	}
+
+	bool operator!=(const FImGuiCanvasSizeInfo& Other) const { return !(*this == Other); }
+};
+
 // UObject used for loading and saving ImGui settings. To access actual settings use FImGuiModuleSettings interface.
 UCLASS(config=ImGui, defaultconfig)
 class UImGuiSettings : public UObject
@@ -103,9 +144,9 @@ protected:
 	UPROPERTY(EditAnywhere, config, Category = "Keyboard Shortcuts")
 	FImGuiKeyInfo ToggleInput;
 
-	// If true, the size of ImGui canvas will be adaptive to game viewport.
+	// Chose how to define the ImGui canvas size. Select between custom, desktop and viewport.
 	UPROPERTY(EditAnywhere, config, Category = "Canvas Size")
-	bool bAdaptiveCanvasSize = false;
+	FImGuiCanvasSizeInfo CanvasSize;
 
 	// Deprecated name for ToggleInput. Kept temporarily to automatically move old configuration.
 	UPROPERTY(config)
@@ -152,8 +193,8 @@ public:
 	// Get the shortcut configuration for 'ImGui.ToggleInput' command.
 	const FImGuiKeyInfo& GetToggleInputKey() const { return ToggleInputKey; }
 
-	// Get the adaptive canvas size configuration.
-	bool AdaptiveCanvasSize() const { return bAdaptiveCanvasSize; }
+	// Get the information how to calculate the canvas size.
+	const FImGuiCanvasSizeInfo& GetCanvasSizeInfo() const { return CanvasSize; }
 
 	// Delegate raised when ImGui Input Handle is changed.
 	FStringClassReferenceChangeDelegate OnImGuiInputHandlerClassChanged;
@@ -171,7 +212,7 @@ private:
 	void SetShareMouseInput(bool bShare);
 	void SetUseSoftwareCursor(bool bUse);
 	void SetToggleInputKey(const FImGuiKeyInfo& KeyInfo);
-	void SetAdaptiveCanvasSize(bool bAdaptive);
+	void SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasSizeInfo);
 
 #if WITH_EDITOR
 	void OnPropertyChanged(class UObject* ObjectBeingModified, struct FPropertyChangedEvent& PropertyChangedEvent);
@@ -182,9 +223,9 @@ private:
 
 	FStringClassReference ImGuiInputHandlerClass;
 	FImGuiKeyInfo ToggleInputKey;
+	FImGuiCanvasSizeInfo CanvasSize;
 	bool bShareKeyboardInput = false;
 	bool bShareGamepadInput = false;
 	bool bShareMouseInput = false;
 	bool bUseSoftwareCursor = false;
-	bool bAdaptiveCanvasSize = false;
 };

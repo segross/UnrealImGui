@@ -103,7 +103,7 @@ private:
 	void UpdateTransparentMouseInput(const FGeometry& AllottedGeometry);
 	void HandleWindowFocusLost();
 
-	void SetAdaptiveCanvasSize(bool bEnabled);
+	void SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasSizeInfo);
 	void UpdateCanvasSize();
 
 	void UpdateCanvasControlMode(const FInputEvent& InputEvent);
@@ -134,12 +134,16 @@ private:
 
 	int32 ContextIndex = 0;
 
+	FVector2D MinCanvasSize = FVector2D::ZeroVector;
+	FVector2D CanvasSize = FVector2D::ZeroVector;
+
 	bool bInputEnabled = false;
 	bool bForegroundWindow = false;
 	bool bHideMouseCursor = true;
 	bool bTransparentMouseInput = false;
 	bool bAdaptiveCanvasSize = false;
 	bool bUpdateCanvasSize = false;
+	bool bCanvasControlEnabled = false;
 
 	TSharedPtr<SImGuiCanvasControl> CanvasControlWidget;
 	TWeakPtr<SWidget> PreviousUserFocusedWidget;

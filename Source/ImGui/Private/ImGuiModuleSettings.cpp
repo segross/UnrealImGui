@@ -103,7 +103,7 @@ void FImGuiModuleSettings::UpdateSettings()
 		SetShareMouseInput(SettingsObject->bShareMouseInput);
 		SetUseSoftwareCursor(SettingsObject->bUseSoftwareCursor);
 		SetToggleInputKey(SettingsObject->ToggleInput);
-		SetAdaptiveCanvasSize(SettingsObject->bAdaptiveCanvasSize);
+		SetCanvasSizeInfo(SettingsObject->CanvasSize);
 	}
 }
 
@@ -161,11 +161,11 @@ void FImGuiModuleSettings::SetToggleInputKey(const FImGuiKeyInfo& KeyInfo)
 	}
 }
 
-void FImGuiModuleSettings::SetAdaptiveCanvasSize(bool bAdaptive)
+void FImGuiModuleSettings::SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasSizeInfo)
 {
-	if (bAdaptiveCanvasSize != bAdaptive)
+	if (CanvasSize != CanvasSizeInfo)
 	{
-		bAdaptiveCanvasSize = bAdaptive;
+		CanvasSize = CanvasSizeInfo;
 	}
 }
 
