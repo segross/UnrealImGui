@@ -104,6 +104,7 @@ void FImGuiModuleSettings::UpdateSettings()
 		SetUseSoftwareCursor(SettingsObject->bUseSoftwareCursor);
 		SetToggleInputKey(SettingsObject->ToggleInput);
 		SetCanvasSizeInfo(SettingsObject->CanvasSize);
+		SetDPIScale(SettingsObject->DPIScale);
 	}
 }
 
@@ -167,6 +168,15 @@ void FImGuiModuleSettings::SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasS
 	{
 		CanvasSize = CanvasSizeInfo;
 		OnCanvasSizeInfoChangeDelegate.Broadcast(CanvasSize);
+	}
+}
+
+void FImGuiModuleSettings::SetDPIScale(float Scale)
+{
+	if (DPIScale != Scale)
+	{
+		DPIScale = Scale;
+		OnDPIScaleChangeDelegate.Broadcast(DPIScale);
 	}
 }
 

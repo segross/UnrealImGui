@@ -148,6 +148,14 @@ protected:
 	UPROPERTY(EditAnywhere, config, Category = "Canvas Size")
 	FImGuiCanvasSizeInfo CanvasSize;
 
+	// DPI scale for the ImGui widgets.
+	//
+	// Note that when this scale is other than 1.0, canvas size will be scaled before it is passed to the ImGui.
+	// It will be scaled to keep the same screen size as defined by the Canvas Size property. If the default
+	// canvas size is 3840x2160 and the DPI scale is 2.0, the size passed to the ImGui will be 1920x1080.
+	UPROPERTY(EditAnywhere, Category = "DPI Scale", meta = (ClampMin = 0, UIMin = 0))
+	float DPIScale = 1.f;
+
 	// Deprecated name for ToggleInput. Kept temporarily to automatically move old configuration.
 	UPROPERTY(config)
 	FImGuiKeyInfo SwitchInputModeKey_DEPRECATED;
@@ -170,6 +178,7 @@ public:
 
 	// Generic delegate used to notify changes of boolean properties.
 	DECLARE_MULTICAST_DELEGATE_OneParam(FBoolChangeDelegate, bool);
+	DECLARE_MULTICAST_DELEGATE_OneParam(FFloatChangeDelegate, float);
 	DECLARE_MULTICAST_DELEGATE_OneParam(FStringClassReferenceChangeDelegate, const FStringClassReference&);
 	DECLARE_MULTICAST_DELEGATE_OneParam(FImGuiCanvasSizeInfoChangeDelegate, const FImGuiCanvasSizeInfo&);
 
@@ -197,6 +206,9 @@ public:
 	// Get the information how to calculate the canvas size.
 	const FImGuiCanvasSizeInfo& GetCanvasSizeInfo() const { return CanvasSize; }
 
+	// Get the DPI Scale.
+	float GetDPIScale() const { return DPIScale; }
+
 	// Delegate raised when ImGui Input Handle is changed.
 	FStringClassReferenceChangeDelegate OnImGuiInputHandlerClassChanged;
 
@@ -205,6 +217,9 @@ public:
 
 	// Delegate raised when information how to calculate the canvas size is changed.
 	FImGuiCanvasSizeInfoChangeDelegate OnCanvasSizeInfoChangeDelegate;
+
+	// Delegate raised when the DPI scale is changed.
+	FFloatChangeDelegate OnDPIScaleChangeDelegate;
 
 private:
 
@@ -217,6 +232,7 @@ private:
 	void SetUseSoftwareCursor(bool bUse);
 	void SetToggleInputKey(const FImGuiKeyInfo& KeyInfo);
 	void SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasSizeInfo);
+	void SetDPIScale(float DPIScale);
 
 #if WITH_EDITOR
 	void OnPropertyChanged(class UObject* ObjectBeingModified, struct FPropertyChangedEvent& PropertyChangedEvent);
@@ -228,6 +244,7 @@ private:
 	FStringClassReference ImGuiInputHandlerClass;
 	FImGuiKeyInfo ToggleInputKey;
 	FImGuiCanvasSizeInfo CanvasSize;
+	float DPIScale = 1.f;
 	bool bShareKeyboardInput = false;
 	bool bShareGamepadInput = false;
 	bool bShareMouseInput = false;

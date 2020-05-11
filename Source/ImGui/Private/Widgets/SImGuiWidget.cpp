@@ -84,6 +84,7 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 	const auto& Settings = ModuleManager->GetSettings();
 	SetHideMouseCursor(Settings.UseSoftwareCursor());
 	CreateInputHandler(Settings.GetImGuiInputHandlerClass());
+	SetDPIScale(Settings.GetDPIScale());
 	SetCanvasSizeInfo(Settings.GetCanvasSizeInfo());
 
 	// Initialize state.
@@ -283,6 +284,10 @@ void SImGuiWidget::RegisterImGuiSettingsDelegates()
 	{
 		Settings.OnUseSoftwareCursorChanged.AddRaw(this, &SImGuiWidget::SetHideMouseCursor);
 	}
+	if (!Settings.OnDPIScaleChangeDelegate.IsBoundToObject(this))
+	{
+		Settings.OnDPIScaleChangeDelegate.AddRaw(this, &SImGuiWidget::SetDPIScale);
+	}
 	if (!Settings.OnCanvasSizeInfoChangeDelegate.IsBoundToObject(this))
 	{
 		Settings.OnCanvasSizeInfoChangeDelegate.AddRaw(this, &SImGuiWidget::SetCanvasSizeInfo);
@@ -295,6 +300,7 @@ void SImGuiWidget::UnregisterImGuiSettingsDelegates()
 
 	Settings.OnImGuiInputHandlerClassChanged.RemoveAll(this);
 	Settings.OnUseSoftwareCursorChanged.RemoveAll(this);
+	Settings.OnDPIScaleChangeDelegate.RemoveAll(this);
 	Settings.OnCanvasSizeInfoChangeDelegate.RemoveAll(this);
 }
 
@@ -503,6 +509,15 @@ void SImGuiWidget::HandleWindowFocusLost()
 	}
 }
 
+void SImGuiWidget::SetDPIScale(float Scale)
+{
+	if (DPIScale != Scale)
+	{
+		DPIScale = Scale;
+		bUpdateCanvasSize = true;
+	}
+}
+
 void SImGuiWidget::SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasSizeInfo)
 {
 	switch (CanvasSizeInfo.SizeType)
@@ -535,7 +550,6 @@ void SImGuiWidget::SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasSizeInfo)
 	}
 
 	bUpdateCanvasSize = true;
-	UpdateCanvasSize();
 }
 
 void SImGuiWidget::UpdateCanvasSize()
@@ -556,6 +570,10 @@ void SImGuiWidget::UpdateCanvasSize()
 				// No need for more updates, if we successfully processed fixed-canvas size.
 				bUpdateCanvasSize = false;
 			}
+
+			// Clamping DPI Scale to keep the canvas size from getting too big.
+			CanvasSize /= FMath::Max(DPIScale, 0.01f);
+			CanvasSize = CanvasSize.RoundToVector();
 
 			ContextProxy->SetDisplaySize(CanvasSize);
 		}
@@ -820,6 +838,7 @@ void SImGuiWidget::OnDebugDraw()
 				TwoColumns::Value("Is Updating", bUpdateCanvasSize);
 				TwoColumns::ValueWidthHeight("Min Canvas Size", MinCanvasSize);
 				TwoColumns::ValueWidthHeight("Canvas Size", CanvasSize);
+				TwoColumns::Value("DPI Scale", DPIScale);
 			});
 
 			TwoColumns::CollapsingGroup("Context", [&]()

@@ -24,9 +24,18 @@ public:
 
 	void Construct(const FArguments& InArgs);
 
+	~SImGuiLayout();
+
 	const TWeakObjectPtr<UGameViewportClient>& GetGameViewport() const { return GameViewport; }
 
 private:
 
+	float GetDPIScale() const { return DPIScale; }
+	void SetDPIScale(float Scale) { DPIScale = Scale; }
+
+
+	FImGuiModuleManager* ModuleManager = nullptr;
 	TWeakObjectPtr<UGameViewportClient> GameViewport;
+
+	float DPIScale = 1.f;
 };

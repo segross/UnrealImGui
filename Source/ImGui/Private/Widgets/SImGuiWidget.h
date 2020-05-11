@@ -103,6 +103,8 @@ private:
 	void UpdateTransparentMouseInput(const FGeometry& AllottedGeometry);
 	void HandleWindowFocusLost();
 
+	void SetDPIScale(float Scale);
+
 	void SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasSizeInfo);
 	void UpdateCanvasSize();
 
@@ -136,6 +138,8 @@ private:
 
 	FVector2D MinCanvasSize = FVector2D::ZeroVector;
 	FVector2D CanvasSize = FVector2D::ZeroVector;
+
+	float DPIScale = 1.f;
 
 	bool bInputEnabled = false;
 	bool bForegroundWindow = false;

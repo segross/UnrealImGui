@@ -5,9 +5,11 @@ Versions marked as 'unofficial' are labelled only for the needs of this changelo
 Change History
 --------------
 
-Version: 1.19 WIP (2020/03-04)
+Version: 1.19 (2020/03-04)
 - Integrated fix for issue with ImGui popup/modal windows not being able to be closed in transparent mouse input mode. 
 - Integrated first version of Adaptive Canvas Size.
+- Added different options to define canvas size, with Adaptive Canvas Size being one of the options (viewport).
+- Added option for DPI scaling. Current implementation scales the whole Slate widget and invert-scales the ImGui canvas size to maintain consistent size on the screen.
 
 Version: 1.18 (2020/01)
 - Updated to engine version 4.24.
