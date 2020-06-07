@@ -95,7 +95,7 @@ FImGuiDelegateHandle FImGuiModule::AddMultiContextImGuiDelegate(const FImGuiDele
 #else
 	checkf(ImGuiModuleManager, TEXT("Null pointer to internal module implementation. Is module available?"));
 
-	return { ImGuiModuleManager->GetContextManager().OnDrawMultiContext().Add(Delegate), EDelegateCategory::MultiContext };
+	return { ImGuiModuleManager->GetContextManager().OnDrawMultiContext.Add(Delegate), EDelegateCategory::MultiContext };
 #endif
 }
 
@@ -115,7 +115,7 @@ void FImGuiModule::RemoveImGuiDelegate(const FImGuiDelegateHandle& Handle)
 	{
 		if (Handle.Category == EDelegateCategory::MultiContext)
 		{
-			ImGuiModuleManager->GetContextManager().OnDrawMultiContext().Remove(Handle.Handle);
+			ImGuiModuleManager->GetContextManager().OnDrawMultiContext.Remove(Handle.Handle);
 		}
 		else if (auto* Proxy = ImGuiModuleManager->GetContextManager().GetContextProxy(Handle.Index))
 		{
@@ -135,7 +135,13 @@ FImGuiTextureHandle FImGuiModule::FindTextureHandle(const FName& Name)
 
 FImGuiTextureHandle FImGuiModule::RegisterTexture(const FName& Name, class UTexture2D* Texture, bool bMakeUnique)
 {
-	const TextureIndex Index = ImGuiModuleManager->GetTextureManager().CreateTextureResources(Name, Texture, bMakeUnique);
+	FTextureManager& TextureManager = ImGuiModuleManager->GetTextureManager();
+
+	checkf(!bMakeUnique || TextureManager.FindTextureIndex(Name) == INDEX_NONE,
+		TEXT("Trying to register a texture with a name '%s' that is already used. Chose a different name ")
+		TEXT("or use bMakeUnique false, to update existing texture resources."), *Name.ToString());
+
+	const TextureIndex Index = TextureManager.CreateTextureResources(Name, Texture);
 	return FImGuiTextureHandle{ Name, ImGuiInterops::ToImTextureID(Index) };
 }
 

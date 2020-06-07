@@ -23,10 +23,10 @@ void SImGuiLayout::Construct(const FArguments& InArgs)
 	if (ModuleManager)
 	{
 		auto& Settings = ModuleManager->GetSettings();
-		SetDPIScale(Settings.GetDPIScale());
-		if (!Settings.OnDPIScaleChangeDelegate.IsBoundToObject(this))
+		SetDPIScale(Settings.GetDPIScaleInfo());
+		if (!Settings.OnDPIScaleChangedDelegate.IsBoundToObject(this))
 		{
-			Settings.OnDPIScaleChangeDelegate.AddRaw(this, &SImGuiLayout::SetDPIScale);
+			Settings.OnDPIScaleChangedDelegate.AddRaw(this, &SImGuiLayout::SetDPIScale);
 		}
 	}
 
@@ -71,7 +71,7 @@ SImGuiLayout::~SImGuiLayout()
 {
 	if (ModuleManager)
 	{
-		ModuleManager->GetSettings().OnDPIScaleChangeDelegate.RemoveAll(this);
+		ModuleManager->GetSettings().OnDPIScaleChangedDelegate.RemoveAll(this);
 	}
 }
 

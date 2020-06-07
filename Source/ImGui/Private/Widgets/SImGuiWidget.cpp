@@ -84,7 +84,7 @@ void SImGuiWidget::Construct(const FArguments& InArgs)
 	const auto& Settings = ModuleManager->GetSettings();
 	SetHideMouseCursor(Settings.UseSoftwareCursor());
 	CreateInputHandler(Settings.GetImGuiInputHandlerClass());
-	SetDPIScale(Settings.GetDPIScale());
+	SetDPIScale(Settings.GetDPIScaleInfo());
 	SetCanvasSizeInfo(Settings.GetCanvasSizeInfo());
 
 	// Initialize state.
@@ -284,13 +284,13 @@ void SImGuiWidget::RegisterImGuiSettingsDelegates()
 	{
 		Settings.OnUseSoftwareCursorChanged.AddRaw(this, &SImGuiWidget::SetHideMouseCursor);
 	}
-	if (!Settings.OnDPIScaleChangeDelegate.IsBoundToObject(this))
+	if (!Settings.OnDPIScaleChangedDelegate.IsBoundToObject(this))
 	{
-		Settings.OnDPIScaleChangeDelegate.AddRaw(this, &SImGuiWidget::SetDPIScale);
+		Settings.OnDPIScaleChangedDelegate.AddRaw(this, &SImGuiWidget::SetDPIScale);
 	}
-	if (!Settings.OnCanvasSizeInfoChangeDelegate.IsBoundToObject(this))
+	if (!Settings.OnCanvasSizeChangedDelegate.IsBoundToObject(this))
 	{
-		Settings.OnCanvasSizeInfoChangeDelegate.AddRaw(this, &SImGuiWidget::SetCanvasSizeInfo);
+		Settings.OnCanvasSizeChangedDelegate.AddRaw(this, &SImGuiWidget::SetCanvasSizeInfo);
 	}
 }
 
@@ -300,8 +300,8 @@ void SImGuiWidget::UnregisterImGuiSettingsDelegates()
 
 	Settings.OnImGuiInputHandlerClassChanged.RemoveAll(this);
 	Settings.OnUseSoftwareCursorChanged.RemoveAll(this);
-	Settings.OnDPIScaleChangeDelegate.RemoveAll(this);
-	Settings.OnCanvasSizeInfoChangeDelegate.RemoveAll(this);
+	Settings.OnDPIScaleChangedDelegate.RemoveAll(this);
+	Settings.OnCanvasSizeChangedDelegate.RemoveAll(this);
 }
 
 void SImGuiWidget::SetHideMouseCursor(bool bHide)
@@ -509,8 +509,9 @@ void SImGuiWidget::HandleWindowFocusLost()
 	}
 }
 
-void SImGuiWidget::SetDPIScale(float Scale)
+void SImGuiWidget::SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo)
 {
+	const float Scale = ScaleInfo.GetSlateScale();
 	if (DPIScale != Scale)
 	{
 		DPIScale = Scale;

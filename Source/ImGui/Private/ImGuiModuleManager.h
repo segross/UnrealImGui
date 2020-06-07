@@ -46,6 +46,7 @@ private:
 	FImGuiModuleManager& operator=(FImGuiModuleManager&&) = delete;
 
 	void LoadTextures();
+	void BuildFontAtlasTexture();
 
 	bool IsTickRegistered() { return TickDelegateHandle.IsValid(); }
 	void RegisterTick();

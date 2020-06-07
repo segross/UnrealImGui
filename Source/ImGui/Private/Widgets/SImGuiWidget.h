@@ -103,7 +103,7 @@ private:
 	void UpdateTransparentMouseInput(const FGeometry& AllottedGeometry);
 	void HandleWindowFocusLost();
 
-	void SetDPIScale(float Scale);
+	void SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo);
 
 	void SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasSizeInfo);
 	void UpdateCanvasSize();

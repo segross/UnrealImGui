@@ -88,6 +88,49 @@ struct FImGuiCanvasSizeInfo
 	bool operator!=(const FImGuiCanvasSizeInfo& Other) const { return !(*this == Other); }
 };
 
+UENUM(BlueprintType)
+enum class EImGuiDPIScaleMethod : uint8
+{
+	ImGui UMETA(DisplayName = "ImGui", ToolTip = "Scale ImGui fonts and styles."),
+	Slate UMETA(ToolTip = "Scale in Slate. ImGui canvas size will be adjusted to get the screen size that is the same as defined in the Canvas Size property.")
+};
+
+/**
+ * Struct with DPI scale data.
+ */
+USTRUCT()
+struct FImGuiDPIScaleInfo
+{
+	GENERATED_BODY()
+
+protected:
+
+	// Whether to scale in ImGui or in Slate. Scaling in ImGui gives better looking results but Slate might be a better
+	// option when layouts do not account for different fonts and styles. When scaling in Slate, ImGui canvas size will
+	// be adjusted to get the screen size that is the same as defined in the Canvas Size property.
+	UPROPERTY(EditAnywhere, Category = "DPI Scale")
+	EImGuiDPIScaleMethod ScalingMethod = EImGuiDPIScaleMethod::ImGui;
+
+	// Fixed scale.
+	UPROPERTY(EditAnywhere, Category = "DPI Scale", meta = (ClampMin = 0, UIMin = 0))
+	float Scale = 1.f;
+
+public:
+
+	float GetImGuiScale() const { return ShouldScaleInSlate() ? 1.f : Scale; }
+
+	float GetSlateScale() const { return ShouldScaleInSlate() ? Scale : 1.f; }
+
+	bool ShouldScaleInSlate() const { return ScalingMethod == EImGuiDPIScaleMethod::Slate; }
+
+	bool operator==(const FImGuiDPIScaleInfo& Other) const
+	{
+		return (Scale == Other.Scale) && (ScalingMethod == Other.ScalingMethod);
+	}
+
+	bool operator!=(const FImGuiDPIScaleInfo& Other) const { return !(*this == Other); }
+};
+
 // UObject used for loading and saving ImGui settings. To access actual settings use FImGuiModuleSettings interface.
 UCLASS(config=ImGui, defaultconfig)
 class UImGuiSettings : public UObject
@@ -148,13 +191,9 @@ protected:
 	UPROPERTY(EditAnywhere, config, Category = "Canvas Size")
 	FImGuiCanvasSizeInfo CanvasSize;
 
-	// DPI scale for the ImGui widgets.
-	//
-	// Note that when this scale is other than 1.0, canvas size will be scaled before it is passed to the ImGui.
-	// It will be scaled to keep the same screen size as defined by the Canvas Size property. If the default
-	// canvas size is 3840x2160 and the DPI scale is 2.0, the size passed to the ImGui will be 1920x1080.
-	UPROPERTY(EditAnywhere, Category = "DPI Scale", meta = (ClampMin = 0, UIMin = 0))
-	float DPIScale = 1.f;
+	// Setup DPI Scale.
+	UPROPERTY(EditAnywhere, config, Category = "DPI Scale", Meta = (ShowOnlyInnerProperties))
+	FImGuiDPIScaleInfo DPIScale;
 
 	// Deprecated name for ToggleInput. Kept temporarily to automatically move old configuration.
 	UPROPERTY(config)
@@ -178,9 +217,9 @@ public:
 
 	// Generic delegate used to notify changes of boolean properties.
 	DECLARE_MULTICAST_DELEGATE_OneParam(FBoolChangeDelegate, bool);
-	DECLARE_MULTICAST_DELEGATE_OneParam(FFloatChangeDelegate, float);
 	DECLARE_MULTICAST_DELEGATE_OneParam(FStringClassReferenceChangeDelegate, const FStringClassReference&);
 	DECLARE_MULTICAST_DELEGATE_OneParam(FImGuiCanvasSizeInfoChangeDelegate, const FImGuiCanvasSizeInfo&);
+	DECLARE_MULTICAST_DELEGATE_OneParam(FImGuiDPIScaleInfoChangeDelegate, const FImGuiDPIScaleInfo&);
 
 	// Constructor for ImGui module settings. It will bind to instances of module properties and commands and will
 	// update them every time when settings are changed.
@@ -206,8 +245,8 @@ public:
 	// Get the information how to calculate the canvas size.
 	const FImGuiCanvasSizeInfo& GetCanvasSizeInfo() const { return CanvasSize; }
 
-	// Get the DPI Scale.
-	float GetDPIScale() const { return DPIScale; }
+	// Get the DPI Scale information.
+	const FImGuiDPIScaleInfo& GetDPIScaleInfo() const { return DPIScale; }
 
 	// Delegate raised when ImGui Input Handle is changed.
 	FStringClassReferenceChangeDelegate OnImGuiInputHandlerClassChanged;
@@ -216,10 +255,10 @@ public:
 	FBoolChangeDelegate OnUseSoftwareCursorChanged;
 
 	// Delegate raised when information how to calculate the canvas size is changed.
-	FImGuiCanvasSizeInfoChangeDelegate OnCanvasSizeInfoChangeDelegate;
+	FImGuiCanvasSizeInfoChangeDelegate OnCanvasSizeChangedDelegate;
 
 	// Delegate raised when the DPI scale is changed.
-	FFloatChangeDelegate OnDPIScaleChangeDelegate;
+	FImGuiDPIScaleInfoChangeDelegate OnDPIScaleChangedDelegate;
 
 private:
 
@@ -232,7 +271,7 @@ private:
 	void SetUseSoftwareCursor(bool bUse);
 	void SetToggleInputKey(const FImGuiKeyInfo& KeyInfo);
 	void SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasSizeInfo);
-	void SetDPIScale(float DPIScale);
+	void SetDPIScaleInfo(const FImGuiDPIScaleInfo& ScaleInfo);
 
 #if WITH_EDITOR
 	void OnPropertyChanged(class UObject* ObjectBeingModified, struct FPropertyChangedEvent& PropertyChangedEvent);
@@ -244,7 +283,7 @@ private:
 	FStringClassReference ImGuiInputHandlerClass;
 	FImGuiKeyInfo ToggleInputKey;
 	FImGuiCanvasSizeInfo CanvasSize;
-	float DPIScale = 1.f;
+	FImGuiDPIScaleInfo DPIScale;
 	bool bShareKeyboardInput = false;
 	bool bShareGamepadInput = false;
 	bool bShareMouseInput = false;

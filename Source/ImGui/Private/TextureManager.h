@@ -60,7 +60,7 @@ public:
 		return IsValidTexture(Index) ? TextureResources[Index].ResourceHandle : ErrorTexture.ResourceHandle;
 	}
 
-	// Create a texture from raw data. Throws exception if there is already a texture with that name.
+	// Create a texture from raw data.
 	// @param Name - The texture name
 	// @param Width - The texture width
 	// @param Height - The texture height
@@ -70,7 +70,7 @@ public:
 	// @returns The index of a texture that was created
 	TextureIndex CreateTexture(const FName& Name, int32 Width, int32 Height, uint32 SrcBpp, uint8* SrcData, TFunction<void(uint8*)> SrcDataCleanup = [](uint8*) {});
 
-	// Create a plain texture. Throws exception if there is already a texture with that name.
+	// Create a plain texture.
 	// @param Name - The texture name
 	// @param Width - The texture width
 	// @param Height - The texture height
@@ -78,16 +78,11 @@ public:
 	// @returns The index of a texture that was created
 	TextureIndex CreatePlainTexture(const FName& Name, int32 Width, int32 Height, FColor Color);
 
-	// Create Slate resources to an existing texture, managed externally. As part of an external interface it allows
-	// to loosen resource verification policy. By default (consistently with other create function) it protects from
-	// creating resources with name that is already registered. If bMakeUnique is false, then existing resources are
-	// updated/replaced. Throws exception, if name argument is NAME_None or texture is null.
+	// Create Slate resources to an existing texture, managed externally.
 	// @param Name - The texture name
 	// @param Texture - The texture
-	// @param bMakeUnique - If true (default) and there is already a texture with given name, then exception is thrown,
-	//     otherwise existing resources are updated.
 	// @returns The index to created/updated texture resources
-	TextureIndex CreateTextureResources(const FName& Name, UTexture2D* Texture, bool bMakeUnique = true);
+	TextureIndex CreateTextureResources(const FName& Name, UTexture2D* Texture);
 
 	// Release resources for given texture. Ignores invalid indices.
 	// @param Index - The index of a texture resources
@@ -110,7 +105,7 @@ private:
 	// @param Texture - The texture
 	// @param bAddToRoot - If true, we should add texture to root to prevent garbage collection (use for own textures)
 	// @returns The index of the entry that we created or reused
-	TextureIndex AddTextureEntry(const FName& Name, UTexture2D* Texture, bool bAddToRoot, bool bUpdate);
+	TextureIndex AddTextureEntry(const FName& Name, UTexture2D* Texture, bool bAddToRoot);
 
 	// Check whether index is in range allocated for TextureResources (it doesn't mean that resources are valid).
 	FORCEINLINE bool IsInRange(TextureIndex Index) const

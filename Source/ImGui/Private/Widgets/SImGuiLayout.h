@@ -31,8 +31,7 @@ public:
 private:
 
 	float GetDPIScale() const { return DPIScale; }
-	void SetDPIScale(float Scale) { DPIScale = Scale; }
-
+	void SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo) { DPIScale = ScaleInfo.GetSlateScale(); }
 
 	FImGuiModuleManager* ModuleManager = nullptr;
 	TWeakObjectPtr<UGameViewportClient> GameViewport;

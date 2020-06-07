@@ -5,6 +5,8 @@
 #include "ImGuiContextProxy.h"
 
 
+class FImGuiModuleSettings;
+
 // TODO: It might be useful to broadcast FContextProxyCreatedDelegate to users, to support similar cases to our ImGui
 // demo, but we would need to remove from that interface internal classes.
 
@@ -18,7 +20,7 @@ class FImGuiContextManager
 {
 public:
 
-	FImGuiContextManager();
+	FImGuiContextManager(FImGuiModuleSettings& InSettings);
 
 	FImGuiContextManager(const FImGuiContextManager&) = delete;
 	FImGuiContextManager& operator=(const FImGuiContextManager&) = delete;
@@ -30,7 +32,6 @@ public:
 
 	ImFontAtlas& GetFontAtlas() { return FontAtlas; }
 	const ImFontAtlas& GetFontAtlas() const { return FontAtlas; }
-
 
 #if WITH_EDITOR
 	// Get or create editor ImGui context proxy.
@@ -57,10 +58,13 @@ public:
 
 	// Delegate called for all contexts in manager, right after calling context specific draw event. Allows listeners
 	// draw the same content to multiple contexts.
-	FSimpleMulticastDelegate& OnDrawMultiContext() { return DrawMultiContextEvent; }
+	FSimpleMulticastDelegate OnDrawMultiContext;
 
-	// Delegate called when new context proxy is created.
-	FContextProxyCreatedDelegate& OnContextProxyCreated() { return ContextProxyCreatedEvent; }
+	// Delegate called when a new context proxy is created.
+	FContextProxyCreatedDelegate OnContextProxyCreated;
+
+	// Delegate called after font atlas is built.
+	FSimpleMulticastDelegate OnFontAtlasBuilt;
 
 	void Tick(float DeltaSeconds);
 
@@ -99,11 +103,17 @@ private:
 
 	FContextData& GetWorldContextData(const UWorld& World, int32* OutContextIndex = nullptr);
 
+	void SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo);
+	void BuildFontAtlas();
+	void RebuildFontAtlas();
+
 	TMap<int32, FContextData> Contexts;
 
-	FSimpleMulticastDelegate DrawMultiContextEvent;
-
-	FContextProxyCreatedDelegate ContextProxyCreatedEvent;
-
 	ImFontAtlas FontAtlas;
+	TArray<TUniquePtr<ImFontAtlas>> FontResourcesToRelease;
+
+	FImGuiModuleSettings& Settings;
+
+	float DPIScale = -1.f;
+	int32 FontResourcesReleaseCountdown = 0;
 };

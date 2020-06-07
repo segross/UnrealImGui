@@ -15,14 +15,18 @@
 // High enough z-order guarantees that ImGui output is rendered on top of the game UI.
 constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
 
+// Module texture names.
+const static FName PlainTextureName = "ImGuiModule_Plain";
+const static FName FontAtlasTextureName = "ImGuiModule_FontAtlas";
 
 FImGuiModuleManager::FImGuiModuleManager()
 	: Commands(Properties)
 	, Settings(Properties, Commands)
 	, ImGuiDemo(Properties)
+	, ContextManager(Settings)
 {
 	// Register in context manager to get information whenever a new context proxy is created.
-	ContextManager.OnContextProxyCreated().AddRaw(this, &FImGuiModuleManager::OnContextProxyCreated);
+	ContextManager.OnContextProxyCreated.AddRaw(this, &FImGuiModuleManager::OnContextProxyCreated);
 
 	// Typically we will use viewport created events to add widget to new game viewports.
 	ViewportCreatedHandle = UGameViewportClient::OnViewportCreated().AddRaw(this, &FImGuiModuleManager::OnViewportCreated);
@@ -43,6 +47,8 @@ FImGuiModuleManager::FImGuiModuleManager()
 
 FImGuiModuleManager::~FImGuiModuleManager()
 {
+	ContextManager.OnFontAtlasBuilt.RemoveAll(this);
+
 	// We are no longer interested with adding widgets to viewports.
 	if (ViewportCreatedHandle.IsValid())
 	{
@@ -80,20 +86,28 @@ void FImGuiModuleManager::LoadTextures()
 		TextureManager.InitializeErrorTexture(FColor::Magenta);
 
 		// Create an empty texture at index 0. We will use it for ImGui outputs with null texture id.
-		TextureManager.CreatePlainTexture(FName{ "ImGuiModule_Plain" }, 2, 2, FColor::White);
+		TextureManager.CreatePlainTexture(PlainTextureName, 2, 2, FColor::White);
 
-		// Create a font atlas texture.
-		ImFontAtlas& Fonts = ContextManager.GetFontAtlas();
+		// Register for atlas built events, so we can rebuild textures.
+		ContextManager.OnFontAtlasBuilt.AddRaw(this, &FImGuiModuleManager::BuildFontAtlasTexture);
 
-		unsigned char* Pixels;
-		int Width, Height, Bpp;
-		Fonts.GetTexDataAsRGBA32(&Pixels, &Width, &Height, &Bpp);
-
-		TextureIndex FontsTexureIndex = TextureManager.CreateTexture(FName{ "ImGuiModule_FontAtlas" }, Width, Height, Bpp, Pixels);
-
-		// Set font texture index in ImGui.
-		Fonts.TexID = ImGuiInterops::ToImTextureID(FontsTexureIndex);
+		BuildFontAtlasTexture();
 	}
+}
+
+void FImGuiModuleManager::BuildFontAtlasTexture()
+{
+	// Create a font atlas texture.
+	ImFontAtlas& Fonts = ContextManager.GetFontAtlas();
+
+	unsigned char* Pixels;
+	int Width, Height, Bpp;
+	Fonts.GetTexDataAsRGBA32(&Pixels, &Width, &Height, &Bpp);
+
+	const TextureIndex FontsTexureIndex = TextureManager.CreateTexture(FontAtlasTextureName, Width, Height, Bpp, Pixels);
+
+	// Set the font texture index in the ImGui.
+	Fonts.TexID = ImGuiInterops::ToImTextureID(FontsTexureIndex);
 }
 
 void FImGuiModuleManager::RegisterTick()
