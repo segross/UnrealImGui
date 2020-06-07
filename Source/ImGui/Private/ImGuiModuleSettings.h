@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <Curves/CurveFloat.h>
 #include <Delegates/Delegate.h>
 #include <UObject/Object.h>
 
@@ -111,24 +112,34 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "DPI Scale")
 	EImGuiDPIScaleMethod ScalingMethod = EImGuiDPIScaleMethod::ImGui;
 
-	// Fixed scale.
+	// An optional scale to apply on top or instead of the curve-based scale.
 	UPROPERTY(EditAnywhere, Category = "DPI Scale", meta = (ClampMin = 0, UIMin = 0))
 	float Scale = 1.f;
 
+	// Curve mapping resolution height to scale.
+	UPROPERTY(config, EditAnywhere, Category = "DPI Scale", meta = (XAxisName = "Resolution Height", YAxisName = "Scale", EditCondition = "bScaleWithCurve"))
+	FRuntimeFloatCurve DPICurve;
+
+	// Whether to use curve-based scaling. If enabled, Scale will be multiplied by a value read from the DPICurve.
+	// If disabled, only the Scale property will be used.
+	UPROPERTY(config, EditAnywhere, Category = "DPI Scale")
+	bool bScaleWithCurve = true;
+
 public:
 
-	float GetImGuiScale() const { return ShouldScaleInSlate() ? 1.f : Scale; }
+	FImGuiDPIScaleInfo();
 
-	float GetSlateScale() const { return ShouldScaleInSlate() ? Scale : 1.f; }
+	float GetImGuiScale() const { return ShouldScaleInSlate() ? 1.f : CalculateScale(); }
+
+	float GetSlateScale() const { return ShouldScaleInSlate() ? CalculateScale() : 1.f; }
 
 	bool ShouldScaleInSlate() const { return ScalingMethod == EImGuiDPIScaleMethod::Slate; }
 
-	bool operator==(const FImGuiDPIScaleInfo& Other) const
-	{
-		return (Scale == Other.Scale) && (ScalingMethod == Other.ScalingMethod);
-	}
+private:
 
-	bool operator!=(const FImGuiDPIScaleInfo& Other) const { return !(*this == Other); }
+	float CalculateScale() const { return Scale * CalculateResolutionBasedScale(); }
+
+	float CalculateResolutionBasedScale() const;
 };
 
 // UObject used for loading and saving ImGui settings. To access actual settings use FImGuiModuleSettings interface.
@@ -262,7 +273,9 @@ public:
 
 private:
 
+	void InitializeAllSettings();
 	void UpdateSettings();
+	void UpdateDPIScaleInfo();
 
 	void SetImGuiInputHandlerClass(const FStringClassReference& ClassReference);
 	void SetShareKeyboardInput(bool bShare);

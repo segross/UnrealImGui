@@ -9,6 +9,37 @@
 
 
 //====================================================================================================
+// FImGuiDPIScaleInfo
+//====================================================================================================
+
+FImGuiDPIScaleInfo::FImGuiDPIScaleInfo()
+{
+	if (FRichCurve* Curve = DPICurve.GetRichCurve())
+	{
+		Curve->AddKey(   0.0f, 1.f);
+
+		Curve->AddKey(2159.5f, 1.f);
+		Curve->AddKey(2160.0f, 2.f);
+
+		Curve->AddKey(4319.5f, 2.f);
+		Curve->AddKey(4320.0f, 4.f);
+	}
+}
+
+float FImGuiDPIScaleInfo::CalculateResolutionBasedScale() const
+{
+	float ResolutionBasedScale = Scale;
+	if (bScaleWithCurve && GEngine && GEngine->GameUserSettings)
+	{
+		if (const FRichCurve* Curve = DPICurve.GetRichCurveConst())
+		{
+			ResolutionBasedScale *= Curve->Eval((float)GEngine->GameUserSettings->GetDesktopResolution().Y, 1.f);
+		}
+	}
+	return ResolutionBasedScale;
+}
+
+//====================================================================================================
 // UImGuiSettings
 //====================================================================================================
 
@@ -77,10 +108,10 @@ FImGuiModuleSettings::FImGuiModuleSettings(FImGuiModuleProperties& InProperties,
 
 	// Delegate initializer to support settings loaded after this object creation (in stand-alone builds) and potential
 	// reloading of settings.
-	UImGuiSettings::OnSettingsLoaded.AddRaw(this, &FImGuiModuleSettings::UpdateSettings);
+	UImGuiSettings::OnSettingsLoaded.AddRaw(this, &FImGuiModuleSettings::InitializeAllSettings);
 
 	// Call initializer to support settings already loaded (editor).
-	UpdateSettings();
+	InitializeAllSettings();
 }
 
 FImGuiModuleSettings::~FImGuiModuleSettings()
@@ -91,6 +122,12 @@ FImGuiModuleSettings::~FImGuiModuleSettings()
 #if WITH_EDITOR
 	FCoreUObjectDelegates::OnObjectPropertyChanged.RemoveAll(this);
 #endif
+}
+
+void FImGuiModuleSettings::InitializeAllSettings()
+{
+	UpdateSettings();
+	UpdateDPIScaleInfo();
 }
 
 void FImGuiModuleSettings::UpdateSettings()
@@ -104,6 +141,13 @@ void FImGuiModuleSettings::UpdateSettings()
 		SetUseSoftwareCursor(SettingsObject->bUseSoftwareCursor);
 		SetToggleInputKey(SettingsObject->ToggleInput);
 		SetCanvasSizeInfo(SettingsObject->CanvasSize);
+	}
+}
+
+void FImGuiModuleSettings::UpdateDPIScaleInfo()
+{
+	if (UImGuiSettings* SettingsObject = UImGuiSettings::Get())
+	{
 		SetDPIScaleInfo(SettingsObject->DPIScale);
 	}
 }
@@ -173,11 +217,8 @@ void FImGuiModuleSettings::SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasS
 
 void FImGuiModuleSettings::SetDPIScaleInfo(const FImGuiDPIScaleInfo& ScaleInfo)
 {
-	if (DPIScale != ScaleInfo)
-	{
-		DPIScale = ScaleInfo;
-		OnDPIScaleChangedDelegate.Broadcast(DPIScale);
-	}
+	DPIScale = ScaleInfo;
+	OnDPIScaleChangedDelegate.Broadcast(DPIScale);
 }
 
 #if WITH_EDITOR
@@ -187,6 +228,11 @@ void FImGuiModuleSettings::OnPropertyChanged(class UObject* ObjectBeingModified,
 	if (ObjectBeingModified == UImGuiSettings::Get())
 	{
 		UpdateSettings();
+		if (PropertyChangedEvent.MemberProperty
+			&& (PropertyChangedEvent.MemberProperty->GetFName() == GET_MEMBER_NAME_CHECKED(FImGuiModuleSettings, DPIScale)))
+		{
+			UpdateDPIScaleInfo();
+		}
 	}
 }
 
