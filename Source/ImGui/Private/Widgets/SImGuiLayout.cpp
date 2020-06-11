@@ -6,6 +6,7 @@
 #include "SImGuiWidget.h"
 
 #include "ImGuiModuleManager.h"
+#include "ImGuiModuleSettings.h"
 
 #include <Widgets/Layout/SConstraintCanvas.h>
 #include <Widgets/Layout/SDPIScaler.h>
@@ -76,3 +77,8 @@ SImGuiLayout::~SImGuiLayout()
 }
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
+
+void SImGuiLayout::SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo)
+{
+	DPIScale = ScaleInfo.GetSlateScale();
+}

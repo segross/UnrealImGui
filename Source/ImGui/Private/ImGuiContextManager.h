@@ -6,6 +6,7 @@
 
 
 class FImGuiModuleSettings;
+struct FImGuiDPIScaleInfo;
 
 // TODO: It might be useful to broadcast FContextProxyCreatedDelegate to users, to support similar cases to our ImGui
 // demo, but we would need to remove from that interface internal classes.

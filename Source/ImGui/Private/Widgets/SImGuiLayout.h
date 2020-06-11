@@ -7,6 +7,7 @@
 
 class FImGuiModuleManager;
 class UGameViewportClient;
+struct FImGuiDPIScaleInfo;
 
 // Layout preset for ImGui Widget.
 class SImGuiLayout : public SCompoundWidget
@@ -31,7 +32,7 @@ public:
 private:
 
 	float GetDPIScale() const { return DPIScale; }
-	void SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo) { DPIScale = ScaleInfo.GetSlateScale(); }
+	void SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo);
 
 	FImGuiModuleManager* ModuleManager = nullptr;
 	TWeakObjectPtr<UGameViewportClient> GameViewport;
