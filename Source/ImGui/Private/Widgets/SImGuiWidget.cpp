@@ -63,6 +63,24 @@ namespace CVars
 }
 #endif // IMGUI_WIDGET_DEBUG
 
+namespace
+{
+	FORCEINLINE FVector2D MaxVector(const FVector2D& A, const FVector2D& B)
+	{
+		return FVector2D(FMath::Max(A.X, B.X), FMath::Max(A.Y, B.Y));
+	}
+
+	FORCEINLINE FVector2D RoundVector(const FVector2D& Vector)
+	{
+		return FVector2D(FMath::RoundToFloat(Vector.X), FMath::RoundToFloat(Vector.Y));
+	}
+
+	FORCEINLINE FSlateRenderTransform RoundTranslation(const FSlateRenderTransform& Transform)
+	{
+		return FSlateRenderTransform(Transform.GetMatrix(), RoundVector(Transform.GetTranslation()));
+	}
+}
+
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SImGuiWidget::Construct(const FArguments& InArgs)
 {
@@ -551,7 +569,7 @@ void SImGuiWidget::SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasSizeInfo)
 
 	// We only update canvas control widget when canvas control is enabled. Make sure that we will not leave
 	// that widget active after disabling canvas control.
-	if (CanvasControlWidget && !bCanvasControlEnabled)
+	if (CanvasControlWidget.IsValid() && !bCanvasControlEnabled)
 	{
 		CanvasControlWidget->SetActive(false);
 	}
@@ -570,7 +588,7 @@ void SImGuiWidget::UpdateCanvasSize()
 			{
 				FVector2D ViewportSize;
 				GameViewport->GetViewportSize(ViewportSize);
-				CanvasSize = FVector2D::Max(CanvasSize, ViewportSize);
+				CanvasSize = MaxVector(CanvasSize, ViewportSize);
 			}
 			else
 			{
@@ -580,7 +598,7 @@ void SImGuiWidget::UpdateCanvasSize()
 
 			// Clamping DPI Scale to keep the canvas size from getting too big.
 			CanvasSize /= FMath::Max(DPIScale, 0.01f);
-			CanvasSize = CanvasSize.RoundToVector();
+			CanvasSize = RoundVector(CanvasSize);
 
 			ContextProxy->SetDisplaySize(CanvasSize);
 		}
@@ -605,16 +623,6 @@ FVector2D SImGuiWidget::TransformScreenPointToImGui(const FGeometry& MyGeometry,
 {
 	const FSlateRenderTransform ImGuiToScreen = ImGuiTransform.Concatenate(MyGeometry.GetAccumulatedRenderTransform());
 	return ImGuiToScreen.Inverse().TransformPoint(Point);
-}
-
-namespace
-{
-	FORCEINLINE FSlateRenderTransform RoundTranslation(const FSlateRenderTransform& Transform)
-	{
-		const FVector2D& Translation = Transform.GetTranslation();
-		return FSlateRenderTransform{ Transform.GetMatrix(),
-			FVector2D{ FMath::RoundToFloat(Translation.X), FMath::RoundToFloat(Translation.Y) } };
-	}
 }
 
 int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyClippingRect,
