@@ -4,6 +4,8 @@
 
 #include "SImGuiCanvasControl.h"
 
+#include <SlateOptMacros.h>
+
 
 namespace
 {

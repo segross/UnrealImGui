@@ -8,8 +8,8 @@
 #include "ImGuiModule.h"
 
 // Engine
-#include <Core.h>
-#include <Engine.h>
+#include <CoreMinimal.h>
+#include <Engine/Engine.h>
 
 // For backward compatibility we will use FStringClassReference which in newer engine versions is a typedef for
 // FSoftClassPath. Include right soft class reference header to avoid warnings in newer engine version.

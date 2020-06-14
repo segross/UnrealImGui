@@ -6,6 +6,7 @@
 #include "ImGuiModuleSettings.h"
 
 #include <GameFramework/PlayerInput.h>
+#include <UObject/UObjectIterator.h>
 
 
 namespace

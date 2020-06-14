@@ -4,8 +4,7 @@
 
 #include "ImGuiInteroperability.h"
 
-#include <Runtime/Launch/Resources/Version.h>
-#include <SlateCore.h>
+#include <Rendering/RenderingCommon.h>
 
 #include <imgui.h>
 

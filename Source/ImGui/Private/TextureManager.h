@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <Core.h>
 #include <Styling/SlateBrush.h>
 #include <Textures/SlateShaderResource.h>
 

@@ -7,6 +7,8 @@
 #include "ImGuiModuleCommands.h"
 #include "ImGuiModuleProperties.h"
 
+#include <GameFramework/GameUserSettings.h>
+
 
 //====================================================================================================
 // FImGuiDPIScaleInfo

@@ -6,6 +6,8 @@
 #include "ImGuiModuleDebug.h"
 #include "ImGuiModuleSettings.h"
 
+#include <Brushes/SlateBorderBrush.h>
+#include <Widgets/DeclarativeSyntaxSupport.h>
 #include <Widgets/SLeafWidget.h>
 
 

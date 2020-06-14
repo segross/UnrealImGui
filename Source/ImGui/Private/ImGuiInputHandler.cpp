@@ -10,6 +10,7 @@
 #include "ImGuiModuleSettings.h"
 
 #include <Engine/Console.h>
+#include <GameFramework/InputSettings.h>
 #include <Input/Events.h>
 
 #if WITH_EDITOR

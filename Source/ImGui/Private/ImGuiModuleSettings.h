@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <SlateTypes.h>
 #include <Curves/CurveFloat.h>
 #include <Delegates/Delegate.h>
 #include <UObject/Object.h>

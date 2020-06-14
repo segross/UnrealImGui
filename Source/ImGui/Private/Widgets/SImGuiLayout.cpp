@@ -8,6 +8,7 @@
 #include "ImGuiModuleManager.h"
 #include "ImGuiModuleSettings.h"
 
+#include <SlateOptMacros.h>
 #include <Widgets/Layout/SConstraintCanvas.h>
 #include <Widgets/Layout/SDPIScaler.h>
 #include <Widgets/Layout/SScaleBox.h>

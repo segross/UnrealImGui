@@ -5,6 +5,7 @@
 #include "ImGuiModuleDebug.h"
 #include "ImGuiModuleSettings.h"
 
+#include <Widgets/DeclarativeSyntaxSupport.h>
 #include <Widgets/SCompoundWidget.h>
 
 
