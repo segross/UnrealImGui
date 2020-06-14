@@ -3,8 +3,9 @@
 #include "ImGuiPrivatePCH.h"
 
 #include "ImGuiDemo.h"
-
 #include "ImGuiModuleProperties.h"
+
+#include <CoreGlobals.h>
 
 
 // Demo copied (with minor modifications) from ImGui examples. See https://github.com/ocornut/imgui.

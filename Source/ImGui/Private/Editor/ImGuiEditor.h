@@ -4,6 +4,9 @@
 
 #if WITH_EDITOR
 
+#include <Delegates/IDelegateInstance.h>
+
+
 // Registers module's settings in editor (due to a small size of this code we don't use a separate editor module).
 class FImGuiEditor
 {

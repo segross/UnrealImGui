@@ -4,6 +4,9 @@
 
 #include "TextureManager.h"
 
+#include <Engine/Texture2D.h>
+#include <Framework/Application/SlateApplication.h>
+
 #include <algorithm>
 
 

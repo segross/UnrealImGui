@@ -7,6 +7,8 @@
 #include "ImGuiModuleCommands.h"
 #include "ImGuiModuleProperties.h"
 
+#include <ConfigCacheIni.h>
+#include <Engine/Engine.h>
 #include <GameFramework/GameUserSettings.h>
 
 

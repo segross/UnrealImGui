@@ -2,10 +2,10 @@
 
 #include "ImGuiPrivatePCH.h"
 
-#include "ImGuiModuleManager.h"
+#include "ImGuiModule.h"
 
 #include "ImGuiDelegatesContainer.h"
-#include "ImGuiTextureHandle.h"
+#include "ImGuiModuleManager.h"
 #include "TextureManager.h"
 #include "Utilities/WorldContext.h"
 #include "Utilities/WorldContextIndex.h"

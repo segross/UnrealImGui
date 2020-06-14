@@ -9,7 +9,8 @@
 #include "ImGuiInteroperability.h"
 #include "Utilities/Arrays.h"
 
-#include <Runtime/Launch/Resources/Version.h>
+#include <GenericPlatform/GenericPlatformFile.h>
+#include <Misc/Paths.h>
 
 
 static constexpr float DEFAULT_CANVAS_WIDTH = 3840.f;

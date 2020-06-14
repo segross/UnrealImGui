@@ -3,6 +3,7 @@
 #pragma once
 
 #include <CoreMinimal.h>
+#include <Input/Reply.h>
 #include <UObject/Object.h>
 #include <UObject/WeakObjectPtr.h>
 

@@ -7,6 +7,7 @@
 #include "ImGuiInteroperability.h"
 #include "Utilities/WorldContextIndex.h"
 
+#include <Framework/Application/SlateApplication.h>
 #include <Modules/ModuleManager.h>
 
 #include <imgui.h>

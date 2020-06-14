@@ -5,6 +5,8 @@
 #include "ImGuiDelegates.h"
 #include "ImGuiDelegatesContainer.h"
 
+#include <Engine/World.h>
+
 
 FSimpleMulticastDelegate& FImGuiDelegates::OnWorldEarlyDebug()
 {

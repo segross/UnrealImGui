@@ -3,6 +3,7 @@
 #include "ImGuiPrivatePCH.h"
 
 #include "ImGuiModuleCommands.h"
+#include "ImGuiModuleProperties.h"
 
 #include "Utilities/DebugExecBindings.h"
 

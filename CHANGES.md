@@ -8,6 +8,7 @@ Change History
 Version: 1.20 (2020/06)
 Transition to IWYU and maintenence:
 - Replaced includes of monolithic headers.
+- Removed dependency on core, engine and ImGui module headers includes in the PCH.
 
 Version: 1.19 (2020/03-06)
 - Integrated fix for issue with ImGui popup/modal windows not being able to be closed in transparent mouse input mode. 

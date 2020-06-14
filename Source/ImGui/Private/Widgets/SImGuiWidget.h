@@ -5,6 +5,7 @@
 #include "ImGuiModuleDebug.h"
 #include "ImGuiModuleSettings.h"
 
+#include <Rendering/RenderingCommon.h>
 #include <Widgets/DeclarativeSyntaxSupport.h>
 #include <Widgets/SCompoundWidget.h>
 
@@ -15,6 +16,9 @@
 class FImGuiModuleManager;
 class SImGuiCanvasControl;
 class UImGuiInputHandler;
+
+class UGameViewportClient;
+class ULocalPlayer;
 
 // Slate widget for rendering ImGui output and storing Slate inputs.
 class SImGuiWidget : public SCompoundWidget

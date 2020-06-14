@@ -11,6 +11,7 @@
 #include "ImGuiModuleSettings.h"
 
 #include <ISettingsModule.h>
+#include <Modules/ModuleManager.h>
 
 
 #define LOCTEXT_NAMESPACE "ImGuiEditor"

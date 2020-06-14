@@ -6,6 +6,8 @@
 #include <Textures/SlateShaderResource.h>
 
 
+class UTexture2D;
+
 // Index type to be used as a texture handle.
 using TextureIndex = int32;
 

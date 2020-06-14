@@ -3,8 +3,9 @@
 #include "ImGuiPrivatePCH.h"
 
 #include "ImGuiInputHandlerFactory.h"
-
 #include "ImGuiInputHandler.h"
+
+#include <Engine/GameViewportClient.h>
 
 
 UImGuiInputHandler* FImGuiInputHandlerFactory::NewHandler(const FStringClassReference& HandlerClassReference, FImGuiModuleManager* ModuleManager, UGameViewportClient* GameViewport, int32 ContextIndex)

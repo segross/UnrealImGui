@@ -19,6 +19,7 @@
 #include <Engine/Console.h>
 #include <Engine/GameViewportClient.h>
 #include <Engine/LocalPlayer.h>
+#include <Framework/Application/SlateApplication.h>
 #include <GameFramework/GameUserSettings.h>
 #include <SlateOptMacros.h>
 #include <Widgets/SViewport.h>

@@ -4,6 +4,7 @@
 
 #include "SImGuiCanvasControl.h"
 
+#include <Rendering/DrawElements.h>
 #include <SlateOptMacros.h>
 
 

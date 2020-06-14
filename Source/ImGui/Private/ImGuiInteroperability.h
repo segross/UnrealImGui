@@ -5,6 +5,7 @@
 #include "TextureManager.h"
 
 #include <GenericPlatform/ICursor.h>
+#include <Input/Events.h>
 
 #include <imgui.h>
 
