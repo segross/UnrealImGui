@@ -2,6 +2,7 @@
 
 #pragma once
 
+class FString;
 struct FImGuiKeyInfo;
 
 namespace DebugExecBindings

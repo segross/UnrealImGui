@@ -4,6 +4,7 @@
 
 #include <Styling/SlateBrush.h>
 #include <Textures/SlateShaderResource.h>
+#include <UObject/WeakObjectPtr.h>
 
 
 class UTexture2D;

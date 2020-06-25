@@ -3,7 +3,6 @@
 #pragma once
 
 #include "ImGuiInputState.h"
-#include "ImGuiModuleDebug.h"
 #include "ImGuiModuleSettings.h"
 
 #include <Brushes/SlateBorderBrush.h>

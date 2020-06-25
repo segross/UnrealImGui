@@ -2,8 +2,7 @@
 
 #pragma once
 
-#include <imgui.h>
-
+struct ImGuiContext;
 
 // Gives access to selected ImGui implementation features.
 namespace ImGuiImplementation

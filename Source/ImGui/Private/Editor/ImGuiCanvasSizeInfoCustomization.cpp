@@ -1,10 +1,8 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ImGuiPrivatePCH.h"
+#include "ImGuiCanvasSizeInfoCustomization.h"
 
 #if WITH_EDITOR
-
-#include "ImGuiCanvasSizeInfoCustomization.h"
 
 #include "ImGuiModuleSettings.h"
 

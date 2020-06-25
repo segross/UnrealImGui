@@ -4,9 +4,10 @@
 
 #include "VersionCompatibility.h"
 
-#include <SlateTypes.h>
 #include <Curves/CurveFloat.h>
 #include <Delegates/Delegate.h>
+#include <InputCoreTypes.h>
+#include <Styling/SlateTypes.h>
 #include <UObject/Object.h>
 
 // We use FStringClassReference, which is supported by older and newer engine versions. Starting from 4.18, it is

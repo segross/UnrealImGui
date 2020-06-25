@@ -13,7 +13,7 @@ Version: 1.20
 
 ImGui version: 1.74
 
-Supported engine version: 4.24*
+Supported engine version: 4.25*
 
 \* *Plugin has been tested and if necessary updated to compile and work with this engine version. As long as possible I will try to maintain backward compatibility of existing features and possibly but not necessarily when adding new features. Right now it should be at least backward compatible with the engine version 4.15.*
 

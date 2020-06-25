@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <CoreMinimal.h>
+
 #include <imgui.h>
 
 class FImGuiModuleProperties;

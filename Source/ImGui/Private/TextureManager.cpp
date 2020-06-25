@@ -1,7 +1,5 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ImGuiPrivatePCH.h"
-
 #include "TextureManager.h"
 
 #include <Engine/Texture2D.h>

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "ImGuiInteroperability.h"
+#include "VersionCompatibility.h"
 
 #include <Rendering/RenderingCommon.h>
 

@@ -1,11 +1,12 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ImGuiPrivatePCH.h"
-
 #include "ImGuiInputHandlerFactory.h"
 #include "ImGuiInputHandler.h"
 
+#include "ImGuiModuleDebug.h"
+
 #include <Engine/GameViewportClient.h>
+#include <InputCoreTypes.h>
 
 
 UImGuiInputHandler* FImGuiInputHandlerFactory::NewHandler(const FStringClassReference& HandlerClassReference, FImGuiModuleManager* ModuleManager, UGameViewportClient* GameViewport, int32 ContextIndex)

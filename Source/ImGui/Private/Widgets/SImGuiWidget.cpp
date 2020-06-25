@@ -1,7 +1,5 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ImGuiPrivatePCH.h"
-
 #include "SImGuiWidget.h"
 #include "SImGuiCanvasControl.h"
 
@@ -15,6 +13,7 @@
 #include "TextureManager.h"
 #include "Utilities/Arrays.h"
 #include "Utilities/ScopeGuards.h"
+#include "VersionCompatibility.h"
 
 #include <Engine/Console.h>
 #include <Engine/GameViewportClient.h>

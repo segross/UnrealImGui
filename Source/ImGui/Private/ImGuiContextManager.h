@@ -3,6 +3,7 @@
 #pragma once
 
 #include "ImGuiContextProxy.h"
+#include "VersionCompatibility.h"
 
 
 class FImGuiModuleSettings;

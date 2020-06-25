@@ -6,6 +6,7 @@
 #include "ImGuiModuleSettings.h"
 
 #include <Rendering/RenderingCommon.h>
+#include <UObject/WeakObjectPtr.h>
 #include <Widgets/DeclarativeSyntaxSupport.h>
 #include <Widgets/SCompoundWidget.h>
 
