@@ -30,7 +30,7 @@ FImGuiDPIScaleInfo::FImGuiDPIScaleInfo()
 
 float FImGuiDPIScaleInfo::CalculateResolutionBasedScale() const
 {
-	float ResolutionBasedScale = Scale;
+	float ResolutionBasedScale = 1.f;
 	if (bScaleWithCurve && GEngine && GEngine->GameUserSettings)
 	{
 		if (const FRichCurve* Curve = DPICurve.GetRichCurveConst())
