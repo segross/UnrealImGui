@@ -73,10 +73,9 @@ namespace
 	};
 }
 
-FImGuiContextProxy::FImGuiContextProxy(const FString& InName, int32 InContextIndex, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas, float InDPIScale)
+FImGuiContextProxy::FImGuiContextProxy(const FString& InName, int32 InContextIndex, ImFontAtlas* InFontAtlas, float InDPIScale)
 	: Name(InName)
 	, ContextIndex(InContextIndex)
-	, SharedDrawEvent(InSharedDrawEvent)
 	, IniFilename(TCHAR_TO_ANSI(*GetIniFile(InName)))
 {
 	// Create context.
@@ -295,11 +294,6 @@ void FImGuiContextProxy::BroadcastWorldDebug()
 
 void FImGuiContextProxy::BroadcastMultiContextDebug()
 {
-	if (SharedDrawEvent && SharedDrawEvent->IsBound())
-	{
-		SharedDrawEvent->Broadcast();
-	}
-
 	FSimpleMulticastDelegate& MultiContextDebugEvent = FImGuiDelegatesContainer::Get().OnMultiContextDebug();
 	if (MultiContextDebugEvent.IsBound())
 	{

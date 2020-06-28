@@ -19,7 +19,7 @@ class FImGuiContextProxy
 {
 public:
 
-	FImGuiContextProxy(const FString& Name, int32 InContextIndex, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas, float InDPIScale);
+	FImGuiContextProxy(const FString& Name, int32 InContextIndex, ImFontAtlas* InFontAtlas, float InDPIScale);
 	~FImGuiContextProxy();
 
 	FImGuiContextProxy(const FImGuiContextProxy&) = delete;
@@ -68,7 +68,8 @@ public:
 	// Cursor type desired by this context (updated once per frame during context update).
 	EMouseCursor::Type GetMouseCursor() const { return MouseCursor;  }
 
-	// Delegate called right before ending the frame to allows listeners draw their controls.
+	// Internal draw event used to draw module's examples and debug widgets. Unlike the delegates container, it is not
+	// passed when the module is reloaded, so all objects that are unloaded with the module should register here.
 	FSimpleMulticastDelegate& OnDraw() { return DrawEvent; }
 
 	// Call early debug events to allow listeners draw their debug widgets.
@@ -116,7 +117,6 @@ private:
 	uint32 LastFrameNumber = 0;
 
 	FSimpleMulticastDelegate DrawEvent;
-	FSimpleMulticastDelegate* SharedDrawEvent = nullptr;
 
 	std::string IniFilename;
 };

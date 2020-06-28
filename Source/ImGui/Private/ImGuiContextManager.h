@@ -58,10 +58,6 @@ public:
 		return Data ? Data->ContextProxy.Get() : nullptr;
 	}
 
-	// Delegate called for all contexts in manager, right after calling context specific draw event. Allows listeners
-	// draw the same content to multiple contexts.
-	FSimpleMulticastDelegate OnDrawMultiContext;
-
 	// Delegate called when a new context proxy is created.
 	FContextProxyCreatedDelegate OnContextProxyCreated;
 
@@ -74,9 +70,9 @@ private:
 
 	struct FContextData
 	{
-		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas, float DPIScale, int32 InPIEInstance = -1)
+		FContextData(const FString& ContextName, int32 ContextIndex, ImFontAtlas& FontAtlas, float DPIScale, int32 InPIEInstance = -1)
 			: PIEInstance(InPIEInstance)
-			, ContextProxy(new FImGuiContextProxy(ContextName, ContextIndex, &SharedDrawEvent, &FontAtlas, DPIScale))
+			, ContextProxy(new FImGuiContextProxy(ContextName, ContextIndex, &FontAtlas, DPIScale))
 		{
 		}
 
