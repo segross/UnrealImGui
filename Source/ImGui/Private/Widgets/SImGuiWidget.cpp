@@ -12,7 +12,6 @@
 #include "ImGuiModuleSettings.h"
 #include "TextureManager.h"
 #include "Utilities/Arrays.h"
-#include "Utilities/ScopeGuards.h"
 #include "VersionCompatibility.h"
 
 #include <Engine/Console.h>
@@ -647,10 +646,6 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 		{
 #if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 			DrawList.CopyVertexData(VertexBuffer, ImGuiToScreen, VertexClippingRect);
-
-			// Get access to the Slate scissor rectangle defined in Slate Core API, so we can customize elements drawing.
-			extern SLATECORE_API TOptional<FShortRect> GSlateScissorRect;
-			auto GSlateScissorRectSaver = ScopeGuards::MakeStateSaver(GSlateScissorRect);
 #else
 			DrawList.CopyVertexData(VertexBuffer, ImGuiToScreen);
 #endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
@@ -672,7 +667,9 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 				const FSlateRect ClippingRect = DrawCommand.ClippingRect.IntersectionWith(MyClippingRect);
 
 #if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
-				GSlateScissorRect = FShortRect{ ClippingRect };
+				// Get access to the Slate scissor rectangle defined in Slate Core API, so we can customize elements drawing.
+				extern SLATECORE_API TOptional<FShortRect> GSlateScissorRect;
+				TGuardValue<TOptional<FShortRect>> GSlateScissorRecGuard(GSlateScissorRect, FShortRect{ ClippingRect });
 #else
 				OutDrawElements.PushClip(FSlateClippingZone{ ClippingRect });
 #endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
