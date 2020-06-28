@@ -736,6 +736,25 @@ static TArray<FKey> GetImGuiMappedKeys()
 	return Keys;
 }
 
+namespace
+{
+	void Text(const char* Str)
+	{
+		ImGui::Text("%s:", Str);
+	}
+
+	void Text(const wchar_t* Str)
+	{
+		ImGui::Text("%ls:", Str);
+	}
+
+	template<typename CharType = std::enable_if_t<!std::is_same<TCHAR, char>::value && !std::is_same<TCHAR, wchar_t>::value, TCHAR>>
+	void Text(const CharType* Str)
+	{
+		ImGui::Text("%ls", TCHAR_TO_WCHAR(Str));
+	}
+}
+
 // Column layout utilities.
 namespace Columns
 {
@@ -761,58 +780,45 @@ namespace TwoColumns
 		Columns::CollapsingGroup(Name, 2, std::forward<FunctorType>(DrawContent));
 	}
 
-	namespace
-	{
-		void LabelText(const char* Label)
-		{
-			ImGui::Text("%s:", Label);
-		}
-
-		void LabelText(const wchar_t* Label)
-		{
-			ImGui::Text("%ls:", Label);
-		}
-	}
-
 	template<typename LabelType>
 	static void Value(LabelType&& Label, int32 Value)
 	{
-		LabelText(Label); ImGui::NextColumn();
+		Text(Label); ImGui::NextColumn();
 		ImGui::Text("%d", Value); ImGui::NextColumn();
 	}
 
 	template<typename LabelType>
 	static void Value(LabelType&& Label, uint32 Value)
 	{
-		LabelText(Label); ImGui::NextColumn();
+		Text(Label); ImGui::NextColumn();
 		ImGui::Text("%u", Value); ImGui::NextColumn();
 	}
 
 	template<typename LabelType>
 	static void Value(LabelType&& Label, float Value)
 	{
-		LabelText(Label); ImGui::NextColumn();
+		Text(Label); ImGui::NextColumn();
 		ImGui::Text("%f", Value); ImGui::NextColumn();
 	}
 
 	template<typename LabelType>
 	static void Value(LabelType&& Label, bool bValue)
 	{
-		LabelText(Label); ImGui::NextColumn();
-		ImGui::Text("%ls", TEXT_BOOL(bValue)); ImGui::NextColumn();
+		Text(Label); ImGui::NextColumn();
+		Text(TEXT_BOOL(bValue)); ImGui::NextColumn();
 	}
 
 	template<typename LabelType>
 	static void Value(LabelType&& Label, const TCHAR* Value)
 	{
-		LabelText(Label); ImGui::NextColumn();
-		ImGui::Text("%ls", Value); ImGui::NextColumn();
+		Text(Label); ImGui::NextColumn();
+		Text(Value); ImGui::NextColumn();
 	}
 
 	template<typename LabelType>
 	static void ValueWidthHeight(LabelType&& Label, const FVector2D& Value)
 	{
-		LabelText(Label); ImGui::NextColumn();
+		Text(Label); ImGui::NextColumn();
 		ImGui::Text("Width = %.0f, Height = %.0f", Value.X, Value.Y); ImGui::NextColumn();
 	}
 }
@@ -846,20 +852,25 @@ void SImGuiWidget::OnDebugDraw()
 		{
 			ImGui::Spacing();
 
+			TwoColumns::CollapsingGroup("Context", [&]()
+			{
+				TwoColumns::Value("Context Index", ContextIndex);
+				TwoColumns::Value("Context Name", ContextProxy ? *ContextProxy->GetName() : TEXT("< Null >"));
+				TwoColumns::Value("Game Viewport", *GameViewport->GetName());
+			});
+
 			TwoColumns::CollapsingGroup("Canvas Size", [&]()
 			{
 				TwoColumns::Value("Is Adaptive", bAdaptiveCanvasSize);
 				TwoColumns::Value("Is Updating", bUpdateCanvasSize);
 				TwoColumns::ValueWidthHeight("Min Canvas Size", MinCanvasSize);
 				TwoColumns::ValueWidthHeight("Canvas Size", CanvasSize);
-				TwoColumns::Value("DPI Scale", DPIScale);
 			});
 
-			TwoColumns::CollapsingGroup("Context", [&]()
+			TwoColumns::CollapsingGroup("DPI Scale", [&]()
 			{
-				TwoColumns::Value("Context Index", ContextIndex);
-				TwoColumns::Value("Context Name", ContextProxy ? *ContextProxy->GetName() : TEXT("< Null >"));
-				TwoColumns::Value("Game Viewport", *GameViewport->GetName());
+				TwoColumns::Value("Slate Scale", DPIScale);
+				TwoColumns::Value("ImGui Scale", ContextProxy ? ContextProxy->GetDPIScale() : 1.f);
 			});
 
 			TwoColumns::CollapsingGroup("Input Mode", [&]()
