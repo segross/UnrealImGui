@@ -19,7 +19,7 @@ class FImGuiContextProxy
 {
 public:
 
-	FImGuiContextProxy(const FString& Name, int32 InContextIndex, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas);
+	FImGuiContextProxy(const FString& Name, int32 InContextIndex, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas, float InDPIScale);
 	~FImGuiContextProxy();
 
 	FImGuiContextProxy(const FImGuiContextProxy&) = delete;
@@ -52,6 +52,12 @@ public:
 
 	// Reset the desired context display size to default size.
 	void ResetDisplaySize();
+
+	// Get the DPI scale set for this context.
+	float GetDPIScale() const { return DPIScale; }
+
+	// Set the DPI scale for this context.
+	void SetDPIScale(float Scale);
 
 	// Whether this context has an active item (read once per frame during context update).
 	bool HasActiveItem() const { return bHasActiveItem; }
@@ -90,6 +96,7 @@ private:
 	ImGuiContext* Context;
 
 	FVector2D DisplaySize = FVector2D::ZeroVector;
+	float DPIScale = 1.f;
 
 	EMouseCursor::Type MouseCursor = EMouseCursor::None;
 	bool bHasActiveItem = false;

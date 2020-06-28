@@ -39,9 +39,41 @@ namespace
 		static FString SaveDirectory = GetSaveDirectory();
 		return FPaths::Combine(SaveDirectory, Name + TEXT(".ini"));
 	}
+
+	struct FGuardCurrentContext
+	{
+		FGuardCurrentContext()
+			: OldContext(ImGui::GetCurrentContext())
+		{
+		}
+
+		~FGuardCurrentContext()
+		{
+			if (bRestore)
+			{
+				ImGui::SetCurrentContext(OldContext);
+			}
+		}
+
+		FGuardCurrentContext(FGuardCurrentContext&& Other)
+			: OldContext(MoveTemp(Other.OldContext))
+		{
+			Other.bRestore = false;
+		}
+
+		FGuardCurrentContext& operator=(FGuardCurrentContext&&) = delete;
+
+		FGuardCurrentContext(const FGuardCurrentContext&) = delete;
+		FGuardCurrentContext& operator=(const FGuardCurrentContext&) = delete;
+
+	private:
+
+		ImGuiContext* OldContext = nullptr;
+		bool bRestore = true;
+	};
 }
 
-FImGuiContextProxy::FImGuiContextProxy(const FString& InName, int32 InContextIndex, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas)
+FImGuiContextProxy::FImGuiContextProxy(const FString& InName, int32 InContextIndex, FSimpleMulticastDelegate* InSharedDrawEvent, ImFontAtlas* InFontAtlas, float InDPIScale)
 	: Name(InName)
 	, ContextIndex(InContextIndex)
 	, SharedDrawEvent(InSharedDrawEvent)
@@ -62,6 +94,9 @@ FImGuiContextProxy::FImGuiContextProxy(const FString& InName, int32 InContextInd
 	// Start with the default canvas size.
 	ResetDisplaySize();
 	IO.DisplaySize = { DisplaySize.X, DisplaySize.Y };
+
+	// Set the initial DPI scale.
+	SetDPIScale(InDPIScale);
 
 	// Initialize key mapping, so context can correctly interpret input state.
 	ImGuiInterops::SetUnrealKeyMap(IO);
@@ -87,6 +122,21 @@ FImGuiContextProxy::~FImGuiContextProxy()
 void FImGuiContextProxy::ResetDisplaySize()
 {
 	DisplaySize = { DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT };
+}
+
+void FImGuiContextProxy::SetDPIScale(float Scale)
+{
+	if (DPIScale != Scale)
+	{
+		DPIScale = Scale;
+
+		ImGuiStyle NewStyle = ImGuiStyle();
+		NewStyle.ScaleAllSizes(Scale);
+
+		FGuardCurrentContext GuardContext;
+		SetAsCurrent();
+		ImGui::GetStyle() = MoveTemp(NewStyle);
+	}
 }
 
 void FImGuiContextProxy::DrawEarlyDebug()

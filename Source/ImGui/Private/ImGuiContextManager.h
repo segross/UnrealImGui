@@ -74,9 +74,9 @@ private:
 
 	struct FContextData
 	{
-		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas, int32 InPIEInstance = -1)
+		FContextData(const FString& ContextName, int32 ContextIndex, FSimpleMulticastDelegate& SharedDrawEvent, ImFontAtlas& FontAtlas, float DPIScale, int32 InPIEInstance = -1)
 			: PIEInstance(InPIEInstance)
-			, ContextProxy(new FImGuiContextProxy(ContextName, ContextIndex, &SharedDrawEvent, &FontAtlas))
+			, ContextProxy(new FImGuiContextProxy(ContextName, ContextIndex, &SharedDrawEvent, &FontAtlas, DPIScale))
 		{
 		}
 

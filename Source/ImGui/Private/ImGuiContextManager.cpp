@@ -152,7 +152,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetEditorContextData()
 
 	if (UNLIKELY(!Data))
 	{
-		Data = &Contexts.Emplace(Utilities::EDITOR_CONTEXT_INDEX, FContextData{ GetEditorContextName(), Utilities::EDITOR_CONTEXT_INDEX, OnDrawMultiContext, FontAtlas, -1 });
+		Data = &Contexts.Emplace(Utilities::EDITOR_CONTEXT_INDEX, FContextData{ GetEditorContextName(), Utilities::EDITOR_CONTEXT_INDEX, OnDrawMultiContext, FontAtlas, DPIScale, -1 });
 		OnContextProxyCreated.Broadcast(Utilities::EDITOR_CONTEXT_INDEX, *Data->ContextProxy);
 	}
 
@@ -167,7 +167,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetStandaloneWorldCont
 
 	if (UNLIKELY(!Data))
 	{
-		Data = &Contexts.Emplace(Utilities::STANDALONE_GAME_CONTEXT_INDEX, FContextData{ GetWorldContextName(), Utilities::STANDALONE_GAME_CONTEXT_INDEX, OnDrawMultiContext, FontAtlas });
+		Data = &Contexts.Emplace(Utilities::STANDALONE_GAME_CONTEXT_INDEX, FContextData{ GetWorldContextName(), Utilities::STANDALONE_GAME_CONTEXT_INDEX, OnDrawMultiContext, FontAtlas, DPIScale });
 		OnContextProxyCreated.Broadcast(Utilities::STANDALONE_GAME_CONTEXT_INDEX, *Data->ContextProxy);
 	}
 
@@ -209,7 +209,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 #if WITH_EDITOR
 	if (UNLIKELY(!Data))
 	{
-		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, OnDrawMultiContext, FontAtlas, WorldContext->PIEInstance });
+		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, OnDrawMultiContext, FontAtlas, DPIScale, WorldContext->PIEInstance });
 		OnContextProxyCreated.Broadcast(Index, *Data->ContextProxy);
 	}
 	else
@@ -220,7 +220,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 #else
 	if (UNLIKELY(!Data))
 	{
-		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, OnDrawMultiContext, FontAtlas });
+		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, OnDrawMultiContext, FontAtlas, DPIScale });
 		OnContextProxyCreated.Broadcast(Index, *Data->ContextProxy);
 	}
 #endif
@@ -231,38 +231,6 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 	}
 	return *Data;
 }
-
-struct FGuardContext
-{
-	FGuardContext()
-		: OldContext(ImGui::GetCurrentContext())
-	{
-	}
-
-	~FGuardContext()
-	{
-		if (bRestore)
-		{
-			ImGui::SetCurrentContext(OldContext);
-		}
-	}
-
-	FGuardContext(FGuardContext&& Other)
-		: OldContext(MoveTemp(Other.OldContext))
-	{
-		Other.bRestore = false;
-	}
-
-	FGuardContext& operator=(FGuardContext&&) = delete;
-
-	FGuardContext(const FGuardContext&) = delete;
-	FGuardContext& operator=(const FGuardContext&) = delete;
-
-private:
-
-	ImGuiContext* OldContext = nullptr;
-	bool bRestore = true;
-};
 
 void FImGuiContextManager::SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo)
 {
@@ -281,12 +249,7 @@ void FImGuiContextManager::SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo)
 		{
 			if (Pair.Value.ContextProxy)
 			{
-				ImGuiStyle NewStyle = ImGuiStyle();
-				NewStyle.ScaleAllSizes(DPIScale);
-
-				FGuardContext GuardContext;
-				Pair.Value.ContextProxy->SetAsCurrent();
-				ImGui::GetStyle() = MoveTemp(NewStyle);
+				Pair.Value.ContextProxy->SetDPIScale(DPIScale);
 			}
 		}
 	}
