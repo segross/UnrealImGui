@@ -218,10 +218,6 @@ protected:
 	UPROPERTY(EditAnywhere, config, Category = "DPI Scale", Meta = (ShowOnlyInnerProperties))
 	FImGuiDPIScaleInfo DPIScale;
 
-	// Deprecated name for ToggleInput. Kept temporarily to automatically move old configuration.
-	UPROPERTY(config)
-	FImGuiKeyInfo SwitchInputModeKey_DEPRECATED;
-
 	static UImGuiSettings* DefaultInstance;
 
 	friend class FImGuiModuleSettings;
