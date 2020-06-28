@@ -6,9 +6,15 @@ Change History
 --------------
 
 Version: 1.20 (2020/06)
-Transition to IWYU and maintenence:
+Transition to IWYU and maintenance:
 - Replaced includes of monolithic headers.
-- Removed dependency on core, engine and ImGui module headers includes in the PCH.
+- Removed explicit PCH and switched to IWYU-style PCH model.
+- Fixed includes to compile without explicit PCH in non-unity mode.
+- Fixed a few issues causing compilation errors in older engine versions.
+- Fixed debug code to compile on platforms using other than char or wchar_t characters.
+- Fixed issues in recently added DPI scaling.
+- Cleaned obsolete and unused code.
+- Replaced custom scope guards with the template provided by the engine.
 
 Version: 1.19 (2020/03-06)
 - Integrated fix for issue with ImGui popup/modal windows not being able to be closed in transparent mouse input mode. 
