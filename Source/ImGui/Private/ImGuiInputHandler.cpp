@@ -349,7 +349,9 @@ void UImGuiInputHandler::BeginDestroy()
 {
 	Super::BeginDestroy();
 
-	if (ModuleManager)
+	// To catch leftovers from modules shutdown during PIE session.
+	extern FImGuiModuleManager* ImGuiModuleManager;
+	if (ModuleManager && ModuleManager == ImGuiModuleManager)
 	{
 		ModuleManager->GetSettings().OnUseSoftwareCursorChanged.RemoveAll(this);
 	}

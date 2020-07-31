@@ -31,7 +31,7 @@ struct EDelegateCategory
 	};
 };
 
-static FImGuiModuleManager* ImGuiModuleManager = nullptr;
+FImGuiModuleManager* ImGuiModuleManager = nullptr;
 
 #if WITH_EDITOR
 static FImGuiEditor* ImGuiEditor = nullptr;

@@ -5,6 +5,10 @@ Versions marked as 'unofficial' are labelled only for the needs of this changelo
 Change History
 --------------
 
+Version: 1.21 (2020/07)
+Improving stability
+- Fixed a crash in the input handler caused by invalidated by hot-reload instance trying to unregister a delegate.
+
 Version: 1.20 (2020/06)
 Transition to IWYU and maintenance:
 - Replaced includes of monolithic headers.
