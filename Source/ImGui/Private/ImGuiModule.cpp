@@ -149,9 +149,9 @@ void FImGuiModule::ShutdownModule()
 			if (&LoadedModule != this)
 			{
 				// Statically bound functions will be still made to the obsolete module so we need to  
-				ImGuiImplementation::SetImGuiContextHandle(LoadedModule.GetImGuiContextHandle());
+				ImGuiImplementation::SetParentContextHandle(LoadedModule.GetImGuiContextHandle());
 
-				FImGuiDelegatesContainer::MoveContainer(LoadedModule.GetDelegatesContainer());
+				FImGuiDelegatesContainer::MoveContainer(LoadedModule.GetDelegatesContainerHandle());
 
 				if (bMoveProperties)
 				{
@@ -170,14 +170,14 @@ void FImGuiModule::SetProperties(const FImGuiModuleProperties& Properties)
 	ImGuiModuleManager->GetProperties() = Properties;
 }
 
-ImGuiContext** FImGuiModule::GetImGuiContextHandle()
+FImGuiContextHandle& FImGuiModule::GetImGuiContextHandle()
 {
-	return ImGuiImplementation::GetImGuiContextHandle();
+	return ImGuiImplementation::GetContextHandle();
 }
 
-FImGuiDelegatesContainer& FImGuiModule::GetDelegatesContainer()
+FImGuiDelegatesContainerHandle& FImGuiModule::GetDelegatesContainerHandle()
 {
-	return FImGuiDelegatesContainer::Get();
+	return FImGuiDelegatesContainer::GetHandle();
 }
 #endif
 

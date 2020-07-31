@@ -6,15 +6,20 @@
 #include <Delegates/Delegate.h>
 
 
+struct FImGuiDelegatesContainerHandle;
+
 struct FImGuiDelegatesContainer
 {
 public:
 
 	// Get the current instance (can change during hot-reloading).
-	static FImGuiDelegatesContainer& Get() { return *InstancePtr; }
+	static FImGuiDelegatesContainer& Get();
 
-	// If this is an active container move its data to a destination and redirect all future calls to that instance.
-	static void MoveContainer(FImGuiDelegatesContainer& Dst);
+	// Get the handle to the container instance (can attach to other handles in hot-reloaded modules).
+	static FImGuiDelegatesContainerHandle& GetHandle();
+
+	// Redirect to the other container and if this one is still active move its data to the other one.
+	static void MoveContainer(FImGuiDelegatesContainerHandle& OtherContainerHandle);
 
 	// Get delegate to ImGui world early debug event from known world instance.
 	FSimpleMulticastDelegate& OnWorldEarlyDebug(UWorld* World) { return OnWorldEarlyDebug(GetContextIndex(World)); }
@@ -44,10 +49,4 @@ private:
 	TMap<int32, FSimpleMulticastDelegate> WorldDebugDelegates;
 	FSimpleMulticastDelegate MultiContextEarlyDebugDelegate;
 	FSimpleMulticastDelegate MultiContextDebugDelegate;
-
-	// Default container instance.
-	static FImGuiDelegatesContainer DefaultInstance;
-
-	// Pointer to the container instance that can be overwritten during hot-reloading.
-	static FImGuiDelegatesContainer* InstancePtr;
 };

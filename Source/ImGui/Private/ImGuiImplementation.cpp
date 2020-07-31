@@ -18,12 +18,28 @@
 #endif // PLATFORM_WINDOWS
 
 #if WITH_EDITOR
-// Global ImGui context pointer.
-ImGuiContext* GImGuiContextPtr = nullptr;
-// Handle to the global ImGui context pointer.
-ImGuiContext** GImGuiContextPtrHandle = &GImGuiContextPtr;
+
+#include "ImGuiModule.h"
+#include "Utilities/RedirectingHandle.h"
+
+// Redirecting handle which will automatically bind to another one, if a different instance of the module is loaded.
+struct FImGuiContextHandle : public Utilities::TRedirectingHandle<ImGuiContext*>
+{
+	FImGuiContextHandle(ImGuiContext*& InDefaultContext)
+		: Utilities::TRedirectingHandle<ImGuiContext*>(InDefaultContext)
+	{
+		if (FImGuiModule* Module = FModuleManager::GetModulePtr<FImGuiModule>("ImGui"))
+		{
+			SetParent(&Module->GetImGuiContextHandle());
+		}
+	}
+};
+
+static ImGuiContext* ImGuiContextPtr = nullptr;
+static FImGuiContextHandle ImGuiContextPtrHandle(ImGuiContextPtr);
+
 // Get the global ImGui context pointer (GImGui) indirectly to allow redirections in obsolete modules.
-#define GImGui (*GImGuiContextPtrHandle)
+#define GImGui (ImGuiContextPtrHandle.Get())
 #endif // WITH_EDITOR
 
 #include "imgui.cpp"
@@ -41,14 +57,14 @@ ImGuiContext** GImGuiContextPtrHandle = &GImGuiContextPtr;
 namespace ImGuiImplementation
 {
 #if WITH_EDITOR
-	ImGuiContext** GetImGuiContextHandle()
+	FImGuiContextHandle& GetContextHandle()
 	{
-		return GImGuiContextPtrHandle;
+		return ImGuiContextPtrHandle;
 	}
 
-	void SetImGuiContextHandle(ImGuiContext** Handle)
+	void SetParentContextHandle(FImGuiContextHandle& Parent)
 	{
-		GImGuiContextPtrHandle = Handle;
+		ImGuiContextPtrHandle.SetParent(&Parent);
 	}
 #endif // WITH_EDITOR
 }

@@ -8,6 +8,8 @@ Change History
 Version: 1.21 (2020/07)
 Improving stability
 - Fixed a crash in the input handler caused by invalidated by hot-reload instance trying to unregister a delegate.
+- Improved hot-reload stability and support for reloading after recompiling outside of the editor. Both methods should be equally supported and work together.
+- Improved behaviour of delegates when hot-reloading.
 
 Version: 1.20 (2020/06)
 Transition to IWYU and maintenance:

@@ -2,16 +2,16 @@
 
 #pragma once
 
-struct ImGuiContext;
+struct FImGuiContextHandle;
 
 // Gives access to selected ImGui implementation features.
 namespace ImGuiImplementation
 {
 #if WITH_EDITOR
 	// Get the handle to the ImGui Context pointer.
-	ImGuiContext** GetImGuiContextHandle();
+	FImGuiContextHandle& GetContextHandle();
 
 	// Set the ImGui Context pointer handle.
-	void SetImGuiContextHandle(ImGuiContext** Handle);
+	void SetParentContextHandle(FImGuiContextHandle& Parent);
 #endif // WITH_EDITOR
 }
