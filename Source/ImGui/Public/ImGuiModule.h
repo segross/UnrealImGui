@@ -167,10 +167,10 @@ public:
 private:
 
 #if WITH_EDITOR
+	virtual void SetProperties(const FImGuiModuleProperties& Properties);
+	virtual struct FImGuiContextHandle& GetImGuiContextHandle();
+	virtual struct FImGuiDelegatesContainerHandle& GetDelegatesContainerHandle();
 	friend struct FImGuiContextHandle;
 	friend struct FImGuiDelegatesContainerHandle;
-	virtual void SetProperties(const FImGuiModuleProperties& Properties);
-	virtual FImGuiContextHandle& GetImGuiContextHandle();
-	virtual FImGuiDelegatesContainerHandle& GetDelegatesContainerHandle();
 #endif
 };

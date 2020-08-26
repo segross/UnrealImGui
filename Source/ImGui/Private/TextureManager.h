@@ -26,8 +26,8 @@ public:
 	FTextureManager& operator=(const FTextureManager&) = delete;
 
 	// Moving transfers ownership and leaves source empty.
-	FTextureManager(FTextureManager&&) = default;
-	FTextureManager& operator=(FTextureManager&&) = default;
+	FTextureManager(FTextureManager&&) = delete;
+	FTextureManager& operator=(FTextureManager&&) = delete;
 
 	// Initialize error texture that will be used for rendering textures without registered resources. Can be called
 	// multiple time, if color needs to be changed.

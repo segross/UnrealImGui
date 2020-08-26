@@ -6,7 +6,9 @@
 #include <Delegates/Delegate.h>
 
 
+#if WITH_EDITOR
 struct FImGuiDelegatesContainerHandle;
+#endif
 
 struct FImGuiDelegatesContainer
 {
@@ -15,11 +17,13 @@ public:
 	// Get the current instance (can change during hot-reloading).
 	static FImGuiDelegatesContainer& Get();
 
+#if WITH_EDITOR
 	// Get the handle to the container instance (can attach to other handles in hot-reloaded modules).
 	static FImGuiDelegatesContainerHandle& GetHandle();
 
 	// Redirect to the other container and if this one is still active move its data to the other one.
 	static void MoveContainer(FImGuiDelegatesContainerHandle& OtherContainerHandle);
+#endif
 
 	// Get delegate to ImGui world early debug event from known world instance.
 	FSimpleMulticastDelegate& OnWorldEarlyDebug(UWorld* World) { return OnWorldEarlyDebug(GetContextIndex(World)); }

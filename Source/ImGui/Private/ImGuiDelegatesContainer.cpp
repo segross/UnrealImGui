@@ -3,11 +3,32 @@
 #include "ImGuiDelegatesContainer.h"
 
 #include "ImGuiModule.h"
-#include "Utilities/RedirectingHandle.h"
 #include "Utilities/WorldContextIndex.h"
 
 
-// Redirecting handle which will automatically bind to another one, if a different instance of the module is loaded.
+#if !WITH_EDITOR
+//
+// Non-editor version without container redirection
+//
+
+static FImGuiDelegatesContainer DelegatesContainer;
+
+FImGuiDelegatesContainer& FImGuiDelegatesContainer::Get()
+{
+	return DelegatesContainer;
+}
+
+#endif // !WITH_EDITOR
+
+
+#if WITH_EDITOR
+//
+// Editor version supporting container redirection needed for hot-reloading
+//
+
+#include "Utilities/RedirectingHandle.h"
+
+// Redirecting handle which will always bind to a container from the currently loaded module.
 struct FImGuiDelegatesContainerHandle : Utilities::TRedirectingHandle<FImGuiDelegatesContainer>
 {
 	FImGuiDelegatesContainerHandle(FImGuiDelegatesContainer& InDefaultContainer)
@@ -46,6 +67,9 @@ void FImGuiDelegatesContainer::MoveContainer(FImGuiDelegatesContainerHandle& Oth
 	// Update pointer to the most recent version.
 	GetHandle().SetParent(&OtherContainerHandle);
 }
+
+#endif // WITH_EDITOR
+
 
 int32 FImGuiDelegatesContainer::GetContextIndex(UWorld* World)
 {
