@@ -3,7 +3,8 @@
 #include "ImGuiContextProxy.h"
 
 #include "ImGuiDelegatesContainer.h"
-#include "ImGuiImplementation.h"
+#include "ThirdPartyBuildImGui.h"
+#include "ThirdPartyBuildNetImgui.h"
 #include "ImGuiInteroperability.h"
 #include "Utilities/Arrays.h"
 #include "VersionCompatibility.h"
@@ -205,16 +206,18 @@ void FImGuiContextProxy::BeginFrame(float DeltaTime)
 {
 	if (!bIsFrameStarted)
 	{
-		ImGuiIO& IO = ImGui::GetIO();
-		IO.DeltaTime = DeltaTime;
+#if NETIMGUI_ENABLED
+		if( !bIsRemoteDraw )
+#endif
+		{
+			ImGuiIO& IO		= ImGui::GetIO();			
+			IO.DeltaTime	= DeltaTime;			
+			IO.DisplaySize	= { DisplaySize.X, DisplaySize.Y };
+			ImGuiInterops::CopyInput(IO, InputState);
+			ImGui::NewFrame();
+		}
 
-		ImGuiInterops::CopyInput(IO, InputState);
 		InputState.ClearUpdateState();
-
-		IO.DisplaySize = { DisplaySize.X, DisplaySize.Y };
-
-		ImGui::NewFrame();
-
 		bIsFrameStarted = true;
 		bIsDrawEarlyDebugCalled = false;
 		bIsDrawDebugCalled = false;
@@ -225,15 +228,50 @@ void FImGuiContextProxy::EndFrame()
 {
 	if (bIsFrameStarted)
 	{
-		// Prepare draw data (after this call we cannot draw to this context until we start a new frame).
-		ImGui::Render();
+#if NETIMGUI_ENABLED
+		if ( bIsRemoteDraw )
+		{
+			// Here we prevent the content to be displayed locally when connected
+			// But could either mirror content sent to server, or allow drawing in local context normally
+			UpdateDrawData(nullptr);
+		}
+		else
+#endif
+		{
+			// Prepare draw data (after this call we cannot draw to this context until we start a new frame).
+			ImGui::Render();
 
-		// Update our draw data, so we can use them later during Slate rendering while ImGui is in the middle of the
-		// next frame.
-		UpdateDrawData(ImGui::GetDrawData());
-
+			// Update our draw data, so we can use them later during Slate rendering while ImGui is in the middle of the
+			// next frame.
+			UpdateDrawData(ImGui::GetDrawData());
+		}
 		bIsFrameStarted = false;
 	}
+}
+
+// Is this context the current ImGui context.
+bool FImGuiContextProxy::IsCurrentContext() const
+{
+#if NETIMGUI_ENABLED
+	if (bIsRemoteDraw)
+	{
+		return NetImgui::IsDrawingRemote();
+	}
+#endif
+	return ImGui::GetCurrentContext() == Context;
+}
+
+// Set this context as current ImGui context.
+void FImGuiContextProxy::SetAsCurrent()
+{
+#if NETIMGUI_ENABLED
+	if (bIsRemoteDraw && NetImgui::GetDrawingContext())
+	{
+		ImGui::SetCurrentContext(NetImgui::GetDrawingContext());
+		return;
+	}
+#endif
+	ImGui::SetCurrentContext(Context);
 }
 
 void FImGuiContextProxy::UpdateDrawData(ImDrawData* DrawData)

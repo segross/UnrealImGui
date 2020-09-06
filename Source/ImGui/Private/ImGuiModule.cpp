@@ -7,9 +7,10 @@
 #include "TextureManager.h"
 #include "Utilities/WorldContext.h"
 #include "Utilities/WorldContextIndex.h"
+#include "ThirdPartyBuildNetImgui.h"
 
 #if WITH_EDITOR
-#include "ImGuiImplementation.h"
+#include "ThirdPartyBuildImGui.h"
 #include "Editor/ImGuiEditor.h"
 #endif
 
@@ -109,12 +110,19 @@ void FImGuiModule::StartupModule()
 	checkf(!ImGuiEditor, TEXT("Instance of the ImGui Editor already exists. Instance should be created only during module startup."));
 	ImGuiEditor = new FImGuiEditor();
 #endif
+
+#if NETIMGUI_ENABLED
+	NetImgui::Startup();	
+#endif
 }
 
 void FImGuiModule::ShutdownModule()
 {
-	// In editor store data that we want to move to hot-reloaded module.
+#if NETIMGUI_ENABLED
+	NetImgui::Shutdown();
+#endif
 
+	// In editor store data that we want to move to hot-reloaded module.
 #if WITH_EDITOR
 	static bool bMoveProperties = true;
 	static FImGuiModuleProperties PropertiesToMove = ImGuiModuleManager->GetProperties();

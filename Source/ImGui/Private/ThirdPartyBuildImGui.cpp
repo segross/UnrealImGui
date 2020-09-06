@@ -1,6 +1,6 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ImGuiImplementation.h"
+#include "ThirdPartyBuildImgui.h"
 
 #include <CoreMinimal.h>
 

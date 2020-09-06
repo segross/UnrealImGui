@@ -107,6 +107,10 @@ void FImGuiModuleManager::BuildFontAtlasTexture()
 
 	// Set the font texture index in the ImGui.
 	Fonts.TexID = ImGuiInterops::ToImTextureID(FontsTexureIndex);
+
+#if NETIMGUI_ENABLED
+	NetImgui::SendDataTexture(static_cast<uint64_t>(FontsTexureIndex), Pixels, Width, Height, NetImgui::eTexFormat::kTexFmtRGBA8);
+#endif
 }
 
 void FImGuiModuleManager::RegisterTick()
