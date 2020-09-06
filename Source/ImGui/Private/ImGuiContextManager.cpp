@@ -164,7 +164,7 @@ FContextData& FImGuiContextManager::GetEditorContextData()
 #endif // WITH_EDITOR
 
 #if !WITH_EDITOR
-FImGuiContextManager::FContextData& FImGuiContextManager::GetStandaloneWorldContextData()
+FContextData& FImGuiContextManager::GetStandaloneWorldContextData()
 {
 	FContextData* Data = Contexts.Find(Utilities::STANDALONE_GAME_CONTEXT_INDEX);
 

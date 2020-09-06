@@ -15,7 +15,7 @@ void NetImguiUpdate(TMap<int32, FContextData>& Contexts)
 	// Note: Ask Editor to wait on a different port from Game, so both can connected at the same time
 	// Note: We Clone the context, so original ImGui context is left unmodified
 	//------------------------------------------------------------------------------------------------
-	if (!NetImgui::IsConnected() && !NetImgui::IsConnectionPending())
+	if( ImGui::GetCurrentContext() && !NetImgui::IsConnected() && !NetImgui::IsConnectionPending())
 	{
 		FString sessionName = FString::Format(TEXT("{0}-{1}"), { FApp::GetProjectName(), FPlatformProcess::ComputerName() });
 		NetImgui::ConnectFromApp(TCHAR_TO_ANSI(sessionName.GetCharArray().GetData()), FApp::IsGame() ? NETIMGUI_LISTENPORT_GAME : NETIMGUI_LISTENPORT_EDITOR, true);
