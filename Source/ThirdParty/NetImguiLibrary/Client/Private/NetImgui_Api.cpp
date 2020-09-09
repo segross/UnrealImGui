@@ -47,6 +47,8 @@ bool ConnectToApp(const char* clientName, const char* ServerHost, uint32_t serve
 bool ConnectToApp(ThreadFunctPtr startThreadFunction, const char* clientName, const char* ServerHost, uint32_t serverPort, bool bCloneContext)
 //=================================================================================================
 {
+	if (!gpClientInfo) return false;
+
 	Client::ClientInfo& client	= *gpClientInfo;	
 	Disconnect();
 	
@@ -76,6 +78,8 @@ bool ConnectFromApp(const char* clientName, uint32_t serverPort, bool bCloneCont
 bool ConnectFromApp(ThreadFunctPtr startThreadFunction, const char* clientName, uint32_t serverPort, bool bCloneContext)
 //=================================================================================================
 {
+	if (!gpClientInfo) return false;
+
 	Client::ClientInfo& client = *gpClientInfo;
 	Disconnect();
 
@@ -97,39 +101,39 @@ bool ConnectFromApp(ThreadFunctPtr startThreadFunction, const char* clientName, 
 void Disconnect(void)
 //=================================================================================================
 {
+	if (!gpClientInfo) return;
+	
 	Client::ClientInfo& client	= *gpClientInfo;
 	client.mbDisconnectRequest	= client.mbConnected;
-	client.mbConnectRequest		= false;
+	client.mbConnectRequest		= false;	
 }
 
 //=================================================================================================
 bool IsConnected(void)
 //=================================================================================================
 {
-	if( gpClientInfo )
-	{
-		Client::ClientInfo& client = *gpClientInfo;
-		return (client.mbConnected && !client.mbDisconnectRequest) || IsDrawingRemote();
-	}
-	return false;
+	if (!gpClientInfo) return false;
+	
+	Client::ClientInfo& client = *gpClientInfo;
+	return (client.mbConnected && !client.mbDisconnectRequest) || IsDrawingRemote();	
 }
 
 //=================================================================================================
 bool IsConnectionPending(void)
 //=================================================================================================
 {
-	if( gpClientInfo )
-	{
-		Client::ClientInfo& client = *gpClientInfo;
-		return !client.mbDisconnectRequest && client.mbConnectRequest;
-	}
-	return false;
+	if (!gpClientInfo) return false;
+	
+	Client::ClientInfo& client = *gpClientInfo;
+	return !client.mbDisconnectRequest && client.mbConnectRequest;	
 }
 
 //=================================================================================================
 bool IsDrawing(void)
 //=================================================================================================
 {
+	if (!gpClientInfo) return false;
+
 	Client::ClientInfo& client = *gpClientInfo;
 	return client.mpContextDrawing == ImGui::GetCurrentContext();
 }
@@ -138,6 +142,8 @@ bool IsDrawing(void)
 bool IsDrawingRemote(void)
 //=================================================================================================
 {
+	if (!gpClientInfo) return false;
+
 	Client::ClientInfo& client = *gpClientInfo;
 	return IsDrawing() && client.mbIsRemoteDrawing;
 }
@@ -146,6 +152,8 @@ bool IsDrawingRemote(void)
 bool NewFrame(bool bSupportFrameSkip)
 //=================================================================================================
 {	
+	if (!gpClientInfo) return false;
+
 	Client::ClientInfo& client = *gpClientInfo;
 	assert(client.mpContextDrawing == nullptr);
 
@@ -206,6 +214,8 @@ bool NewFrame(bool bSupportFrameSkip)
 void EndFrame(void)
 //=================================================================================================
 {
+	if (!gpClientInfo) return;
+
 	Client::ClientInfo& client		= *gpClientInfo;	
 
 	if( client.mpContextDrawing != nullptr )
@@ -237,17 +247,21 @@ void EndFrame(void)
 ImGuiContext* GetDrawingContext()
 //=================================================================================================
 {
+	if (!gpClientInfo) return nullptr;
+
 	Client::ClientInfo& client = *gpClientInfo;
 	return client.mpContextDrawing;
 }
 
 
 //=================================================================================================
-const ImDrawData* GetDrawData(void)
+ImDrawData* GetDrawData(void)
 //=================================================================================================
 {
+	if (!gpClientInfo) return nullptr;
+
 	Client::ClientInfo& client	= *gpClientInfo;	
-	const ImDrawData* pLastFrameDrawn = ImGui::GetDrawData();
+	ImDrawData* pLastFrameDrawn = ImGui::GetDrawData();
 	if (IsConnected() && client.mpContextClone)
 	{
 		ImGuiContext* pSaved	= ImGui::GetCurrentContext();
@@ -262,6 +276,8 @@ const ImDrawData* GetDrawData(void)
 void SendDataTexture(uint64_t textureId, void* pData, uint16_t width, uint16_t height, eTexFormat format)
 //=================================================================================================
 {
+	if (!gpClientInfo) return;
+
 	Client::ClientInfo& client				= *gpClientInfo;
 	CmdTexture* pCmdTexture					= nullptr;
 	
@@ -326,24 +342,23 @@ bool Startup(void)
 void Shutdown(void)
 //=================================================================================================
 {
-	if( !gpClientInfo )
-	{
-		Disconnect();
-		while( gpClientInfo->mbConnected )
-			std::this_thread::yield();
-		Network::Shutdown();
+	if (!gpClientInfo) return;
 	
-		for( auto& texture : gpClientInfo->mTextures )
-			texture.Set(nullptr);
+	Disconnect();
+	while( gpClientInfo->mbConnected )
+		std::this_thread::yield();
+	Network::Shutdown();
+	
+	for( auto& texture : gpClientInfo->mTextures )
+		texture.Set(nullptr);
 
-		if( gpClientInfo->mpContextClone )
-			ImGui::DestroyContext(gpClientInfo->mpContextClone);
+	if( gpClientInfo->mpContextClone )
+		ImGui::DestroyContext(gpClientInfo->mpContextClone);
 
-		if( gpClientInfo->mpContextEmpty )
-			ImGui::DestroyContext(gpClientInfo->mpContextEmpty);
+	if( gpClientInfo->mpContextEmpty )
+		ImGui::DestroyContext(gpClientInfo->mpContextEmpty);
 
-		netImguiDeleteSafe(gpClientInfo);		
-	}
+	netImguiDeleteSafe(gpClientInfo);		
 }
 
 //=================================================================================================
@@ -380,6 +395,8 @@ uint32_t GetTexture_BytePerImage(eTexFormat eFormat, uint32_t pixelWidth, uint32
 void ContextInitialize(bool bCloneOriginalContext)
 //=================================================================================================
 {
+	if (!gpClientInfo) return;
+
 	Client::ClientInfo& client = *gpClientInfo;
 	if (client.mpContextClone)
 	{
@@ -460,6 +477,8 @@ void ContextInitialize(bool bCloneOriginalContext)
 void ContextClone(void)
 //=================================================================================================
 {
+	if (!gpClientInfo) return;
+
 	Client::ClientInfo& client				= *gpClientInfo;	
 	client.mpContextClone					= ImGui::CreateContext(ImGui::GetIO().Fonts);
 	ImGuiContext* pSourceCxt				= ImGui::GetCurrentContext();
@@ -532,6 +551,8 @@ void ContextClone(void)
 bool InputUpdateData(void)
 //=================================================================================================
 {
+	if (!gpClientInfo) return false;
+
 	Client::ClientInfo& client	= *gpClientInfo;
 	CmdInput* pCmdInput			= client.mPendingInputIn.Release();
 	ImGuiIO& io					= ImGui::GetIO();
@@ -627,7 +648,7 @@ void EndFrame(void)
 #endif
 }
 
-const ImDrawData* GetDrawData(void)												
+ImDrawData* GetDrawData(void)												
 { 
 #ifdef IMGUI_VERSION	
 	return ImGui::GetDrawData();

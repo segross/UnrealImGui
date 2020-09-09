@@ -229,13 +229,7 @@ void FImGuiContextProxy::EndFrame()
 	if (bIsFrameStarted)
 	{
 #if NETIMGUI_ENABLED
-		if ( bIsRemoteDraw )
-		{
-			// Here we prevent the content to be displayed locally when connected
-			// But could either mirror content sent to server, or allow drawing in local context normally
-			UpdateDrawData(nullptr);
-		}
-		else
+		if ( !bIsRemoteDraw )
 #endif
 		{
 			// Prepare draw data (after this call we cannot draw to this context until we start a new frame).

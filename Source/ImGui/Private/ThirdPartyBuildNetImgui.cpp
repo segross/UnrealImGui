@@ -6,10 +6,16 @@
 
 #include "ImGuiContextManager.h"
 
+static int sRemoteContextIndex = 0; // Which context is currently associated with netImgui
+static bool sMirrorContent = false;
+
+bool NetImguiDisplayMirror()
+{
+	return sMirrorContent;
+}
+
 void NetImguiUpdate(TMap<int32, FContextData>& Contexts)
 {
-	static int sRemoteContextIndex = 0; // Which context is currently associated with netImgui
-
 	//------------------------------------------------------------------------------------------------
 	// If not already done, start listening for netImgui server to connect to us
 	// Note: Ask Editor to wait on a different port from Game, so both can connected at the same time
@@ -40,20 +46,43 @@ void NetImguiUpdate(TMap<int32, FContextData>& Contexts)
 	{
 		if (NetImgui::GetDrawingContext() != nullptr)
 			NetImgui::EndFrame();
-
-		// NetImgui::NewFrame update delta time of original context (to match netImgui)
-		// make sure it updates the right one
+			
 		if (pRemoteContextProxy)
-			pRemoteContextProxy->SetAsCurrent();
+		{
+			// User requested to have netImgui content also displayed locally
+			// We need to do this here, right after the EndFrame, otherwise the ImguiData 
+			// data will be null
+			if( sMirrorContent )
+			{
+				ImDrawData* pDrawData = NetImgui::GetDrawData();
+				// Because UpdateDrawData take ownership of the Imgui DrawData with a memory swap, 
+				// we make sure we only update the display when we have new draw data in, instead of 
+				// relying on NetImgui DrawData that got stolen by the ProxyContext
+				if(pDrawData->CmdListsCount > 0)
+				{
+					pRemoteContextProxy->UpdateDrawData(pDrawData);
+					pDrawData->CmdListsCount = 0; 
+				}
+			}
+			// Clear the local display
+			else
+			{
+				pRemoteContextProxy->UpdateDrawData(nullptr);
+			}
 
-		// It is possible to avoid drawing Imgui when connected and server doesn't expect a new frame,
+			// NetImgui::NewFrame update delta time of original context (to match netImgui)
+			// make sure it updates the right one
+			pRemoteContextProxy->SetAsCurrent();
+			
+		}
+		// It is possible to avoid drawing ImGui when connected and server doesn't expect a new frame,
 		// but requires to skip calling drawing delegates and user not to draw in UObject::Tick. 
 		// Last point difficult to control, so might be safer to not support 'frameskip'
 		NetImgui::NewFrame();
 
 		// Add a main menu bar with a list of Context to choose from.
 		// Could add more options (like continue drawing locally)
-		bool bShouldDisplayMenu = (Contexts.Num() > 1 || pRemoteContextProxy == nullptr);
+		bool bShouldDisplayMenu = true; //(Contexts.Num() > 1 || pRemoteContextProxy == nullptr);
 		if (bShouldDisplayMenu && ImGui::BeginMainMenuBar())
 		{
 			if (ImGui::BeginMenu("netImgui"))
@@ -66,7 +95,8 @@ void NetImguiUpdate(TMap<int32, FContextData>& Contexts)
 				}
 
 				// Add other netImgui options here, like continue display locally
-				// ...
+				ImGui::Separator();
+				ImGui::Checkbox("Mirror ImGui in game", &sMirrorContent);
 
 				ImGui::EndMenu();
 			}

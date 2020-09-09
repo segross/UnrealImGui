@@ -81,6 +81,8 @@ public:
 	// Tick to advance context to the next frame. Only one call per frame will be processed.
 	void Tick(float DeltaSeconds);
 
+	void UpdateDrawData(ImDrawData* DrawData);
+
 #if NETIMGUI_ENABLED
 	// Currently, there's no way user can have informations about netImgui (connected, remote drawing, ...)
 	// Should the delegate provide a bit more info, or just give access to netImgui api in game code?
@@ -90,9 +92,7 @@ public:
 private:
 
 	void BeginFrame(float DeltaTime = 1.f / 60.f);
-	void EndFrame();
-
-	void UpdateDrawData(ImDrawData* DrawData);
+	void EndFrame();	
 
 	void BroadcastWorldEarlyDebug();
 	void BroadcastMultiContextEarlyDebug();

@@ -142,7 +142,7 @@ ImGuiContext*		GetDrawingContext();
 // Note: Be careful with the returned value, the pointer remain valid only as long as
 //		 a new dear ImGui frame hasn't been started for the netImgui remote app
 //=================================================================================================
-const ImDrawData*	GetDrawData(void);
+ImDrawData*			GetDrawData(void);
 
 uint8_t				GetTexture_BitsPerPixel	(eTexFormat eFormat);
 uint32_t			GetTexture_BytePerLine	(eTexFormat eFormat, uint32_t pixelWidth);
