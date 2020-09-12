@@ -104,7 +104,7 @@ void Disconnect(void)
 	if (!gpClientInfo) return;
 	
 	Client::ClientInfo& client	= *gpClientInfo;
-	client.mbDisconnectRequest	= client.mbConnected;
+	client.mbDisconnectRequest	= client.mbConnected || client.mbDisconnectRequest;
 	client.mbConnectRequest		= false;	
 }
 
