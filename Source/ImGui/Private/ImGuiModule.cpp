@@ -303,6 +303,23 @@ bool FImGuiTextureHandle::HasValidEntry() const
 	return Index != INDEX_NONE && ImGuiModuleManager && ImGuiModuleManager->GetTextureManager().GetTextureName(Index) == Name;
 }
 
+bool FImGuiModuleProperties::IsRemoteDrawing() const
+{
+#if NETIMGUI_ENABLED
+	return NetImgui::IsDrawingRemote();
+#else
+	return false;
+#endif
+}
+
+bool FImGuiModuleProperties::IsRemoteConnected() const
+{
+#if NETIMGUI_ENABLED
+	return NetImgui::IsConnected();
+#else
+	return false;
+#endif
+}
 
 #undef LOCTEXT_NAMESPACE
 

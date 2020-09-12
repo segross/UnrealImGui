@@ -4,6 +4,7 @@
 
 #include "ImGuiDelegatesContainer.h"
 #include "ThirdPartyBuildImGui.h"
+#include "ThirdPartyBuildNetImgui.h"
 #include "ImGuiModuleSettings.h"
 #include "Utilities/WorldContext.h"
 #include "Utilities/WorldContextIndex.h"
@@ -84,9 +85,7 @@ FImGuiContextManager::~FImGuiContextManager()
 
 void FImGuiContextManager::Tick(float DeltaSeconds)
 {
-#if NETIMGUI_ENABLED
 	NetImguiUpdate(Contexts);
-#endif
 
 	// In editor, worlds can get invalid. We could remove corresponding entries, but that would mean resetting ImGui
 	// context every time when PIE session is restarted. Instead we freeze contexts until their worlds are re-created.

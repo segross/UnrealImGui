@@ -33,7 +33,7 @@ constexpr uint32_t kDefaultClientPort = 8889;	//!< Default port Client waits for
 //			NETIMGUI_POSIX_SOCKETS_ENABLED and provide your own implementation of the functions 
 //			declared in 'NetImgui_Network.h'.
 //=================================================================================================
-#ifndef NETIMGUI_WINSOCKET_ENABLED
+#if !defined(NETIMGUI_WINSOCKET_ENABLED) && !defined(__UNREAL__)
 	#ifdef _WIN32
 		#define NETIMGUI_WINSOCKET_ENABLED	1 // Project needs 'ws2_32.lib' added to input libraries
 	#else
@@ -41,6 +41,6 @@ constexpr uint32_t kDefaultClientPort = 8889;	//!< Default port Client waits for
 	#endif
 #endif
 
-#ifndef NETIMGUI_POSIX_SOCKETS_ENABLED
+#if !defined(NETIMGUI_POSIX_SOCKETS_ENABLED) && !defined(__UNREAL__)
 	#define NETIMGUI_POSIX_SOCKETS_ENABLED	!(NETIMGUI_WINSOCKET_ENABLED)
 #endif

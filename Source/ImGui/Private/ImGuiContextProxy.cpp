@@ -144,12 +144,20 @@ void FImGuiContextProxy::DrawEarlyDebug()
 	if (bIsFrameStarted && !bIsDrawEarlyDebugCalled)
 	{
 		bIsDrawEarlyDebugCalled = true;
+		if( NetImGuiCanDrawProxy(this) )
+		{			
+			SetAsCurrent();
+			
+			// Delegates called in order specified in FImGuiDelegates.
+			BroadcastMultiContextEarlyDebug();
+			BroadcastWorldEarlyDebug();
+		}
 
-		SetAsCurrent();
-
-		// Delegates called in order specified in FImGuiDelegates.
-		BroadcastMultiContextEarlyDebug();
-		BroadcastWorldEarlyDebug();
+		if( NetImGuiSetupDrawRemote(this) )
+		{
+			BroadcastMultiContextEarlyDebug();
+			BroadcastWorldEarlyDebug();
+		}
 	}
 }
 
@@ -162,11 +170,20 @@ void FImGuiContextProxy::DrawDebug()
 		// Make sure that early debug is always called first to guarantee order specified in FImGuiDelegates.
 		DrawEarlyDebug();
 
-		SetAsCurrent();
+		if (NetImGuiCanDrawProxy(this))
+		{			
+			SetAsCurrent();
 
-		// Delegates called in order specified in FImGuiDelegates.
-		BroadcastWorldDebug();
-		BroadcastMultiContextDebug();
+			// Delegates called in order specified in FImGuiDelegates.
+			BroadcastWorldDebug();
+			BroadcastMultiContextDebug();
+		}
+
+		if (NetImGuiSetupDrawRemote(this))
+		{
+			BroadcastWorldDebug();
+			BroadcastMultiContextDebug();
+		}
 	}
 }
 
@@ -206,9 +223,7 @@ void FImGuiContextProxy::BeginFrame(float DeltaTime)
 {
 	if (!bIsFrameStarted)
 	{
-#if NETIMGUI_ENABLED
-		if( !bIsRemoteDraw )
-#endif
+		if( NetImGuiCanDrawProxy(this) )
 		{
 			ImGuiIO& IO		= ImGui::GetIO();			
 			IO.DeltaTime	= DeltaTime;			
@@ -228,9 +243,7 @@ void FImGuiContextProxy::EndFrame()
 {
 	if (bIsFrameStarted)
 	{
-#if NETIMGUI_ENABLED
-		if ( !bIsRemoteDraw )
-#endif
+		if ( NetImGuiCanDrawProxy(this) )
 		{
 			// Prepare draw data (after this call we cannot draw to this context until we start a new frame).
 			ImGui::Render();
@@ -246,25 +259,12 @@ void FImGuiContextProxy::EndFrame()
 // Is this context the current ImGui context.
 bool FImGuiContextProxy::IsCurrentContext() const
 {
-#if NETIMGUI_ENABLED
-	if (bIsRemoteDraw)
-	{
-		return NetImgui::IsDrawingRemote();
-	}
-#endif
 	return ImGui::GetCurrentContext() == Context;
 }
 
 // Set this context as current ImGui context.
 void FImGuiContextProxy::SetAsCurrent()
 {
-#if NETIMGUI_ENABLED
-	if (bIsRemoteDraw && NetImgui::GetDrawingContext())
-	{
-		ImGui::SetCurrentContext(NetImgui::GetDrawingContext());
-		return;
-	}
-#endif
 	ImGui::SetCurrentContext(Context);
 }
 

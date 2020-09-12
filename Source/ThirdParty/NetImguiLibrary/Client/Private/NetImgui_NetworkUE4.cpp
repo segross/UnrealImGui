@@ -2,6 +2,11 @@
 
 #if NETIMGUI_ENABLED && defined(__UNREAL__)
 #include "NetImgui_WarningDisableStd.h"
+
+//SF Temporary code, prevents warning while we are still include Windows specific. Will be removed once using UE sockets
+#ifdef TEXT
+	#undef TEXT
+#endif
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 

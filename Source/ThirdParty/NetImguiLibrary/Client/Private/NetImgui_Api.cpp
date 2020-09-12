@@ -234,7 +234,7 @@ void EndFrame(void)
 		}
 				
 		if( ImGui::GetCurrentContext() == client.mpContextClone )
-			ImGui::GetIO().DeltaTime= 0.f; // Reset the time passed from 0. Gets incremented in NewFrame
+			ImGui::GetIO().DeltaTime= 0.f; // Reset the time passed. Gets incremented in NewFrame
 
 		ImGui::SetCurrentContext(client.mpContextRestore);		
 	}

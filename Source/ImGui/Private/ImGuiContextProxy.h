@@ -9,7 +9,6 @@
 #include <GenericPlatform/ICursor.h>
 
 #include <imgui.h>
-#include <ThirdPartyBuildNetImgui.h>
 #include <string>
 
 
@@ -83,12 +82,6 @@ public:
 
 	void UpdateDrawData(ImDrawData* DrawData);
 
-#if NETIMGUI_ENABLED
-	// Currently, there's no way user can have informations about netImgui (connected, remote drawing, ...)
-	// Should the delegate provide a bit more info, or just give access to netImgui api in game code?
-	inline void SetIsRemoteDraw(bool inIsRemote){ bIsRemoteDraw = inIsRemote; };
-	inline bool GetIsRemoteDraw()const { return bIsRemoteDraw; };
-#endif	
 private:
 
 	void BeginFrame(float DeltaTime = 1.f / 60.f);
@@ -112,9 +105,6 @@ private:
 	bool bIsFrameStarted = false;
 	bool bIsDrawEarlyDebugCalled = false;
 	bool bIsDrawDebugCalled = false;
-#if NETIMGUI_ENABLED
-	bool bIsRemoteDraw = false;	// If context is remote drawing in the current frame
-#endif
 
 	FImGuiInputState InputState;
 
