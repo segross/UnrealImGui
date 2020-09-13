@@ -9,7 +9,6 @@
 #include <GenericPlatform/ICursor.h>
 
 #include <imgui.h>
-
 #include <string>
 
 
@@ -39,10 +38,10 @@ public:
 	const FImGuiInputState& GetInputState() const { return InputState; }
 
 	// Is this context the current ImGui context.
-	bool IsCurrentContext() const { return ImGui::GetCurrentContext() == Context; }
+	bool IsCurrentContext() const;
 
 	// Set this context as current ImGui context.
-	void SetAsCurrent() { ImGui::SetCurrentContext(Context); }
+	void SetAsCurrent(); 	
 
 	// Get the desired context display size.
 	const FVector2D& GetDisplaySize() const { return DisplaySize; }
@@ -81,12 +80,12 @@ public:
 	// Tick to advance context to the next frame. Only one call per frame will be processed.
 	void Tick(float DeltaSeconds);
 
+	void UpdateDrawData(ImDrawData* DrawData);
+
 private:
 
 	void BeginFrame(float DeltaTime = 1.f / 60.f);
-	void EndFrame();
-
-	void UpdateDrawData(ImDrawData* DrawData);
+	void EndFrame();	
 
 	void BroadcastWorldEarlyDebug();
 	void BroadcastMultiContextEarlyDebug();

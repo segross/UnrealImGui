@@ -3,7 +3,8 @@
 #include "ImGuiContextManager.h"
 
 #include "ImGuiDelegatesContainer.h"
-#include "ImGuiImplementation.h"
+#include "ThirdPartyBuildImGui.h"
+#include "ThirdPartyBuildNetImgui.h"
 #include "ImGuiModuleSettings.h"
 #include "Utilities/WorldContext.h"
 #include "Utilities/WorldContextIndex.h"
@@ -84,6 +85,8 @@ FImGuiContextManager::~FImGuiContextManager()
 
 void FImGuiContextManager::Tick(float DeltaSeconds)
 {
+	NetImguiUpdate(Contexts);
+
 	// In editor, worlds can get invalid. We could remove corresponding entries, but that would mean resetting ImGui
 	// context every time when PIE session is restarted. Instead we freeze contexts until their worlds are re-created.
 
@@ -145,7 +148,7 @@ void FImGuiContextManager::OnWorldPostActorTick(UWorld* World, ELevelTick TickTy
 #endif // ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 
 #if WITH_EDITOR
-FImGuiContextManager::FContextData& FImGuiContextManager::GetEditorContextData()
+FContextData& FImGuiContextManager::GetEditorContextData()
 {
 	FContextData* Data = Contexts.Find(Utilities::EDITOR_CONTEXT_INDEX);
 
@@ -160,7 +163,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetEditorContextData()
 #endif // WITH_EDITOR
 
 #if !WITH_EDITOR
-FImGuiContextManager::FContextData& FImGuiContextManager::GetStandaloneWorldContextData()
+FContextData& FImGuiContextManager::GetStandaloneWorldContextData()
 {
 	FContextData* Data = Contexts.Find(Utilities::STANDALONE_GAME_CONTEXT_INDEX);
 
@@ -174,7 +177,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetStandaloneWorldCont
 }
 #endif // !WITH_EDITOR
 
-FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(const UWorld& World, int32* OutIndex)
+FContextData& FImGuiContextManager::GetWorldContextData(const UWorld& World, int32* OutIndex)
 {
 	using namespace Utilities;
 

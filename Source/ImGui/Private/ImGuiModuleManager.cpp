@@ -189,9 +189,6 @@ void FImGuiModuleManager::AddWidgetToViewport(UGameViewportClient* GameViewport)
 	int32 ContextIndex;
 	auto& ContextProxy = ContextManager.GetWorldContextProxy(*GameViewport->GetWorld(), ContextIndex);
 
-	// Make sure that textures are loaded before the first Slate widget is created.
-	LoadTextures();
-
 	// Create and initialize the widget.
 	TSharedPtr<SImGuiLayout> SharedWidget;
 	SAssignNew(SharedWidget, SImGuiLayout).ModuleManager(this).GameViewport(GameViewport).ContextIndex(ContextIndex);
@@ -231,5 +228,7 @@ void FImGuiModuleManager::AddWidgetsToActiveViewports()
 
 void FImGuiModuleManager::OnContextProxyCreated(int32 ContextIndex, FImGuiContextProxy& ContextProxy)
 {
+	// Make sure that textures are loaded before the first Proxy Context is created.
+	LoadTextures();
 	ContextProxy.OnDraw().AddLambda([this, ContextIndex]() { ImGuiDemo.DrawControls(ContextIndex); });
 }

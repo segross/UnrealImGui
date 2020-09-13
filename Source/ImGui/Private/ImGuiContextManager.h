@@ -17,6 +17,26 @@ struct FImGuiDPIScaleInfo;
 // @param ContextProxy - Created context proxy
 DECLARE_MULTICAST_DELEGATE_TwoParams(FContextProxyCreatedDelegate, int32, FImGuiContextProxy&);
 
+// NETIMGUI_ENABLED
+// NOTE:	Made this public, to share with NetImgui. Need access to the proxy and CanTick property
+//			Could be done other ways like building the data and sending it to NetImguiUpdate 
+//			instead of accessing it directly)
+struct FContextData
+{
+	FContextData(const FString& ContextName, int32 ContextIndex, ImFontAtlas& FontAtlas, float DPIScale, int32 InPIEInstance = -1)
+		: PIEInstance(InPIEInstance)
+		, ContextProxy(new FImGuiContextProxy(ContextName, ContextIndex, &FontAtlas, DPIScale))
+	{
+	}
+
+	FORCEINLINE bool CanTick() const { return PIEInstance < 0 || GEngine->GetWorldContextFromPIEInstance(PIEInstance); }
+
+	int32 PIEInstance = -1;
+	TUniquePtr<FImGuiContextProxy> ContextProxy;
+};
+// NETIMGUI_ENABLED
+
+
 // Manages ImGui context proxies.
 class FImGuiContextManager
 {
@@ -67,20 +87,6 @@ public:
 	void Tick(float DeltaSeconds);
 
 private:
-
-	struct FContextData
-	{
-		FContextData(const FString& ContextName, int32 ContextIndex, ImFontAtlas& FontAtlas, float DPIScale, int32 InPIEInstance = -1)
-			: PIEInstance(InPIEInstance)
-			, ContextProxy(new FImGuiContextProxy(ContextName, ContextIndex, &FontAtlas, DPIScale))
-		{
-		}
-
-		FORCEINLINE bool CanTick() const { return PIEInstance < 0 || GEngine->GetWorldContextFromPIEInstance(PIEInstance); }
-
-		int32 PIEInstance = -1;
-		TUniquePtr<FImGuiContextProxy> ContextProxy;
-	};
 
 #if ENGINE_COMPATIBILITY_LEGACY_WORLD_ACTOR_TICK
 	void OnWorldTickStart(ELevelTick TickType, float DeltaSeconds);
