@@ -1,90 +1,99 @@
 #include "NetImgui_Shared.h"
 
 #if NETIMGUI_ENABLED && defined(__UNREAL__)
-#include "NetImgui_WarningDisableStd.h"
 
-//SF Temporary code, prevents warning while we are still include Windows specific. Will be removed once using UE sockets
-#ifdef TEXT
-	#undef TEXT
-#endif
-#include <WinSock2.h>
-#include <WS2tcpip.h>
+#include "CoreMinimal.h"
+#include "SocketSubsystem.h"
+#include "Sockets.h"
 
 namespace NetImgui { namespace Internal { namespace Network 
 {
 
 struct SocketInfo
 {
-	SocketInfo(SOCKET socket) : mSocket(socket){}
-	SOCKET mSocket;
+	SocketInfo(FSocket* pSocket) : mpSocket(pSocket) {}
+	~SocketInfo() { Close(); }
+	void Close()
+	{
+		if(mpSocket )
+		{
+			mpSocket->Close();
+			ISocketSubsystem::Get()->DestroySocket(mpSocket);
+			mpSocket = nullptr;
+		}
+	}
+	FSocket* mpSocket;
 };
 
 bool Startup()
 {
-	WSADATA wsa;
-	if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
-		return false;
-	
 	return true;
 }
 
 void Shutdown()
 {
-	WSACleanup();
 }
 
 SocketInfo* Connect(const char* ServerHost, uint32_t ServerPort)
 {
-	SOCKET ConnectSocket = socket(AF_INET , SOCK_STREAM , 0);
-	if(ConnectSocket == INVALID_SOCKET)
-		return nullptr;
+	SocketInfo* pSocketInfo					= nullptr;
+	ISocketSubsystem* SocketSubSystem		= ISocketSubsystem::Get();
+	auto ResolveInfo						= SocketSubSystem->GetHostByName(ServerHost);
+	while( !ResolveInfo->IsComplete() )
+		FPlatformProcess::Sleep(0.1);
 	
-	char zPortName[32];
-	addrinfo*	pResults	= nullptr;
-	SocketInfo* pSocketInfo	= nullptr;
-	sprintf_s(zPortName, "%i", ServerPort);
-	getaddrinfo(ServerHost, zPortName, nullptr, &pResults);
-	addrinfo*	pResultCur	= pResults;
-	while( pResultCur && !pSocketInfo )
+	if (ResolveInfo->GetErrorCode() == 0)
 	{
-		if( connect(ConnectSocket, pResultCur->ai_addr, static_cast<int>(pResultCur->ai_addrlen)) == 0 )
-			pSocketInfo = netImguiNew<SocketInfo>(ConnectSocket);
-				
-		pResultCur = pResultCur->ai_next;
+		TSharedRef<FInternetAddr> IpAddress	= ResolveInfo->GetResolvedAddress().Clone();
+		IpAddress->SetPort(ServerPort);		
+		if (IpAddress->IsValid())
+		{
+			//FString a						= IpAddress->ToString(true);
+			FSocket* pNewSocket				= SocketSubSystem->CreateSocket(NAME_Stream, "netImgui", IpAddress->GetProtocolType());
+			if (pNewSocket)
+			{
+				pNewSocket->SetNonBlocking(false);
+				pSocketInfo = netImguiNew<SocketInfo>(pNewSocket);
+				if (pNewSocket->Connect(IpAddress.Get()))
+				{
+					return pSocketInfo;
+				}
+			}
+		}		
 	}
-	freeaddrinfo(pResults);
-	return pSocketInfo;
+	netImguiDelete(pSocketInfo);
+	return nullptr;
 }
 
 SocketInfo* ListenStart(uint32_t ListenPort)
 {
-	SOCKET ListenSocket = INVALID_SOCKET;
-	if( (ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) != INVALID_SOCKET )
+	ISocketSubsystem* SocketSubSystem		= ISocketSubsystem::Get();
+	TSharedRef<FInternetAddr> IpAddress		= SocketSubSystem->CreateInternetAddr();
+	IpAddress->SetLoopbackAddress();
+	IpAddress->SetPort(ListenPort);
+	FSocket* pNewListenSocket				= SocketSubSystem->CreateSocket(NAME_Stream, "netImguiListen", IpAddress->GetProtocolType());
+	SocketInfo* pListenSocketInfo			= netImguiNew<SocketInfo>(pNewListenSocket);
+	if(pNewListenSocket->Bind(*IpAddress) )
 	{
-		sockaddr_in server;
-		server.sin_family		= AF_INET;
-		server.sin_addr.s_addr	= INADDR_ANY;
-		server.sin_port			= htons(static_cast<USHORT>(ListenPort));
-		if(	bind(ListenSocket, reinterpret_cast<sockaddr*>(&server), sizeof(server)) != SOCKET_ERROR &&
-			listen(ListenSocket, 0) != SOCKET_ERROR )
-		{
-			return netImguiNew<SocketInfo>(ListenSocket);
-		}
-		closesocket(ListenSocket);
+		pNewListenSocket->SetNonBlocking(true);
+		if( pNewListenSocket->Listen(1) )
+			return pListenSocketInfo;
 	}
+
+	netImguiDelete(pListenSocketInfo);
 	return nullptr;
 }
 
-SocketInfo* ListenConnect(SocketInfo* ListenSocket)
+SocketInfo* ListenConnect(SocketInfo* pListenSocket)
 {
-	if( ListenSocket )
+	if (pListenSocket)
 	{
-		sockaddr ClientAddress;
-		int	Size(sizeof(ClientAddress));
-		SOCKET ServerSocket = accept(ListenSocket->mSocket, &ClientAddress, &Size) ;
-		if (ServerSocket != INVALID_SOCKET)
+		FSocket* pNewSocket = pListenSocket->mpSocket->Accept(FString("netImgui"));
+		if( pNewSocket )
 		{
-			return netImguiNew<SocketInfo>(ServerSocket);
+			pNewSocket->SetNonBlocking(false);
+			SocketInfo* pSocketInfo = netImguiNew<SocketInfo>(pNewSocket);
+			return pSocketInfo;
 		}
 	}
 	return nullptr;
@@ -92,26 +101,23 @@ SocketInfo* ListenConnect(SocketInfo* ListenSocket)
 
 void Disconnect(SocketInfo* pClientSocket)
 {
-	if( pClientSocket )
-	{
-		closesocket(pClientSocket->mSocket);
-		netImguiDelete(pClientSocket);
-	}
+	netImguiDelete(pClientSocket);	
 }
 
 bool DataReceive(SocketInfo* pClientSocket, void* pDataIn, size_t Size)
 {
-	int resultRcv = recv(pClientSocket->mSocket, reinterpret_cast<char*>(pDataIn), static_cast<int>(Size), MSG_WAITALL);
-	return resultRcv != SOCKET_ERROR && resultRcv > 0;
+	int32 sizeRcv(0) ;
+	bool bResult = pClientSocket->mpSocket->Recv(reinterpret_cast<uint8*>(pDataIn), Size, sizeRcv, ESocketReceiveFlags::WaitAll);
+	return bResult && sizeRcv > 0;
 }
 
 bool DataSend(SocketInfo* pClientSocket, void* pDataOut, size_t Size)
 {
-	int resultSend = send(pClientSocket->mSocket, reinterpret_cast<char*>(pDataOut), static_cast<int>(Size), 0);
-	return resultSend != SOCKET_ERROR && resultSend > 0;
+	int32 sizeSent(0);
+	bool bResult = pClientSocket->mpSocket->Send(reinterpret_cast<uint8*>(pDataOut), Size, sizeSent);
+	return bResult && Size == sizeSent;
 }
 
 }}} // namespace NetImgui::Internal::Network
 
-#include "NetImgui_WarningReenable.h"
-#endif // #if NETIMGUI_ENABLED && NETIMGUI_WINSOCKET_ENABLED
+#endif // #if NETIMGUI_ENABLED && defined(__UNREAL__)

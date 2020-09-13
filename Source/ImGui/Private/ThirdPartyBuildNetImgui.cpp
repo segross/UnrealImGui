@@ -3,7 +3,7 @@
 #include "ThirdPartyBuildNetImgui.h"
 
 #if NETIMGUI_ENABLED
-
+#include "CoreMinimal.h"
 #include "ImGuiContextManager.h"
 #include "ImGuiDelegatesContainer.h"
 
@@ -21,11 +21,16 @@ static FImGuiContextProxy*	spActiveContextProxy	= nullptr;
 void NetImguiPreUpdate_Connection()
 {
 	// Only listen for connection from netImGui server, 
-	// Could also support reaching servre directly if we had a provided IP
+	// Could also support reaching server directly if we had a provided IP
 	if (ImGui::GetCurrentContext() && !NetImgui::IsConnected() && !NetImgui::IsConnectionPending())
 	{
 		FString sessionName = FString::Format(TEXT("{0}-{1}"), { FApp::GetProjectName(), FPlatformProcess::ComputerName() });
+		
+		// Setup connection to wait for netImgui server to reach us
 		NetImgui::ConnectFromApp(TCHAR_TO_ANSI(sessionName.GetCharArray().GetData()), FApp::IsGame() ? NETIMGUI_LISTENPORT_GAME : NETIMGUI_LISTENPORT_EDITOR, true);
+
+		// Setup connection to try reaching netImgui server directly
+		//NetImgui::ConnectToApp(TCHAR_TO_ANSI(sessionName.GetCharArray().GetData()), "localhost", NetImgui::kDefaultServerPort, true);
 	}
 }
 
