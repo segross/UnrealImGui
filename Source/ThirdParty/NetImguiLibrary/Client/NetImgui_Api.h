@@ -5,11 +5,11 @@
 //=================================================================================================
 //! @author		: Sammy Fatnassi
 //! @date		: 2020/09/06
-//!	@version	: v1.2.4
+//!	@version	: v1.3.0
 //! @Details	: For integration info : https://github.com/sammyfreg/netImgui/wiki
 //=================================================================================================
-#define NETIMGUI_VERSION		"1.2.4"
-#define NETIMGUI_VERSION_NUM	10204
+#define NETIMGUI_VERSION		"1.3.0"
+#define NETIMGUI_VERSION_NUM	10300
 
 struct ImGuiContext;
 struct ImDrawData;
@@ -49,8 +49,10 @@ bool				Startup(void);
 
 //=================================================================================================
 // Free Resources
+//-------------------------------------------------------------------------------------------------
+// bWait			: Wait until all communication threads have terminated before returning
 //=================================================================================================
-void				Shutdown(void);
+void				Shutdown(bool bWait);
 
 //=================================================================================================
 // Try to establish a connection to netImguiApp server. 

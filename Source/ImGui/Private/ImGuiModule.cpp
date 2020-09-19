@@ -118,10 +118,6 @@ void FImGuiModule::StartupModule()
 
 void FImGuiModule::ShutdownModule()
 {
-#if NETIMGUI_ENABLED
-	NetImgui::Shutdown();
-#endif
-
 	// In editor store data that we want to move to hot-reloaded module.
 #if WITH_EDITOR
 	static bool bMoveProperties = true;
@@ -139,6 +135,10 @@ void FImGuiModule::ShutdownModule()
 	checkf(ImGuiModuleManager, TEXT("Null ImGui Module Manager. Module manager instance should be deleted during module shutdown."));
 	delete ImGuiModuleManager;
 	ImGuiModuleManager = nullptr;
+
+#if NETIMGUI_ENABLED
+	NetImgui::Shutdown(true);
+#endif
 
 #if WITH_EDITOR
 	// When shutting down we leave the global ImGui context pointer and handle pointing to resources that are already
