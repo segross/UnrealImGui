@@ -11,6 +11,7 @@ Improving stability
 - Improved hot-reload stability and support for reloading after recompiling outside of the editor. Both methods should be equally supported and work together.
 - Improved behaviour of delegates when hot-reloading.
 - Changed context index mapping to fix issues with multi-PIE debugging in 4.25.
+- Fixed Linux crash caused by wrong mapping of key codes.
 
 Version: 1.20 (2020/06)
 Transition to IWYU and maintenance:
