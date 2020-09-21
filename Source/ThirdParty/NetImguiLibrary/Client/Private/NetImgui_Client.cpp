@@ -13,9 +13,12 @@ namespace NetImgui { namespace Internal { namespace Client
 // CLIENT INFO Constructor
 //=================================================================================================
 ClientInfo::ClientInfo() 
-: mTexturesPendingCount(0) 
+: mpSocketPending(nullptr)
+, mpSocketComs(nullptr)
+, mpSocketListen(nullptr)
+, mTexturesPendingCount(0)
 { 
-	memset(mTexturesPending, 0, sizeof(mTexturesPending)); 
+	memset(mTexturesPending, 0, sizeof(mTexturesPending));
 }
 
 //=================================================================================================
@@ -27,21 +30,22 @@ bool Communications_Initialize(ClientInfo& client)
 	CmdVersion cmdVersionSend;
 	CmdVersion cmdVersionRcv;	
 	StringCopy(cmdVersionSend.mClientName, client.mName);
-	bool bResultSend =		Network::DataSend(client.mpSocket, &cmdVersionSend, cmdVersionSend.mHeader.mSize);
-	bool bResultRcv	=		Network::DataReceive(client.mpSocket, &cmdVersionRcv, sizeof(cmdVersionRcv));		
-	client.mbConnected =	bResultRcv && bResultSend && 
-							cmdVersionRcv.mHeader.mType == CmdHeader::eCommands::Version && 
-							cmdVersionRcv.mVersion == CmdVersion::eVersion::_Current;
-	client.mbConnectRequest = false;
-	if( client.mbConnected )
-	{
-		client.mbHasTextureUpdate = true;
+	bool bResultSend	= Network::DataSend(client.mpSocketPending, &cmdVersionSend, cmdVersionSend.mHeader.mSize);
+	bool bResultRcv		= Network::DataReceive(client.mpSocketPending, &cmdVersionRcv, sizeof(cmdVersionRcv));
+	bool mbConnected	= bResultRcv && bResultSend && 
+						  cmdVersionRcv.mHeader.mType == CmdHeader::eCommands::Version && 
+						  cmdVersionRcv.mVersion == CmdVersion::eVersion::_Current;	
+	if(mbConnected)
+	{				
 		for(auto& texture : client.mTextures)
+		{
 			texture.mbSent = false;
+		}
 
-		return true;
+		client.mbHasTextureUpdate	= true;
+		client.mpSocketComs			= client.mpSocketPending.exchange(nullptr);
 	}
-	return false;
+	return client.mpSocketComs != nullptr;
 }
 
 //=================================================================================================
@@ -74,7 +78,7 @@ bool Communications_Outgoing_Textures(ClientInfo& client)
 		{
 			if( !cmdTexture.mbSent && cmdTexture.mpCmdTexture )
 			{
-				bSuccess			&= Network::DataSend(client.mpSocket, cmdTexture.mpCmdTexture, cmdTexture.mpCmdTexture->mHeader.mSize);
+				bSuccess			&= Network::DataSend(client.mpSocketComs, cmdTexture.mpCmdTexture, cmdTexture.mpCmdTexture->mHeader.mSize);
 				cmdTexture.mbSent	= bSuccess;
 				if( cmdTexture.mbSent && cmdTexture.mpCmdTexture->mFormat == eTexFormat::kTexFmt_Invalid )
 					netImguiDeleteSafe(cmdTexture.mpCmdTexture);					
@@ -95,7 +99,7 @@ bool Communications_Outgoing_Frame(ClientInfo& client)
 	CmdDrawFrame* pPendingDrawFrame = client.mPendingFrameOut.Release();
 	if( pPendingDrawFrame )
 	{
-		bSuccess = Network::DataSend(client.mpSocket, pPendingDrawFrame, pPendingDrawFrame->mHeader.mSize);
+		bSuccess = Network::DataSend(client.mpSocketComs, pPendingDrawFrame, pPendingDrawFrame->mHeader.mSize);
 		netImguiDeleteSafe(pPendingDrawFrame);
 	}
 	return bSuccess;
@@ -110,7 +114,7 @@ bool Communications_Outgoing_Disconnect(ClientInfo& client)
 	if( client.mbDisconnectRequest )
 	{
 		CmdDisconnect cmdDisconnect;
-		Network::DataSend(client.mpSocket, &cmdDisconnect, cmdDisconnect.mHeader.mSize);
+		Network::DataSend(client.mpSocketComs, &cmdDisconnect, cmdDisconnect.mHeader.mSize);
 		return false;
 	}
 	return true;
@@ -123,7 +127,7 @@ bool Communications_Outgoing_Disconnect(ClientInfo& client)
 bool Communications_Outgoing_Ping(ClientInfo& client)
 {
 	CmdPing cmdPing;
-	return Network::DataSend(client.mpSocket, &cmdPing, cmdPing.mHeader.mSize);		
+	return Network::DataSend(client.mpSocketComs, &cmdPing, cmdPing.mHeader.mSize);		
 }
 
 //=================================================================================================
@@ -137,12 +141,12 @@ bool Communications_Incoming(ClientInfo& client)
 	{
 		CmdHeader cmdHeader;
 		uint8_t* pCmdData	= nullptr;
-		bOk					= Network::DataReceive(client.mpSocket, &cmdHeader, sizeof(cmdHeader));
+		bOk					= Network::DataReceive(client.mpSocketComs, &cmdHeader, sizeof(cmdHeader));
 		if( bOk && cmdHeader.mSize > sizeof(CmdHeader) )
 		{
 			pCmdData								= netImguiSizedNew<uint8_t>(cmdHeader.mSize);
 			*reinterpret_cast<CmdHeader*>(pCmdData) = cmdHeader;
-			bOk										= Network::DataReceive(client.mpSocket, &pCmdData[sizeof(cmdHeader)], cmdHeader.mSize-sizeof(cmdHeader));	
+			bOk										= Network::DataReceive(client.mpSocketComs, &pCmdData[sizeof(cmdHeader)], cmdHeader.mSize-sizeof(cmdHeader));	
 		}
 
 		if( bOk )
@@ -190,16 +194,15 @@ void CommunicationsClient(void* pClientVoid)
 {	
 	ClientInfo* pClient = reinterpret_cast<ClientInfo*>(pClientVoid);
 	Communications_Initialize(*pClient);
-	bool bConnected(pClient->mbConnected);
+	bool bConnected(pClient->IsConnected());
 	while( bConnected )
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(8));
-		bConnected	= Communications_Outgoing(*pClient) && Communications_Incoming(*pClient);		
+		bConnected = Communications_Outgoing(*pClient) && Communications_Incoming(*pClient);		
 	}
-	Network::Disconnect(pClient->mpSocket);
-	pClient->mpSocket				= nullptr;
-	pClient->mbDisconnectRequest	= false;
-	pClient->mbConnected			= false;		
+
+	pClient->KillSocketComs();
+	pClient->mbDisconnectRequest = false;
 }
 
 //=================================================================================================
@@ -207,32 +210,26 @@ void CommunicationsClient(void* pClientVoid)
 //=================================================================================================
 void CommunicationsHost(void* pClientVoid)
 {
-	ClientInfo* pClient					= reinterpret_cast<ClientInfo*>(pClientVoid);	
-	Network::SocketInfo* pListenSocket	= pClient->mpSocket;
-	pClient->mpSocket					= nullptr;
-
-	while( !pClient->mbDisconnectRequest )
+	ClientInfo* pClient					= reinterpret_cast<ClientInfo*>(pClientVoid);
+	pClient->mpSocketListen				= pClient->mpSocketPending.exchange(nullptr);
+	while( !pClient->mbDisconnectRequest && pClient->mpSocketListen )
 	{		
-		pClient->mbConnectRequest		= true;
-		pClient->mpSocket				= Network::ListenConnect( pListenSocket );
-		if( pClient->mpSocket )
+		pClient->mpSocketPending		= Network::ListenConnect(pClient->mpSocketListen);
+		if( pClient->mpSocketPending )
 		{
 			Communications_Initialize(*pClient);
-			bool bConnected				= pClient->mbConnected;
-			pClient->mbConnectRequest	= !bConnected;
+			bool bConnected(pClient->IsConnected());
 			while (bConnected)
 			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(8));
 				bConnected				= Communications_Outgoing(*pClient) && Communications_Incoming(*pClient);
 			}
-			Network::Disconnect(pClient->mpSocket);
-			pClient->mpSocket			= nullptr;
-			pClient->mbConnected		= false;
+			pClient->KillSocketComs();
 		}			
 	}
-	Network::Disconnect(pListenSocket);	
-	pListenSocket						= nullptr;
-	pClient->mbDisconnectRequest		= false;
+
+	pClient->KillSocketAll();
+	pClient->mbDisconnectRequest = false;
 }
 
 //=================================================================================================

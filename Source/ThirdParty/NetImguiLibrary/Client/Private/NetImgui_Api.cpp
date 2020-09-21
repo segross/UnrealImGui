@@ -52,19 +52,18 @@ bool ConnectToApp(ThreadFunctPtr startThreadFunction, const char* clientName, co
 	Client::ClientInfo& client	= *gpClientInfo;	
 	Disconnect();
 	
-	while( client.mbDisconnectRequest )
-		std::this_thread::sleep_for(std::chrono::milliseconds(8));
+	while (client.IsActive())
+		std::this_thread::yield();
 
 	StringCopy(client.mName, (clientName == nullptr || clientName[0] == 0 ? "Unnamed" : clientName));
-	client.mpSocket						= Network::Connect(ServerHost, serverPort);	
-	client.mbConnectRequest				= client.mpSocket != nullptr;	
-	if( client.mpSocket )
+	client.mpSocketPending	= Network::Connect(ServerHost, serverPort);	
+	if (client.mpSocketPending)
 	{
 		ContextInitialize( bCloneContext );
 		startThreadFunction(Client::CommunicationsClient, &client);		
 	}
 	
-	return client.mpSocket != nullptr;
+	return client.IsActive();
 }
 
 //=================================================================================================
@@ -83,18 +82,18 @@ bool ConnectFromApp(ThreadFunctPtr startThreadFunction, const char* clientName, 
 	Client::ClientInfo& client = *gpClientInfo;
 	Disconnect();
 
-	while (client.mbDisconnectRequest)
-		std::this_thread::sleep_for(std::chrono::milliseconds(8));
+	while (client.IsActive())
+		std::this_thread::yield();
 
 	StringCopy(client.mName, (clientName == nullptr || clientName[0] == 0 ? "Unnamed" : clientName));
-	client.mpSocket						= Network::ListenStart(serverPort);
-	client.mbConnectRequest				= client.mpSocket != nullptr;
-	if( client.mpSocket )
+	client.mpSocketPending = Network::ListenStart(serverPort);
+	if (client.mpSocketPending)
 	{
 		ContextInitialize( bCloneContext );
 		startThreadFunction(Client::CommunicationsHost, &client);
 	}
-	return client.mpSocket != nullptr;
+
+	return client.IsActive();
 }
 
 //=================================================================================================
@@ -104,8 +103,8 @@ void Disconnect(void)
 	if (!gpClientInfo) return;
 	
 	Client::ClientInfo& client	= *gpClientInfo;
-	client.mbDisconnectRequest	= client.mbConnected || client.mbDisconnectRequest;
-	client.mbConnectRequest		= false;	
+	client.mbDisconnectRequest	= client.IsActive();
+	client.KillSocketListen(); // Forcefully disconnect Listening socket, since it is blocking
 }
 
 //=================================================================================================
@@ -115,7 +114,10 @@ bool IsConnected(void)
 	if (!gpClientInfo) return false;
 	
 	Client::ClientInfo& client = *gpClientInfo;
-	return (client.mbConnected && !client.mbDisconnectRequest) || IsDrawingRemote();	
+
+	// If disconnected in middle of a remote frame drawing,  
+	// want to behave like it is still connected to finish frame properly
+	return client.IsConnected() || IsDrawingRemote(); 
 }
 
 //=================================================================================================
@@ -125,7 +127,7 @@ bool IsConnectionPending(void)
 	if (!gpClientInfo) return false;
 	
 	Client::ClientInfo& client = *gpClientInfo;
-	return !client.mbDisconnectRequest && client.mbConnectRequest;	
+	return client.IsConnectPending();
 }
 
 //=================================================================================================
@@ -218,7 +220,7 @@ void EndFrame(void)
 
 	Client::ClientInfo& client		= *gpClientInfo;	
 
-	if( client.mpContextDrawing != nullptr )
+	if (client.mpContextDrawing)
 	{
 		const bool bDiscardDraw		= client.mpContextDrawing == client.mpContextEmpty;
 		client.mpContextRestore		= client.mpContextRestore ? client.mpContextRestore : ImGui::GetCurrentContext();
@@ -227,13 +229,13 @@ void EndFrame(void)
 		ImGui::Render();
 		
 		// We were drawing frame for our remote connection, send the data
-		if ( IsConnected() && !bDiscardDraw )
+		if (IsConnected() && !bDiscardDraw)
 		{
 			CmdDrawFrame* pNewDrawFrame = CreateCmdDrawDrame(ImGui::GetDrawData(), Cursor);
 			client.mPendingFrameOut.Assign(pNewDrawFrame);
 		}
 				
-		if( ImGui::GetCurrentContext() == client.mpContextClone )
+		if (ImGui::GetCurrentContext() == client.mpContextClone)
 			ImGui::GetIO().DeltaTime= 0.f; // Reset the time passed. Gets incremented in NewFrame
 
 		ImGui::SetCurrentContext(client.mpContextRestore);		
@@ -314,7 +316,7 @@ void SendDataTexture(uint64_t textureId, void* pData, uint16_t width, uint16_t h
 	while( client.mTexturesPendingCount >= static_cast<int32_t>(ArrayCount(client.mTexturesPending)) )
 	{
 		if( IsConnected() )
-			std::this_thread::sleep_for (std::chrono::nanoseconds(1));
+			std::this_thread::yield();
 		else
 			client.TextureProcessPending();
 	}
@@ -339,13 +341,13 @@ bool Startup(void)
 }
 
 //=================================================================================================
-void Shutdown(void)
+void Shutdown(bool bWait)
 //=================================================================================================
 {
 	if (!gpClientInfo) return;
 	
 	Disconnect();
-	while( gpClientInfo->mbConnected )
+	while(bWait && gpClientInfo->IsActive() )
 		std::this_thread::yield();
 	Network::Shutdown();
 	
@@ -607,7 +609,7 @@ static bool 		sIsDrawing = false;
 #endif
 
 bool				Startup(void)															{ return true; }
-void				Shutdown(void)															{ }
+void				Shutdown(bool)															{ }
 bool				ConnectToApp(const char*, const char*, uint32_t, bool)					{ return false; }
 bool				ConnectToApp(ThreadFunctPtr, const char*, const char*, uint32_t, bool)	{ return false; }
 bool				ConnectFromApp(const char*, uint32_t, bool)								{ return false; }
