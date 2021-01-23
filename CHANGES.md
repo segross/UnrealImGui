@@ -5,11 +5,13 @@ Versions marked as 'unofficial' are labelled only for the needs of this changelo
 Change History
 --------------
 
-Version: 1.21 (2020/07)
+Version: 1.21 (2020/07-09)
 Improving stability
 - Fixed a crash in the input handler caused by invalidated by hot-reload instance trying to unregister a delegate.
 - Improved hot-reload stability and support for reloading after recompiling outside of the editor. Both methods should be equally supported and work together.
 - Improved behaviour of delegates when hot-reloading.
+- Changed context index mapping to fix issues with multi-PIE debugging in 4.25.
+- Fixed Linux crash caused by wrong mapping of key codes.
 
 Version: 1.20 (2020/06)
 Transition to IWYU and maintenance:
