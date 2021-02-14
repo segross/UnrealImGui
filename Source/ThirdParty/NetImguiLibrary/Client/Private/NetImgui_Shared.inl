@@ -72,6 +72,7 @@ ExchangePtr<TType>::~ExchangePtr()
 //=============================================================================
 template <typename TType>
 OffsetPointer<TType>::OffsetPointer()
+: mOffset(0)
 {
 	SetOff(0);
 }

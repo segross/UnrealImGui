@@ -48,7 +48,6 @@ SocketInfo* Connect(const char* ServerHost, uint32_t ServerPort)
 		IpAddress->SetPort(ServerPort);		
 		if (IpAddress->IsValid())
 		{
-			//FString a						= IpAddress->ToString(true);
 			FSocket* pNewSocket				= SocketSubSystem->CreateSocket(NAME_Stream, "netImgui", IpAddress->GetProtocolType());
 			if (pNewSocket)
 			{
@@ -67,17 +66,19 @@ SocketInfo* Connect(const char* ServerHost, uint32_t ServerPort)
 
 SocketInfo* ListenStart(uint32_t ListenPort)
 {
-	ISocketSubsystem* SocketSubSystem		= ISocketSubsystem::Get();
-	TSharedRef<FInternetAddr> IpAddress		= SocketSubSystem->CreateInternetAddr();
+	ISocketSubsystem* PlatformSocketSub = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
+	TSharedRef<FInternetAddr> IpAddress = PlatformSocketSub->CreateInternetAddr();
 	IpAddress->SetLoopbackAddress();
 	IpAddress->SetPort(ListenPort);
-	FSocket* pNewListenSocket				= SocketSubSystem->CreateSocket(NAME_Stream, "netImguiListen", IpAddress->GetProtocolType());
-	SocketInfo* pListenSocketInfo			= netImguiNew<SocketInfo>(pNewListenSocket);
-	if(pNewListenSocket->Bind(*IpAddress) )
+	FSocket* pNewListenSocket			= PlatformSocketSub->CreateSocket(NAME_Stream, "netImguiListen", IpAddress->GetProtocolType());
+	SocketInfo* pListenSocketInfo		= netImguiNew<SocketInfo>(pNewListenSocket);
+	if (pNewListenSocket->Bind(*IpAddress))
 	{
 		pNewListenSocket->SetNonBlocking(true);
-		if( pNewListenSocket->Listen(1) )
+		if (pNewListenSocket->Listen(1))
+		{
 			return pListenSocketInfo;
+		}
 	}
 
 	netImguiDelete(pListenSocketInfo);
@@ -106,18 +107,25 @@ void Disconnect(SocketInfo* pClientSocket)
 
 bool DataReceive(SocketInfo* pClientSocket, void* pDataIn, size_t Size)
 {
-	int32 sizeRcv(0) ;
+	int32 sizeRcv(0);
 	bool bResult = pClientSocket->mpSocket->Recv(reinterpret_cast<uint8*>(pDataIn), Size, sizeRcv, ESocketReceiveFlags::WaitAll);
-	return bResult && sizeRcv > 0;
+	return bResult && static_cast<int32>(Size) == sizeRcv;
 }
 
 bool DataSend(SocketInfo* pClientSocket, void* pDataOut, size_t Size)
 {
 	int32 sizeSent(0);
 	bool bResult = pClientSocket->mpSocket->Send(reinterpret_cast<uint8*>(pDataOut), Size, sizeSent);
-	return bResult && Size == sizeSent;
+	return bResult && static_cast<int32>(Size) == sizeSent;
 }
 
 }}} // namespace NetImgui::Internal::Network
+
+#else
+
+// Prevents Linker warning LNK4221 in Visual Studio (This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library)
+extern int sSuppresstLNK4221_NetImgui_NetworkUE4; 
+int sSuppresstLNK4221_NetImgui_NetworkUE4(0);
+
 
 #endif // #if NETIMGUI_ENABLED && defined(__UNREAL__)

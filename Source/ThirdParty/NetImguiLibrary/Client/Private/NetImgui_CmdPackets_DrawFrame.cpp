@@ -19,10 +19,10 @@ inline void ImGui_ExtractVertices(ImguiVert* pOutVertices, const ImDrawList* pCm
 	{
 		const auto& Vtx			= pCmdList->VtxBuffer[i];
 		pOutVertices[i].mColor	= Vtx.col;
-		pOutVertices[i].mUV[0]	= static_cast<uint16_t>((Vtx.uv.x	- static_cast<float>(ImguiVert::kUvRange_Min)) * 0x10000 / (ImguiVert::kUvRange_Max - ImguiVert::kUvRange_Min));
-		pOutVertices[i].mUV[1]	= static_cast<uint16_t>((Vtx.uv.y	- static_cast<float>(ImguiVert::kUvRange_Min)) * 0x10000 / (ImguiVert::kUvRange_Max - ImguiVert::kUvRange_Min));
-		pOutVertices[i].mPos[0]	= static_cast<uint16_t>((Vtx.pos.x	- static_cast<float>(ImguiVert::kPosRange_Min)) * 0x10000 / (ImguiVert::kPosRange_Max - ImguiVert::kPosRange_Min));
-		pOutVertices[i].mPos[1]	= static_cast<uint16_t>((Vtx.pos.y	- static_cast<float>(ImguiVert::kPosRange_Min)) * 0x10000 / (ImguiVert::kPosRange_Max - ImguiVert::kPosRange_Min));
+		pOutVertices[i].mUV[0]	= static_cast<uint16_t>((Vtx.uv.x	- static_cast<float>(ImguiVert::kUvRange_Min)) * 0xFFFF / (ImguiVert::kUvRange_Max - ImguiVert::kUvRange_Min));
+		pOutVertices[i].mUV[1]	= static_cast<uint16_t>((Vtx.uv.y	- static_cast<float>(ImguiVert::kUvRange_Min)) * 0xFFFF / (ImguiVert::kUvRange_Max - ImguiVert::kUvRange_Min));
+		pOutVertices[i].mPos[0]	= static_cast<uint16_t>((Vtx.pos.x	- static_cast<float>(ImguiVert::kPosRange_Min)) * 0xFFFF / (ImguiVert::kPosRange_Max - ImguiVert::kPosRange_Min));
+		pOutVertices[i].mPos[1]	= static_cast<uint16_t>((Vtx.pos.y	- static_cast<float>(ImguiVert::kPosRange_Min)) * 0xFFFF / (ImguiVert::kPosRange_Max - ImguiVert::kPosRange_Min));
 	}	
 }
 
@@ -50,7 +50,7 @@ inline void ImGui_ExtractIndices(uint8_t* pOutIndices, const ImDrawList* pCmdLis
 	}	
 }
 
-inline void ImGui_ExtractDraws(uint32_t& indiceByteOffset, uint32_t& vertexIndex, uint32_t& drawIndex, ImguiDraw* pOutDraws, const ImDrawList* pCmdList, const ImVec2& clipOffset)
+inline void ImGui_ExtractDraws(uint32_t& indiceByteOffset, uint32_t& vertexIndex, uint32_t& drawIndex, ImguiDraw* pOutDraws, const ImDrawList* pCmdList)
 {
 	const bool is16Bit = pCmdList->VtxBuffer.size() <= 0xFFFF;
 	for(int cmd_i = 0; cmd_i < pCmdList->CmdBuffer.size(); cmd_i++)
@@ -63,10 +63,10 @@ inline void ImGui_ExtractDraws(uint32_t& indiceByteOffset, uint32_t& vertexIndex
 			pOutDraws[drawIndex].mTextureId		= reinterpret_cast<uint64_t>(pCmd->TextureId);
 			pOutDraws[drawIndex].mIdxCount		= pCmd->ElemCount;
 			pOutDraws[drawIndex].mIndexSize		= is16Bit ? 2 : 4;
-			pOutDraws[drawIndex].mClipRect[0]	= pCmd->ClipRect.x - clipOffset.x;
-			pOutDraws[drawIndex].mClipRect[1]	= pCmd->ClipRect.y - clipOffset.y;
-			pOutDraws[drawIndex].mClipRect[2]	= pCmd->ClipRect.z - clipOffset.x;
-			pOutDraws[drawIndex].mClipRect[3]	= pCmd->ClipRect.w - clipOffset.y;
+			pOutDraws[drawIndex].mClipRect[0]	= pCmd->ClipRect.x;
+			pOutDraws[drawIndex].mClipRect[1]	= pCmd->ClipRect.y;
+			pOutDraws[drawIndex].mClipRect[2]	= pCmd->ClipRect.z;
+			pOutDraws[drawIndex].mClipRect[3]	= pCmd->ClipRect.w;
 			indiceByteOffset					+= pCmd->ElemCount * pOutDraws[drawIndex].mIndexSize;
 			drawIndex							+= 1;
 		}
@@ -79,13 +79,14 @@ CmdDrawFrame* CreateCmdDrawDrame(const ImDrawData* pDearImguiData, ImGuiMouseCur
 	//-----------------------------------------------------------------------------------------
 	// Find memory needed for all the data
 	//-----------------------------------------------------------------------------------------
-	uint32_t indiceSize(0), drawCount(0), dataSize(sizeof(CmdDrawFrame));
+	uint32_t indiceCount(0), indiceSize(0), drawCount(0), dataSize(sizeof(CmdDrawFrame));
 	for(int n = 0; n < pDearImguiData->CmdListsCount; n++)
 	{
 		const ImDrawList* pCmdList	= pDearImguiData->CmdLists[n];
 		bool is16Bit				= pCmdList->VtxBuffer.size() <= 0xFFFF;
+		indiceCount					+= static_cast<uint32_t>(pCmdList->IdxBuffer.size());
 		indiceSize					+= RoundUp(static_cast<uint32_t>(pCmdList->IdxBuffer.size() * (is16Bit ? 2 : 4)), 4u);
-		drawCount					+= static_cast<uint32_t>(pCmdList->CmdBuffer.size());	// Allocate maximumpossible. Final count can be lower since some are for callbacks
+		drawCount					+= static_cast<uint32_t>(pCmdList->CmdBuffer.size());	// Allocate maximum possible. Final count can be lower since some are for callbacks
 	}		
 			
 	uint32_t indiceOffset			= dataSize;	
@@ -101,6 +102,7 @@ CmdDrawFrame* CreateCmdDrawDrame(const ImDrawData* pDearImguiData, ImGuiMouseCur
 	CmdDrawFrame* pDrawFrame		= netImguiSizedNew<CmdDrawFrame>(dataSize);
 	uint8_t* pRawData				= reinterpret_cast<uint8_t*>(pDrawFrame);
 	pDrawFrame->mVerticeCount		= static_cast<uint32_t>(pDearImguiData->TotalVtxCount);
+	pDrawFrame->mIndiceCount		= indiceCount;
 	pDrawFrame->mIndiceByteSize		= indiceSize;
 	pDrawFrame->mDrawCount			= 0;
 	pDrawFrame->mMouseCursor		= static_cast<uint32_t>(mouseCursor);
@@ -121,7 +123,7 @@ CmdDrawFrame* CreateCmdDrawDrame(const ImDrawData* pDearImguiData, ImGuiMouseCur
 		const ImDrawList* pCmdList = pDearImguiData->CmdLists[n];
 		ImGui_ExtractVertices(&pDrawFrame->mpVertices[vertexIndex], pCmdList);
 		ImGui_ExtractIndices(&pDrawFrame->mpIndices[indiceByteOffset], pCmdList);
-		ImGui_ExtractDraws(indiceByteOffset, vertexIndex, drawIndex, pDrawFrame->mpDraws.Get(), pCmdList, pDearImguiData->DisplayPos);
+		ImGui_ExtractDraws(indiceByteOffset, vertexIndex, drawIndex, pDrawFrame->mpDraws.Get(), pCmdList);
 		vertexIndex += static_cast<uint32_t>(pCmdList->VtxBuffer.size());
 	}	
 	pDrawFrame->mDrawCount		= drawIndex;	// Not all DrawCmd generate a draw, update value to actual value

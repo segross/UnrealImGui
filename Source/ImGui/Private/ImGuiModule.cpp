@@ -241,6 +241,23 @@ void FImGuiModule::ToggleShowDemo()
 	}
 }
 
+bool FImGuiModule::IsRemoteDrawing() const
+{
+#if NETIMGUI_ENABLED
+	return NetImgui::IsDrawingRemote();
+#else
+	return false;
+#endif
+}
+
+bool FImGuiModule::IsRemoteConnected() const
+{
+#if NETIMGUI_ENABLED
+	return NetImgui::IsConnected();
+#else
+	return false;
+#endif
+}
 
 //----------------------------------------------------------------------------------------------------
 // Runtime loader
@@ -301,24 +318,6 @@ bool FImGuiTextureHandle::HasValidEntry() const
 {
 	const TextureIndex Index = ImGuiInterops::ToTextureIndex(TextureId);
 	return Index != INDEX_NONE && ImGuiModuleManager && ImGuiModuleManager->GetTextureManager().GetTextureName(Index) == Name;
-}
-
-bool FImGuiModuleProperties::IsRemoteDrawing() const
-{
-#if NETIMGUI_ENABLED
-	return NetImgui::IsDrawingRemote();
-#else
-	return false;
-#endif
-}
-
-bool FImGuiModuleProperties::IsRemoteConnected() const
-{
-#if NETIMGUI_ENABLED
-	return NetImgui::IsConnected();
-#else
-	return false;
-#endif
 }
 
 #undef LOCTEXT_NAMESPACE

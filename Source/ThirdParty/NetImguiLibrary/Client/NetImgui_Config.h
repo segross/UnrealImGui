@@ -6,6 +6,9 @@
 //=================================================================================================
 #include "Private/NetImgui_WarningDisableImgui.h" 
 #include <imgui.h>
+#ifdef NETIMGUI_INTERNAL_INCLUDE
+#include <imgui_internal.h>
+#endif
 #include "Private/NetImgui_WarningReenable.h"
 
 //=================================================================================================

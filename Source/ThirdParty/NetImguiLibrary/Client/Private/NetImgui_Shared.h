@@ -6,7 +6,10 @@
 #if defined(_MSC_VER)
 #pragma warning (disable: 4464)		// warning C4464: relative include path contains '..'
 #endif
+
+#define NETIMGUI_INTERNAL_INCLUDE 1
 #include "../NetImgui_Api.h"
+#undef NETIMGUI_INTERNAL_INCLUDE
 
 #if NETIMGUI_ENABLED
 
@@ -19,6 +22,8 @@
 #include <vector>
 #include "NetImgui_WarningReenable.h"
 //=================================================================================================
+
+#define NETIMGUI_IMGUI_CALLBACK_ENABLED ((IMGUI_VERSION_NUM >= 18000) && 0)
 
 //=================================================================================================
 #include "NetImgui_WarningDisable.h"
@@ -37,8 +42,45 @@ template <typename TType> TType*					netImguiSizedNew(size_t placementSize);
 template <typename TType> void						netImguiDelete(TType* pData);
 template <typename TType> void						netImguiDeleteSafe(TType*& pData);
 
+class ScopedImguiContext
+{
+public:
+	ScopedImguiContext(ImGuiContext* pNewContext) : mpSavedContext(ImGui::GetCurrentContext()){ ImGui::SetCurrentContext(pNewContext); }
+	~ScopedImguiContext() { ImGui::SetCurrentContext(mpSavedContext); }
+
+protected:
+	ImGuiContext* mpSavedContext;
+};
+
+template<typename TType>
+class ScopedValue
+{
+public:
+	ScopedValue(TType& ValueRef, TType Value) 
+	: mValueRef(ValueRef)
+	, mValueRestore(ValueRef) 
+	{
+		mValueRef = Value; 
+	}
+	~ScopedValue() 
+	{
+		mValueRef = mValueRestore; 
+	}
+protected:
+	TType&	mValueRef;
+	TType	mValueRestore;
+	uint8_t mPadding[sizeof(void*)-(sizeof(TType)%8)];
+	
+	// Prevents warning about implicitly delete functions
+	ScopedValue(const ScopedValue&) = delete;
+	ScopedValue(const ScopedValue&&) = delete;
+	void operator=(const ScopedValue&) = delete;
+};
+
+using ScopedBool = ScopedValue<bool>;
+
 //=============================================================================
-// Class to exchange a pointer between two threads, safely
+// Class to safely exchange a pointer between two threads
 //=============================================================================
 template <typename TType>
 class ExchangePtr
@@ -95,7 +137,7 @@ private:
 
 //=============================================================================
 //=============================================================================
-// @Sammyfreg TODO: re purpose this to a threadsafe consume/append buffer?
+// @sammyfreg TODO: re purpose this to a threadsafe consume/append buffer?
 template <typename TType, size_t TCount>
 class Ringbuffer
 {

@@ -194,8 +194,6 @@ void FImGuiContextProxy::Tick(float DeltaSeconds)
 	{
 		LastFrameNumber = GFrameNumber;
 
-		SetAsCurrent();
-
 		if (bIsFrameStarted)
 		{
 			// Make sure that draw events are called before the end of the frame.
@@ -225,8 +223,9 @@ void FImGuiContextProxy::BeginFrame(float DeltaTime)
 	{
 		if( NetImGuiCanDrawProxy(this) )
 		{
-			ImGuiIO& IO		= ImGui::GetIO();			
-			IO.DeltaTime	= DeltaTime;			
+			SetAsCurrent();
+			ImGuiIO& IO		= ImGui::GetIO();
+			IO.DeltaTime	= DeltaTime;
 			IO.DisplaySize	= { DisplaySize.X, DisplaySize.Y };
 			ImGuiInterops::CopyInput(IO, InputState);
 			ImGui::NewFrame();
@@ -246,6 +245,7 @@ void FImGuiContextProxy::EndFrame()
 		if ( NetImGuiCanDrawProxy(this) )
 		{
 			// Prepare draw data (after this call we cannot draw to this context until we start a new frame).
+			SetAsCurrent();
 			ImGui::Render();
 
 			// Update our draw data, so we can use them later during Slate rendering while ImGui is in the middle of the
