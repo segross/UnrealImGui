@@ -12,6 +12,10 @@
 
 #endif
 
+void	NetImGuiStartup();
+
+void	NetImGuiShutdown();
+
 // Called at the start of updating the Proxy context
 void	NetImguiUpdate(TMap<int32, FContextData>& Contexts);
 

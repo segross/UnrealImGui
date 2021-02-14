@@ -45,7 +45,9 @@ void NetImguiPreUpdate_Connection()
 	if (ImGui::GetCurrentContext() && !NetImgui::IsConnected() && !NetImgui::IsConnectionPending())
 	{
 		// Using a separate Imgui Context for NetImgui, so ContextProxy can be easily swapped to any active (PIE, Editor, Game, ...)
-		spNetImguiContext = ImGui::CreateContext(ImGui::GetIO().Fonts);
+		if( !spNetImguiContext )
+			spNetImguiContext = ImGui::CreateContext(ImGui::GetIO().Fonts);
+
 		ImGui::SetCurrentContext(spNetImguiContext);
 
 		FString sessionName = FString::Format(TEXT("{0}-{1}"), { FApp::GetProjectName(), FPlatformProcess::ComputerName() });
@@ -154,6 +156,27 @@ void NetImguiPreUpdate_DrawNetImguiContent(TMap<int32, FContextData>& Contexts)
 
 #endif // NETIMGUI_ENABLED
 
+//=================================================================================================
+// (Public) Initialize the library
+//=================================================================================================
+void NetImGuiStartup()
+{
+#if NETIMGUI_ENABLED
+	NetImgui::Startup();
+#endif
+}
+
+//=================================================================================================
+// (Public) Delete some resources before shutdown
+//=================================================================================================
+void NetImGuiShutdown()
+{
+#if NETIMGUI_ENABLED
+	NetImgui::Shutdown(true);
+	ImGui::DestroyContext(spNetImguiContext);
+	spNetImguiContext = nullptr;
+#endif
+}
 //=================================================================================================
 // (Public) Main update of netImgui. Establish connection and call delegates associated with it
 //			to receive their ImGui draw commands.

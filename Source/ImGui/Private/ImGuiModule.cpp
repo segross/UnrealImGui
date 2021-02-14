@@ -111,9 +111,7 @@ void FImGuiModule::StartupModule()
 	ImGuiEditor = new FImGuiEditor();
 #endif
 
-#if NETIMGUI_ENABLED
-	NetImgui::Startup();	
-#endif
+	NetImGuiStartup();
 }
 
 void FImGuiModule::ShutdownModule()
@@ -136,9 +134,7 @@ void FImGuiModule::ShutdownModule()
 	delete ImGuiModuleManager;
 	ImGuiModuleManager = nullptr;
 
-#if NETIMGUI_ENABLED
-	NetImgui::Shutdown(true);
-#endif
+	NetImGuiShutdown();
 
 #if WITH_EDITOR
 	// When shutting down we leave the global ImGui context pointer and handle pointing to resources that are already
