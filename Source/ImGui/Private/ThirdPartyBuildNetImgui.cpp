@@ -46,8 +46,9 @@ void NetImguiPreUpdate_Connection()
 	{
 		// Using a separate Imgui Context for NetImgui, so ContextProxy can be easily swapped to any active (PIE, Editor, Game, ...)
 		if( !spNetImguiContext )
+		{
 			spNetImguiContext = ImGui::CreateContext(ImGui::GetIO().Fonts);
-
+		}
 		ImGui::SetCurrentContext(spNetImguiContext);
 
 		FString sessionName = FString::Format(TEXT("{0}-{1}"), { FApp::GetProjectName(), FPlatformProcess::ComputerName() });
@@ -173,8 +174,11 @@ void NetImGuiShutdown()
 {
 #if NETIMGUI_ENABLED
 	NetImgui::Shutdown(true);
-	ImGui::DestroyContext(spNetImguiContext);
-	spNetImguiContext = nullptr;
+	if( spNetImguiContext )
+	{
+		ImGui::DestroyContext(spNetImguiContext);
+		spNetImguiContext = nullptr;
+	}
 #endif
 }
 //=================================================================================================
