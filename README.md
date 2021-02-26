@@ -15,13 +15,19 @@ ImGui version: 1.74
 
 Supported engine version: 4.25*
 
-\* *Plugin has been tested and if necessary updated to compile and work with this engine version. As long as possible I will try to maintain backward compatibility of existing features and possibly but not necessarily when adding new features. Right now it should be at least backward compatible with the engine version 4.15.*
+\* *Plugin has been tested and if necessary updated to compile and work with this engine version. As long as possible I will try to maintain backward compatibility of existing features and possibly but not necessarily when adding new features. When it comes to bare-bone ImGui version it should be at least backward compatible with the engine version 4.15. For NetImgui it needs to be determined.*
 
 
 About
 -----
 
-The main goal of this project is to provide a basic integration of Dear ImGui, avoiding custom extensions but with support for Unreal specific features, like Multi-PIE sessions.
+The main goal of this plugin is to provide a basic integration of the Dear ImGui which will be easy to use from the game code.
+
+My main focus used to be on debugging and for that this plugin should work out of the box. It is possible to use it for different purposes but depending on the use case it may require some adaptations.
+
+To support multi-PIE, each world gets its own ImGui context to which it can draw. All that is managed by the plugin in a way that should be invisible for the game code. I plan to extend it to allow own contexts and widgets but right now I don't have enough time to commit to that.
+
+As of recently, the plugin has the *net_imgui* branch with an integration of the [NetImgui](https://github.com/sammyfreg/netImgui) developed by Sammyfreg. This is still experimental, but it is possible to already download and use it. Many thanks for the library and for the initial integration.
 
 ### Key features
 
@@ -40,6 +46,8 @@ To use this plug-in, you will need a C++ Unreal project.
 Content of this repository needs to be placed in the *Plugins* directory under the project root: *[Project Root]/Plugins/ImGui/*. After you compile and run you should notice that *ImGui* module is now available.
 
 Note that plugins can be also placed in the engine directory *[UE4 Root]/Engine/Plugins/* but I didn't try it with this project.
+
+If you want to use NetImgui, instead of please look at the [How to Set up NetImgui](#how-to-set-up-netimgui).
 
 ### Setting module type
 
@@ -112,6 +120,20 @@ And then use it like this:
 // ImGui code
 #endif
 ```
+
+How to Set up NetImgui
+----------------------
+
+To use NetImgui, use content of the *net_imgui* branch in place of *master*. This will be gradually merged into the *master* but until then you need to use that experimental branch.
+
+Similarly like ImGui, NetImgui is built as part of the UnrealImGui plugin and no other integration steps are required.
+
+To be able to connect to the Unreal editor or application that use NetImgui, you need to run a server (netImguiServer). Please, see the [NetImgui](https://github.com/sammyfreg/netImgui) page for instructions how to get it.
+
+After launching the server for the first time, you need to add two client configurations, for ports 8889 and 8890. After that, you can either initialise connection from the server or set it to autoconnection mode. More info will be added later.
+
+Once you establish connection, you can use a top bar to switch between contexts and modes. In standalone game it should be one context and in the editor one editor context, plus one for each PIE instance.
+Please, note that all those features are experimental and might evolve. Any input is welcomed.
 
 How to use it
 -------------

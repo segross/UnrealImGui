@@ -40,10 +40,7 @@ namespace ImGuiInterops
 	uint32 GetKeyIndex(const FKey& Key);
 
 	// Map key event to index in keys buffer.
-	FORCEINLINE uint32 GetKeyIndex(const FKeyEvent& KeyEvent)
-	{
-		return KeyEvent.GetKeyCode();
-	}
+	uint32 GetKeyIndex(const FKeyEvent& KeyEvent);
 
 	// Map mouse FKey to index in mouse buttons buffer.
 	uint32 GetMouseIndex(const FKey& MouseButton);

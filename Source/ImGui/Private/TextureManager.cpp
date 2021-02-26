@@ -77,7 +77,7 @@ TextureIndex FTextureManager::CreateTextureInternal(const FName& Name, int32 Wid
 									NetImgui::eTexFormat::kTexFmt_Invalid;
 		if (texIndex != INDEX_NONE && eFmt != NetImgui::eTexFormat::kTexFmt_Invalid)
 		{
-			NetImgui::SendDataTexture(static_cast<uint64_t>(texIndex), SrcData, Width, Height, eFmt);
+			NetImgui::SendDataTexture(ImGuiInterops::ToImTextureID(texIndex), SrcData, Width, Height, eFmt);
 		}
 #endif		
 	}

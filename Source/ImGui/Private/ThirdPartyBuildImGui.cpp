@@ -1,6 +1,6 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "ThirdPartyBuildImgui.h"
+#include "ThirdPartyBuildImGui.h"
 
 #include <CoreMinimal.h>
 
@@ -46,6 +46,7 @@ static FImGuiContextHandle ImGuiContextPtrHandle(ImGuiContextPtr);
 #include "imgui_demo.cpp"
 #include "imgui_draw.cpp"
 #include "imgui_widgets.cpp"
+#include "imgui_tables.cpp"
 
 #if PLATFORM_WINDOWS
 #include <Windows/HideWindowsPlatformTypes.h>

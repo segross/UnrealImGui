@@ -24,6 +24,26 @@ struct ClientTexture
 };
 
 //=============================================================================
+// Keeps a list of ImGui context values NetImgui overrides (to restore)
+//=============================================================================
+struct SavedImguiContext
+{
+	void					Save(ImGuiContext* copyFrom);
+	void					Restore(ImGuiContext* copyTo);	
+	const char*				mBackendPlatformName	= nullptr;
+	const char*				mBackendRendererName	= nullptr;	
+	void*					mClipboardUserData		= nullptr;
+    void*					mImeWindowHandle		= nullptr;
+	ImGuiBackendFlags		mBackendFlags			= 0;
+	ImGuiConfigFlags		mConfigFlags			= 0;	
+	bool					mDrawMouse				= false;
+	bool					mSavedContext			= false;
+	char					mPadding1[6];
+	int						mKeyMap[ImGuiKey_COUNT];
+	char					mPadding2[8 - (sizeof(mKeyMap) % 8)];	
+};
+
+//=============================================================================
 // Keep all Client infos needed for communication with server
 //=============================================================================
 struct ClientInfo
@@ -33,6 +53,13 @@ struct ClientInfo
 	using Time			= std::chrono::time_point<std::chrono::high_resolution_clock>;
 
 										ClientInfo();
+										~ClientInfo();
+	void								ContextInitialize();
+	void								ContextOverride();
+	void								ContextRestore();
+	void								ContextRemoveHooks();
+	inline bool							IsContextOverriden()const;
+
 	std::atomic<Network::SocketInfo*>	mpSocketPending;						// Hold socket info until communication is established
 	std::atomic<Network::SocketInfo*>	mpSocketComs;							// Socket used for communications with server
 	std::atomic<Network::SocketInfo*>	mpSocketListen;							// Socket used to wait for communication request from server
@@ -41,33 +68,38 @@ struct ClientInfo
 	CmdTexture*							mTexturesPending[16];
 	ExchangePtr<CmdDrawFrame>			mPendingFrameOut;
 	ExchangePtr<CmdInput>				mPendingInputIn;
-	BufferKeys							mPendingKeyIn;
-	ImGuiContext*						mpContextClone				= nullptr;	// Default ImGui drawing context copy, used to do our internal remote drawing
-	ImGuiContext*						mpContextEmpty				= nullptr;	// Placeholder ImGui drawing context, when we are not waiting for a new drawing frame but still want a valid context in place
-	ImGuiContext*						mpContextRestore			= nullptr;	// Context to restore to Imgui once drawing is done
-	ImGuiContext*						mpContextDrawing			= nullptr;	// Current context used for drawing (between a BeginFrame/EndFrame)
-	Time								mTimeTracking;
+	CmdInput*							mpLastInput					= nullptr;
+	BufferKeys							mPendingKeyIn;	
+	ImGuiContext*						mpContext					= nullptr;	// Context that the remote drawing should use (either the one active when connection request happened, or a clone)
+	ImVec2								mSavedDisplaySize			= {0, 0};	// Save original display size on 'NewFrame' and restore it on 'EndFrame' (making sure size is still valid after a disconnect)
+	const void*							mpFontTextureData			= nullptr;	// Last font texture data send to server (used to detect if font was changed)
+	ImTextureID							mFontTextureID				= reinterpret_cast<ImTextureID>(0);
+	SavedImguiContext					mSavedContextValues;
+	Time								mTimeTracking;							// Used to update Dear ImGui time delta on remote context //SF remove?
 	std::atomic_int32_t					mTexturesPendingCount;	
 	float								mMouseWheelVertPrev			= 0.f;
-	float								mMouseWheelHorizPrev		= 0.f;
-	int									mRestoreKeyMap[ImGuiKey_COUNT];
-	ImGuiConfigFlags					mRestoreConfigFlags			= 0;
-	const char*							mRestoreBackendPlatformName	= nullptr;
-	const char*							mRestoreBackendRendererName	= nullptr;	
-	ImGuiBackendFlags					mRestoreBackendFlags		= 0;
+	float								mMouseWheelHorizPrev		= 0.f;	
 	bool								mbDisconnectRequest			= false;	// Waiting to Disconnect
 	bool								mbHasTextureUpdate			= false;
+	bool								mbIsDrawing					= false;	// We are inside a 'NetImgui::NewFrame' / 'NetImgui::EndFrame' (even if not for a remote draw)
 	bool								mbIsRemoteDrawing			= false;	// True if the rendering it meant for the remote netImgui server
 	bool								mbRestorePending			= false;	// Original context has had some settings overridden, original values stored in mRestoreXXX	
-	//char								PADDING[5];
+	bool								mbFontUploaded				= false;	// Auto detect if font was sent to server
+	bool								mbInsideHook				= false;	// Currently inside ImGui hook callback
+	bool								mbInsideNewEnd				= false;	// Currently inside NetImgui::NewFrame() or NetImgui::EndFrame() (prevents recusrive hook call)
+	bool								mbValidDrawFrame			= false;	// If we should forward the drawdata to the server at the end of ImGui::Render()
+
+	char								PADDING[3];
+	ImGuiID								mhImguiHookNewframe			= 0;
+	ImGuiID								mhImguiHookEndframe			= 0;
+
 	void								TextureProcessPending();
 	void								TextureProcessRemoval();
 	inline bool							IsConnected()const;
 	inline bool							IsConnectPending()const;
 	inline bool							IsActive()const;
-	inline void							KillSocketComs();
-	inline void							KillSocketListen();
-	inline void							KillSocketAll();
+	inline void							KillSocketComs();						// Kill communication sockets (should only be called from communication thread)
+	inline void							KillSocketListen();						// Kill connecting listening socket (should only be called from communication thread)
 
 // Prevent warnings about implicitly created copy
 protected:

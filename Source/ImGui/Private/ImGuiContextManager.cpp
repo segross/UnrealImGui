@@ -11,7 +11,11 @@
 
 #include <imgui.h>
 
-
+#include "Fonts/Roboto_Medium.cpp"
+#include "Fonts/Cousine_Regular.cpp"
+#include "Fonts/Droid_Sans.cpp"
+#include "Fonts/Karla_Regular.cpp"
+#include "Fonts/Proggy_Tiny.cpp"
 // TODO: Refactor ImGui Context Manager, to handle different types of worlds.
 
 namespace
@@ -261,9 +265,23 @@ void FImGuiContextManager::BuildFontAtlas()
 {
 	if (!FontAtlas.IsBuilt())
 	{
+		//---------------------------------------------------------------------------------------------
+		// Load our Font (Must be loaded in same order as FImguiModule::eFont enum)
 		ImFontConfig FontConfig = {};
 		FontConfig.SizePixels = FMath::RoundFromZero(13.f * DPIScale);
 		FontAtlas.AddFontDefault(&FontConfig);
+		FPlatformString::Strcpy(FontConfig.Name, sizeof(FontConfig.Name), "Roboto Medium, 16px");
+		FontAtlas.AddFontFromMemoryCompressedTTF(Roboto_Medium_compressed_data,		Roboto_Medium_compressed_size,		16.0f*DPIScale, &FontConfig);
+		FPlatformString::Strcpy(FontConfig.Name, sizeof(FontConfig.Name), "Cousine Regular, 15px");
+		FontAtlas.AddFontFromMemoryCompressedTTF(Cousine_Regular_compressed_data,	Cousine_Regular_compressed_size,	15.0f*DPIScale, &FontConfig);
+		FPlatformString::Strcpy(FontConfig.Name, sizeof(FontConfig.Name), "Karla Regular, 16px");
+		FontAtlas.AddFontFromMemoryCompressedTTF(Karla_Regular_compressed_data,		Karla_Regular_compressed_size,		16.0f*DPIScale, &FontConfig);
+		FPlatformString::Strcpy(FontConfig.Name, sizeof(FontConfig.Name), "Droid Sans, 16px");
+		FontAtlas.AddFontFromMemoryCompressedTTF(Droid_Sans_compressed_data,		Droid_Sans_compressed_size,			16.0f*DPIScale, &FontConfig);
+		FPlatformString::Strcpy(FontConfig.Name, sizeof(FontConfig.Name), "Proggy Tiny, 10px");
+		FontAtlas.AddFontFromMemoryCompressedTTF(Proggy_Tiny_compressed_data,		Proggy_Tiny_compressed_size,		10.0f*DPIScale, &FontConfig);
+
+		// ... add extra fonts here (and add extra entry in 'FImguiModule::eFont' enum)
 
 		unsigned char* Pixels;
 		int Width, Height, Bpp;

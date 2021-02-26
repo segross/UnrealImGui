@@ -71,12 +71,6 @@ public:
 	/** Toggle ImGui demo. */
 	void ToggleDemo() { SetShowDemo(!ShowDemo()); }
 
-	/** Check whether we are ~currently~ drawing for remote connection or locally **/
-	bool IsRemoteDrawing() const;
-
-	/** Check whether we have a remote connection established or not **/
-	bool IsRemoteConnected() const;
-
 private:
 
 	bool bInputEnabled = false;

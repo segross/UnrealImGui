@@ -1,6 +1,6 @@
 namespace NetImgui { namespace Internal
 {
-// @Sammyfreg TODO: Make Offset/Pointer test safer
+// @sammyfreg TODO: Make Offset/Pointer test safer
 void CmdDrawFrame::ToPointers()
 {
 	if( !mpIndices.IsPointer() ) //Safer to test the first element after CmdHeader
@@ -25,6 +25,14 @@ bool CmdInput::IsKeyDown(eVirtualKeys vkKey)const
 {
 	const uint64_t key = static_cast<uint64_t>(vkKey);
 	return (mKeysDownMask[key/64] & (uint64_t(1)<<(key%64))) != 0;
+}
+
+void CmdInput::SetKeyDown(eVirtualKeys vkKey, bool isDown)
+{
+	const size_t keyEntryIndex	= static_cast<uint64_t>(vkKey) / 64;
+	const uint64_t keyBitMask	= static_cast<uint64_t>(1) << static_cast<uint64_t>(vkKey) % 64;	
+	mKeysDownMask[keyEntryIndex]= isDown ?	mKeysDownMask[keyEntryIndex] | keyBitMask : 
+											mKeysDownMask[keyEntryIndex] & ~keyBitMask;
 }
 
 }} // namespace NetImgui::Internal
