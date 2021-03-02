@@ -40,8 +40,8 @@ namespace
 
 	bool IsBindable(const FKey& Key)
 	{
-		return Key.IsValid() && Key != EKeys::AnyKey && !Key.IsFloatAxis() && !Key.IsVectorAxis()
-			&& !Key.IsGamepadKey() && !Key.IsModifierKey() && !Key.IsMouseButton();
+		return Key.IsValid() && Key != EKeys::AnyKey && !Key.IsAxis1D() && !Key.IsAxis2D()
+			&& !Key.IsAxis3D() && !Key.IsGamepadKey() && !Key.IsModifierKey() && !Key.IsMouseButton();
 	}
 
 	void UpdatePlayerInput(UPlayerInput* PlayerInput, const FKeyBind& KeyBind)
