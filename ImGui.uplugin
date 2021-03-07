@@ -16,7 +16,7 @@
 	"Modules": [
 		{
 			"Name": "ImGui",
-			"Type": "Developer",
+			"Type": "DeveloperTool",
 			"LoadingPhase": "PreDefault"
 		}
 	]
