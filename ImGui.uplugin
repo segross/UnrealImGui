@@ -18,6 +18,11 @@
 			"Name": "ImGui",
 			"Type": "DeveloperTool",
 			"LoadingPhase": "PreDefault"
+		},
+		{
+			"Name": "ImGUIBlueprintLibrary",
+			"Type": "DeveloperTool",
+			"LoadingPhase": "PreLoadingScreen"
 		}
 	]
 }
