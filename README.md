@@ -9,13 +9,23 @@ Dear ImGui is an immediate-mode graphical user interface library that is very li
 
 Status
 ------
-Version: 1.21
+Version: 1.22
 
 ImGui version: 1.74
 
-Supported engine version: 4.25*
+Supported engine version: 4.26*
 
 \* *Plugin has been tested and if necessary updated to compile and work with this engine version. As long as possible I will try to maintain backward compatibility of existing features and possibly but not necessarily when adding new features. When it comes to bare-bone ImGui version it should be at least backward compatible with the engine version 4.15. For NetImgui it needs to be determined.*
+
+Current work
+------------
+
+Currently, I'm a little busy outside of this project so changes come slowly. But here is what to expect in the reasonably near future:
+- Stability first, so fixes for more critical issues like an invalidation of handles after reloading texture resources will be pushed first. The same goes for merges.
+- There are a few smaller issues that I'm aware of and that might be not reported but which I want to fix.
+- ImGui needs to be updated.
+- Smaller features might be slowly pushed but bigger ones will need to wait. The same goes for merges.
+- There is a branch with NetImgui which is really good, and which will be eventually merged to master, but first I want to fix a few issues that I know about (some are discussed in thread #28). In the meantime, the NetImgui branch is pretty much ready to use.
 
 
 About

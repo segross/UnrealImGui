@@ -100,6 +100,18 @@ void FImGuiModule::ReleaseTexture(const FImGuiTextureHandle& Handle)
 
 void FImGuiModule::StartupModule()
 {
+	// Initialize handles to allow cross-module redirections. Other handles will always look for parents in the active
+	// module, which means that we can only redirect to started modules. We don't have to worry about self-referencing
+	// as local handles are guaranteed to be constructed before initializing pointers.
+	// This supports in-editor recompilation and hot-reloading after compiling from the command line. The latter method
+	// theoretically doesn't support plug-ins and will not load re-compiled module, but its handles will still redirect
+	// to the active one.
+
+#if WITH_EDITOR
+	ImGuiContextHandle = &ImGuiImplementation::GetContextHandle();
+	DelegatesContainerHandle = &FImGuiDelegatesContainer::GetHandle();
+#endif
+
 	// Create managers that implements module logic.
 
 	checkf(!ImGuiModuleManager, TEXT("Instance of the ImGui Module Manager already exists. Instance should be created only during module startup."));
@@ -148,10 +160,17 @@ void FImGuiModule::ShutdownModule()
 			FImGuiModule& LoadedModule = FImGuiModule::Get();
 			if (&LoadedModule != this)
 			{
-				// Statically bound functions will be still made to the obsolete module so we need to  
-				ImGuiImplementation::SetParentContextHandle(LoadedModule.GetImGuiContextHandle());
+				// Statically bound functions can be bound to the obsolete module, so we need to manually redirect.
 
-				FImGuiDelegatesContainer::MoveContainer(LoadedModule.GetDelegatesContainerHandle());
+				if (LoadedModule.ImGuiContextHandle)
+				{
+					ImGuiImplementation::SetParentContextHandle(*LoadedModule.ImGuiContextHandle);
+				}
+
+				if (LoadedModule.DelegatesContainerHandle)
+				{
+					FImGuiDelegatesContainer::MoveContainer(*LoadedModule.DelegatesContainerHandle);
+				}
 
 				if (bMoveProperties)
 				{
@@ -168,16 +187,6 @@ void FImGuiModule::ShutdownModule()
 void FImGuiModule::SetProperties(const FImGuiModuleProperties& Properties)
 {
 	ImGuiModuleManager->GetProperties() = Properties;
-}
-
-FImGuiContextHandle& FImGuiModule::GetImGuiContextHandle()
-{
-	return ImGuiImplementation::GetContextHandle();
-}
-
-FImGuiDelegatesContainerHandle& FImGuiModule::GetDelegatesContainerHandle()
-{
-	return FImGuiDelegatesContainer::GetHandle();
 }
 #endif
 

@@ -5,6 +5,10 @@ Versions marked as 'unofficial' are labelled only for the needs of this changelo
 Change History
 --------------
 
+Version: 1.22 (2021/04)
+- Fixed potential for initialization fiasco when using delegates container.
+- Fixed bug in code protecting redirecting handles from self-referencing.
+
 Version: 1.21 (2020/07-09)
 Improving stability
 - Fixed a crash in the input handler caused by invalidated by hot-reload instance trying to unregister a delegate.

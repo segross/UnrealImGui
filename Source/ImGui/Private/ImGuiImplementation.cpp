@@ -30,7 +30,7 @@ struct FImGuiContextHandle : public Utilities::TRedirectingHandle<ImGuiContext*>
 	{
 		if (FImGuiModule* Module = FModuleManager::GetModulePtr<FImGuiModule>("ImGui"))
 		{
-			SetParent(&Module->GetImGuiContextHandle());
+			SetParent(Module->ImGuiContextHandle);
 		}
 	}
 };
