@@ -8,6 +8,7 @@ Change History
 Version: 1.22 (2021/04)
 - Fixed potential for initialization fiasco when using delegates container.
 - Fixed bug in code protecting redirecting handles from self-referencing.
+- Fixed cached resource handles getting invalid after reloading texture resources.
 
 Version: 1.21 (2020/07-09)
 Improving stability
