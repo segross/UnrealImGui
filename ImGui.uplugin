@@ -16,8 +16,13 @@
 	"Modules": [
 		{
 			"Name": "ImGui",
-			"Type": "Developer",
+			"Type": "DeveloperTool",
 			"LoadingPhase": "PreDefault"
+		},
+		{
+			"Name": "ImGUIBlueprintLibrary",
+			"Type": "DeveloperTool",
+			"LoadingPhase": "PreLoadingScreen"
 		}
 	]
 }
