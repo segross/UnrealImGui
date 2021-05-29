@@ -168,8 +168,8 @@ private:
 
 #if WITH_EDITOR
 	virtual void SetProperties(const FImGuiModuleProperties& Properties);
-	virtual struct FImGuiContextHandle& GetImGuiContextHandle();
-	virtual struct FImGuiDelegatesContainerHandle& GetDelegatesContainerHandle();
+	struct FImGuiContextHandle* ImGuiContextHandle = nullptr;
+	struct FImGuiDelegatesContainerHandle* DelegatesContainerHandle = nullptr;
 	friend struct FImGuiContextHandle;
 	friend struct FImGuiDelegatesContainerHandle;
 #endif
