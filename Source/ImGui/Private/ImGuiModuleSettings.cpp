@@ -86,18 +86,27 @@ FImGuiModuleSettings::FImGuiModuleSettings(FImGuiModuleProperties& InProperties,
 	// reloading of settings.
 	UImGuiSettings::OnSettingsLoaded.AddRaw(this, &FImGuiModuleSettings::InitializeAllSettings);
 
-	// Call initializer to support settings already loaded (editor).
-	InitializeAllSettings();
+	// Listen for plugin loading phases so that we can be sure that things like the enhanced input are initialized.
+	PluginLoadingPhaseDelegateHandle = IPluginManager::Get().OnLoadingPhaseComplete().AddRaw(this, &FImGuiModuleSettings::OnPluginLoadingPhaseComplete);
 }
 
 FImGuiModuleSettings::~FImGuiModuleSettings()
 {
 
 	UImGuiSettings::OnSettingsLoaded.RemoveAll(this);
+	IPluginManager::Get().OnLoadingPhaseComplete().Remove(PluginLoadingPhaseDelegateHandle);
 
 #if WITH_EDITOR
 	FCoreUObjectDelegates::OnObjectPropertyChanged.RemoveAll(this);
 #endif
+}
+
+void FImGuiModuleSettings::OnPluginLoadingPhaseComplete(ELoadingPhase::Type Phase, bool bSuccess)
+{
+	if (Phase == ELoadingPhase::Type::PreDefault && bSuccess)
+	{
+		InitializeAllSettings();
+	}
 }
 
 void FImGuiModuleSettings::InitializeAllSettings()
