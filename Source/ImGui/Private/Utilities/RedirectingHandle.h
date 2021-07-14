@@ -8,8 +8,8 @@
 
 namespace Utilities
 {
-	// Handle initialized as a pointer to a default value, but once attached it will follow the parent handle.
-	// When detached it will revert back to the default value. Intended for cross-module redirections.
+	// Handle initialized as a pointer to a default value, but can be redirected to follow other handles.
+	// When detached, it will revert to the default value. Intended for cross-module redirections.
 	template<typename T>
 	struct TRedirectingHandle
 	{
@@ -49,7 +49,7 @@ namespace Utilities
 				}
 
 				// Protecting from setting itself as a parent.
-				Parent = (Parent != this) ? InParent : nullptr;
+				Parent = (InParent != this) ? InParent : nullptr;
 
 				if (Parent)
 				{

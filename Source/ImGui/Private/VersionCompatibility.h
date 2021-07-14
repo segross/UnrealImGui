@@ -31,3 +31,5 @@
 // Starting from version 4.24, world actor tick event has additional world parameter.
 #define ENGINE_COMPATIBILITY_LEGACY_WORLD_ACTOR_TICK    BELOW_ENGINE_VERSION(4, 24)
 
+// Starting from version 4.26, FKey::IsFloatAxis and FKey::IsVectorAxis are deprecated and replaced with FKey::IsAxis[1|2|3]D methods.
+#define ENGINE_COMPATIBILITY_LEGACY_KEY_AXIS_API        BELOW_ENGINE_VERSION(4, 26)
