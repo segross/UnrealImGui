@@ -80,14 +80,14 @@ FImGuiModuleSettings::FImGuiModuleSettings(FImGuiModuleProperties& InProperties,
 {
 #if WITH_EDITOR
 	FCoreUObjectDelegates::OnObjectPropertyChanged.AddRaw(this, &FImGuiModuleSettings::OnPropertyChanged);
+
+	// Listen for plugin loading phases so that we can be sure that things like the enhanced input are initialized.
+	PluginLoadingPhaseDelegateHandle = IPluginManager::Get().OnLoadingPhaseComplete().AddRaw(this, &FImGuiModuleSettings::OnPluginLoadingPhaseComplete);
 #endif
 
 	// Delegate initializer to support settings loaded after this object creation (in stand-alone builds) and potential
 	// reloading of settings.
 	UImGuiSettings::OnSettingsLoaded.AddRaw(this, &FImGuiModuleSettings::InitializeAllSettings);
-
-	// Listen for plugin loading phases so that we can be sure that things like the enhanced input are initialized.
-	PluginLoadingPhaseDelegateHandle = IPluginManager::Get().OnLoadingPhaseComplete().AddRaw(this, &FImGuiModuleSettings::OnPluginLoadingPhaseComplete);
 }
 
 FImGuiModuleSettings::~FImGuiModuleSettings()
@@ -98,9 +98,15 @@ FImGuiModuleSettings::~FImGuiModuleSettings()
 
 #if WITH_EDITOR
 	FCoreUObjectDelegates::OnObjectPropertyChanged.RemoveAll(this);
+	if(PluginLoadingPhaseDelegateHandle.IsValid())
+	{
+		IPluginManager::Get().OnLoadingPhaseComplete().Remove(PluginLoadingPhaseDelegateHandle);
+		PluginLoadingPhaseDelegateHandle.Reset();
+	}
 #endif
 }
 
+#if WITH_EDITOR
 void FImGuiModuleSettings::OnPluginLoadingPhaseComplete(ELoadingPhase::Type Phase, bool bSuccess)
 {
 	if (Phase == ELoadingPhase::Type::PreDefault && bSuccess)
@@ -108,6 +114,7 @@ void FImGuiModuleSettings::OnPluginLoadingPhaseComplete(ELoadingPhase::Type Phas
 		InitializeAllSettings();
 	}
 }
+#endif
 
 void FImGuiModuleSettings::InitializeAllSettings()
 {

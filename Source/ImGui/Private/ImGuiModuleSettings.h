@@ -9,7 +9,10 @@
 #include <InputCoreTypes.h>
 #include <Styling/SlateTypes.h>
 #include <UObject/Object.h>
+
+#if WITH_EDITOR
 #include <Interfaces/IPluginManager.h>
+#endif
 
 // We use FStringClassReference, which is supported by older and newer engine versions. Starting from 4.18, it is
 // a typedef of FSoftClassPath, which is also recognized by UHT.
@@ -282,8 +285,6 @@ public:
 
 private:
 
-	void OnPluginLoadingPhaseComplete(ELoadingPhase::Type Phase, bool bSucccess);
-
 	void InitializeAllSettings();
 	void UpdateSettings();
 	void UpdateDPIScaleInfo();
@@ -299,9 +300,10 @@ private:
 
 #if WITH_EDITOR
 	void OnPropertyChanged(class UObject* ObjectBeingModified, struct FPropertyChangedEvent& PropertyChangedEvent);
-#endif // WITH_EDITOR
+	void OnPluginLoadingPhaseComplete(ELoadingPhase::Type Phase, bool bSucccess);
 
 	FDelegateHandle PluginLoadingPhaseDelegateHandle;
+#endif // WITH_EDITOR
 	
 	FImGuiModuleProperties& Properties;
 	FImGuiModuleCommands& Commands;
