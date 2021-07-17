@@ -77,6 +77,9 @@ SocketInfo* ListenStart(uint32_t ListenPort)
 		server.sin_family		= AF_INET;
 		server.sin_addr.s_addr	= INADDR_ANY;
 		server.sin_port			= htons(static_cast<USHORT>(ListenPort));
+		
+		constexpr BOOL ReUseAdrValue(true);
+		setsockopt(ListenSocket, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&ReUseAdrValue), sizeof(ReUseAdrValue));
 		if(	bind(ListenSocket, reinterpret_cast<sockaddr*>(&server), sizeof(server)) != SOCKET_ERROR &&
 			listen(ListenSocket, 0) != SOCKET_ERROR )
 		{

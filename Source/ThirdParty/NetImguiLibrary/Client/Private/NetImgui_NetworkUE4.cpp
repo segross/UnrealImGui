@@ -3,6 +3,7 @@
 #if NETIMGUI_ENABLED && defined(__UNREAL__)
 
 #include "CoreMinimal.h"
+#include "Misc/OutputDeviceRedirector.h"
 #include "SocketSubsystem.h"
 #include "Sockets.h"
 
@@ -67,21 +68,25 @@ SocketInfo* Connect(const char* ServerHost, uint32_t ServerPort)
 SocketInfo* ListenStart(uint32_t ListenPort)
 {
 	ISocketSubsystem* PlatformSocketSub = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM);
-	TSharedRef<FInternetAddr> IpAddress = PlatformSocketSub->CreateInternetAddr();
-	IpAddress->SetLoopbackAddress();
+	TSharedPtr<FInternetAddr> IpAddress = PlatformSocketSub->GetLocalBindAddr(*GLog);
 	IpAddress->SetPort(ListenPort);
-	FSocket* pNewListenSocket			= PlatformSocketSub->CreateSocket(NAME_Stream, "netImguiListen", IpAddress->GetProtocolType());
-	SocketInfo* pListenSocketInfo		= netImguiNew<SocketInfo>(pNewListenSocket);
-	if (pNewListenSocket->Bind(*IpAddress))
-	{
-		pNewListenSocket->SetNonBlocking(true);
-		if (pNewListenSocket->Listen(1))
-		{
-			return pListenSocketInfo;
-		}
-	}
 
-	netImguiDelete(pListenSocketInfo);
+	FSocket* pNewListenSocket			= PlatformSocketSub->CreateSocket(NAME_Stream, "netImguiListen", IpAddress->GetProtocolType());
+	if( pNewListenSocket )
+	{
+		SocketInfo* pListenSocketInfo	= netImguiNew<SocketInfo>(pNewListenSocket);
+		pNewListenSocket->SetReuseAddr();
+		pNewListenSocket->SetNonBlocking(true);
+		pNewListenSocket->SetRecvErr();
+		if (pNewListenSocket->Bind(*IpAddress))
+		{		
+			if (pNewListenSocket->Listen(1))
+			{
+				return pListenSocketInfo;
+			}
+		}
+		netImguiDelete(pListenSocketInfo);
+	}	
 	return nullptr;
 }
 
