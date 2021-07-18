@@ -341,7 +341,7 @@ void ClientInfo::TextureProcessPending()
 	while( mTexturesPendingCreated != mTexturesPendingSent )
 	{
 		mbHasTextureUpdate			|= true;
-		uint32_t idx				= mTexturesPendingSent.fetch_add(1) % static_cast<int32_t>(ArrayCount(mTexturesPending));
+		uint32_t idx				= mTexturesPendingSent.fetch_add(1) % static_cast<uint32_t>(ArrayCount(mTexturesPending));
 		CmdTexture* pCmdTexture		= mTexturesPending[idx];
 		mTexturesPending[idx]		= nullptr;
 		if( pCmdTexture )

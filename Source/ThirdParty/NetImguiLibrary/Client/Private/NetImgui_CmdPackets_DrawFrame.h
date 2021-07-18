@@ -26,6 +26,6 @@ struct ImguiDraw
 	uint8_t		PADDING[2];
 };
 
-struct CmdDrawFrame* CreateCmdDrawDrame(const ImDrawData* pDearImguiData, ImGuiMouseCursor cursor);
+struct CmdDrawFrame* CreateCmdDrawFrame(const ImDrawData* pDearImguiData, ImGuiMouseCursor cursor);
 
 }} // namespace NetImgui::Internal

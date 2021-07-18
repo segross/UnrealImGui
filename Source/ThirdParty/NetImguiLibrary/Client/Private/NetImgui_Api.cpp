@@ -236,7 +236,7 @@ void EndFrame(void)
 		// We were drawing frame for our remote connection, send the data				
 		if( client.mbValidDrawFrame )
 		{
-			CmdDrawFrame* pNewDrawFrame = CreateCmdDrawDrame(ImGui::GetDrawData(), Cursor);
+			CmdDrawFrame* pNewDrawFrame = CreateCmdDrawFrame(ImGui::GetDrawData(), Cursor);
 			client.mPendingFrameOut.Assign(pNewDrawFrame);
 		}
 
@@ -323,14 +323,14 @@ void SendDataTexture(ImTextureID textureId, void* pData, uint16_t width, uint16_
 
 	// In unlikely event of too many textures, wait for them to be processed 
 	// (if connected) or Process them now (if not)
-	while( (client.mTexturesPendingCreated - client.mTexturesPendingSent) >= static_cast<int32_t>(ArrayCount(client.mTexturesPending)) )
+	while( (client.mTexturesPendingCreated - client.mTexturesPendingSent) >= static_cast<uint32_t>(ArrayCount(client.mTexturesPending)) )
 	{
 		if( IsConnected() )
 			std::this_thread::yield();
 		else
 			client.TextureProcessPending();
 	}
-	int32_t idx						= client.mTexturesPendingCreated.fetch_add(1) % static_cast<int32_t>(ArrayCount(client.mTexturesPending));
+	uint32_t idx					= client.mTexturesPendingCreated.fetch_add(1) % static_cast<uint32_t>(ArrayCount(client.mTexturesPending));
 	client.mTexturesPending[idx]	= pCmdTexture;
 
 	// If not connected to server yet, update all pending textures

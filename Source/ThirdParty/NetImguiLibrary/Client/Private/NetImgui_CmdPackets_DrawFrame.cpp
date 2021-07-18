@@ -28,7 +28,7 @@ inline void ImGui_ExtractVertices(ImguiVert* pOutVertices, const ImDrawList* pCm
 
 inline void ImGui_ExtractIndices(uint8_t* pOutIndices, const ImDrawList* pCmdList)
 {
-	bool is16Bit		= pCmdList->VtxBuffer.size() <= 0xFFFF;
+	bool is16Bit		= sizeof(ImDrawIdx) == 2 || pCmdList->VtxBuffer.size() <= 0xFFFF;	// When Dear Imgui is compiled with ImDrawIdx = uint16, we know fore certain that there won't be any drawcall with index > 65k, even if Vertex buffer is bigger than 65k.
 	size_t IndexSize	= is16Bit ? 2 : 4;
 	int IndexCount		= pCmdList->IdxBuffer.size();
 	// No conversion needed
@@ -52,14 +52,18 @@ inline void ImGui_ExtractIndices(uint8_t* pOutIndices, const ImDrawList* pCmdLis
 
 inline void ImGui_ExtractDraws(uint32_t& indiceByteOffset, uint32_t& vertexIndex, uint32_t& drawIndex, ImguiDraw* pOutDraws, const ImDrawList* pCmdList)
 {
-	const bool is16Bit = pCmdList->VtxBuffer.size() <= 0xFFFF;
+	const bool is16Bit = sizeof(ImDrawIdx) == 2 || pCmdList->VtxBuffer.size() <= 0xFFFF;	// When Dear Imgui is compiled with ImDrawIdx = uint16, we know fore certain that there won't be any drawcall with index > 65k, even if Vertex buffer is bigger than 65k.
 	for(int cmd_i = 0; cmd_i < pCmdList->CmdBuffer.size(); cmd_i++)
 	{
-		const ImDrawCmd* pCmd	= &pCmdList->CmdBuffer[cmd_i];						
+		const ImDrawCmd* pCmd = &pCmdList->CmdBuffer[cmd_i];
 		if( pCmd->UserCallback == nullptr )
 		{					
 			pOutDraws[drawIndex].mIdxOffset		= indiceByteOffset;
+		#if IMGUI_VERSION_NUM >= 17100
+			pOutDraws[drawIndex].mVtxOffset		= pCmd->VtxOffset + vertexIndex;
+		#else
 			pOutDraws[drawIndex].mVtxOffset		= vertexIndex;
+		#endif
 			pOutDraws[drawIndex].mTextureId		= reinterpret_cast<uint64_t>(pCmd->TextureId);
 			pOutDraws[drawIndex].mIdxCount		= pCmd->ElemCount;
 			pOutDraws[drawIndex].mIndexSize		= is16Bit ? 2 : 4;
@@ -74,7 +78,7 @@ inline void ImGui_ExtractDraws(uint32_t& indiceByteOffset, uint32_t& vertexIndex
 	indiceByteOffset = RoundUp(indiceByteOffset, 4u);
 }
 
-CmdDrawFrame* CreateCmdDrawDrame(const ImDrawData* pDearImguiData, ImGuiMouseCursor mouseCursor)
+CmdDrawFrame* CreateCmdDrawFrame(const ImDrawData* pDearImguiData, ImGuiMouseCursor mouseCursor)
 {
 	//-----------------------------------------------------------------------------------------
 	// Find memory needed for all the data
