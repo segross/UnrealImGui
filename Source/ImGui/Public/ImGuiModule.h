@@ -8,9 +8,6 @@
 
 #include <Modules/ModuleManager.h>
 
-#define IMGUI_FONT_DEFAULT 0
-#define IMGUI_FONT_ROBOTO 1
-#define IMGUI_FONT_ROBOTO_BIG 2
 
 class FImGuiModule : public IModuleInterface
 {
