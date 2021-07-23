@@ -9,6 +9,7 @@
 #include "Utilities/WorldContextIndex.h"
 
 #include <imgui.h>
+#include "ImGuiAdditionalFonts.h"
 
 
 // TODO: Refactor ImGui Context Manager, to handle different types of worlds.
@@ -258,10 +259,20 @@ void FImGuiContextManager::BuildFontAtlas()
 {
 	if (!FontAtlas.IsBuilt())
 	{
+		// Load default font
 		ImFontConfig FontConfig = {};
 		FontConfig.SizePixels = FMath::RoundFromZero(13.f * DPIScale);
 		FontAtlas.AddFontDefault(&FontConfig);
 
+		// Load Roboto
+		FPlatformString::Strcpy(FontConfig.Name, sizeof(FontConfig.Name), "Roboto Regular, 16px");
+		FontAtlas.AddFontFromMemoryCompressedTTF(roboto_regular_compressed_data, roboto_regular_compressed_size, 16.f * DPIScale, &FontConfig);
+
+		// Load Roboto big
+		FPlatformString::Strcpy(FontConfig.Name, sizeof(FontConfig.Name), "Roboto Bold, 20px");
+		FontAtlas.AddFontFromMemoryCompressedTTF(roboto_bold_compressed_data, roboto_bold_compressed_size, 20.f * DPIScale, &FontConfig);
+
+		// Build the atlas
 		unsigned char* Pixels;
 		int Width, Height, Bpp;
 		FontAtlas.GetTexDataAsRGBA32(&Pixels, &Width, &Height, &Bpp);
