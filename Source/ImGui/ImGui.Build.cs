@@ -96,6 +96,7 @@ public class ImGui : ModuleRules
 		List<string> PrivateDefinitions = Definitions;
 #endif
 
+		PublicDefinitions.Add("WITH_IMGUI=1");
 		PrivateDefinitions.Add(string.Format("RUNTIME_LOADER_ENABLED={0}", bEnableRuntimeLoader ? 1 : 0));
 	}
 }
