@@ -37,6 +37,7 @@ struct alignas(8) CmdVersion
 		ImguiVersionInfo	= 3,	// Added Dear Imgui/ NetImgui version info to 'CmdVersion'
 		ServerRefactor		= 4,	// Change to 'CmdInput' and 'CmdVersion' store size of 'ImWchar' to make sure they are compatible
 		BackgroundCmd		= 5,	// Added new command to control background appearance
+		ClientName			= 6,	// Increase maximum allowed client name that a program can set
 		// Insert new version here
 
 		//--------------------------------
@@ -46,7 +47,7 @@ struct alignas(8) CmdVersion
 
 	CmdHeader	mHeader					= CmdHeader(CmdHeader::eCommands::Version, sizeof(CmdVersion));
 	eVersion	mVersion				= eVersion::_Current;
-	char		mClientName[16]			= {0};
+	char		mClientName[64]			= {};
 	char		mImguiVerName[16]		= {IMGUI_VERSION};
 	char		mNetImguiVerName[16]	= {NETIMGUI_VERSION};
 	uint32_t	mImguiVerID				= IMGUI_VERSION_NUM;

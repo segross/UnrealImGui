@@ -63,7 +63,7 @@ struct ClientInfo
 	std::atomic<Network::SocketInfo*>	mpSocketPending;						// Hold socket info until communication is established
 	std::atomic<Network::SocketInfo*>	mpSocketComs;							// Socket used for communications with server
 	std::atomic<Network::SocketInfo*>	mpSocketListen;							// Socket used to wait for communication request from server
-	char								mName[16]					={0};
+	char								mName[64]					={};
 	VecTexture							mTextures;
 	CmdTexture*							mTexturesPending[16];
 	ExchangePtr<CmdDrawFrame>			mPendingFrameOut;

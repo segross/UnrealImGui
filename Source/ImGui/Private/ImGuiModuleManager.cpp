@@ -7,7 +7,7 @@
 
 #include <Framework/Application/SlateApplication.h>
 #include <Modules/ModuleManager.h>
-
+#include "ImGuiUnrealCommand.h"
 #include <imgui.h>
 
 
@@ -17,6 +17,10 @@ constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
 // Module texture names.
 const static FName PlainTextureName = "ImGuiModule_Plain";
 const static FName FontAtlasTextureName = "ImGuiModule_FontAtlas";
+
+#if IMGUI_UNREAL_COMMAND_ENABLED
+static UECommandImgui::CommandContext* spUECommandContext = nullptr;
+#endif
 
 FImGuiModuleManager::FImGuiModuleManager()
 	: Commands(Properties)
@@ -42,6 +46,14 @@ FImGuiModuleManager::FImGuiModuleManager()
 	// We need to add widgets to active game viewports as they won't generate on-created events. This is especially
 	// important during hot-reloading.
 	AddWidgetsToActiveViewports();
+
+#if IMGUI_UNREAL_COMMAND_ENABLED
+	spUECommandContext = UECommandImgui::Create();
+	// Commented code demonstrating how to add/modify Presets
+	// Could also modify the list of 'Default Presets' directly (UECommandImgui::sDefaultPresets)
+	//UECommandImgui::AddPresetFilters(spUECommandContext, TEXT("ExamplePreset"), {"ai.Debug", "fx.Dump"});
+	//UECommandImgui::AddPresetCommands(spUECommandContext, TEXT("ExamplePreset"), {"Stat Unit", "Stat Fps"});
+#endif
 }
 
 FImGuiModuleManager::~FImGuiModuleManager()
@@ -69,6 +81,9 @@ FImGuiModuleManager::~FImGuiModuleManager()
 		}
 	}
 
+#if IMGUI_UNREAL_COMMAND_ENABLED
+	UECommandImgui::Destroy(spUECommandContext);
+#endif
 	// Deactivate this manager.
 	ReleaseTickInitializer();
 	UnregisterTick();
@@ -231,4 +246,17 @@ void FImGuiModuleManager::OnContextProxyCreated(int32 ContextIndex, FImGuiContex
 	// Make sure that textures are loaded before the first Proxy Context is created.
 	LoadTextures();
 	ContextProxy.OnDraw().AddLambda([this, ContextIndex]() { ImGuiDemo.DrawControls(ContextIndex); });
+
+#if IMGUI_UNREAL_COMMAND_ENABLED
+	ContextProxy.OnDraw().AddLambda([this, ContextIndex]() { 
+		// Add Main Menu entry to toggle Unreal Command Window visibility
+		if (ImGui::BeginMainMenuBar()) {
+			ImGui::MenuItem("Unreal-Commands", nullptr, &UECommandImgui::IsVisible(spUECommandContext) );
+			ImGui::EndMainMenuBar();
+		}
+
+		// Always try displaying the 'Unreal Command Imgui' Window (handle Window visibily internally)
+		UECommandImgui::Show(spUECommandContext);
+	});
+#endif
 }
