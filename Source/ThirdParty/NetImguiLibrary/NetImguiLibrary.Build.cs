@@ -7,7 +7,7 @@ using UnrealBuildTool;
 // (Library can be found here : https://github.com/sammyfreg/netImgui)
 //
 // Code is actually compiled under ThirdPartyBuildNetImgui.cpp, avoiding issues with PCH and DLL
-// functions definitions. This only some path/defines/modules dependencies
+// functions definitions. This only adds some path/defines/modules dependencies
 //=================================================================================================
 
 public class NetImguiLibrary : ModuleRules
@@ -43,7 +43,7 @@ public class NetImguiLibrary : ModuleRules
 			PublicDefinitions.Add("NETIMGUI_LISTENPORT_GAME=" + kGameListenPort);
 			PublicDefinitions.Add("NETIMGUI_LISTENPORT_EDITOR=" + kEditorListenPort);
 			PublicDefinitions.Add("NETIMGUI_LISTENPORT_DEDICATED_SERVER=" + kServerListenPort);
-			
+			PublicDefinitions.Add("NETIMGUI_IMGUI_CALLBACK_ENABLED=0");	// Disabled NetImgui intercepting the NewFrame/Render of Imgui Contexts
 			PublicDefinitions.Add("NETIMGUI_WINSOCKET_ENABLED=0");      // Using Unreal sockets, no need for built-in sockets
 			PublicDefinitions.Add("NETIMGUI_POSIX_SOCKETS_ENABLED=0");  // Using Unreal sockets, no need for built-in sockets
 		}

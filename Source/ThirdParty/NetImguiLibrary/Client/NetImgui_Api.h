@@ -1,27 +1,37 @@
 #pragma once
 
 //=================================================================================================
-//! @Name		: netImgui
+//! @Name		: NetImgui
 //=================================================================================================
 //! @author		: Sammy Fatnassi
-//! @date		: 2021/02/07
-//!	@version	: v1.3.3
+//! @date		: 2021/08/08
+//!	@version	: v1.6.0
 //! @Details	: For integration info : https://github.com/sammyfreg/netImgui/wiki
 //=================================================================================================
-#define NETIMGUI_VERSION		"1.3.3"
-#define NETIMGUI_VERSION_NUM	10303
+#define NETIMGUI_VERSION		"1.6"
+#define NETIMGUI_VERSION_NUM	10600
 
 #include <stdint.h>
-
 #include "Private/NetImgui_WarningDisable.h"
+
+#ifdef NETIMGUI_IMPLEMENTATION
+	#define NETIMGUI_INTERNAL_INCLUDE
+#endif
 #include "NetImgui_Config.h"
+#ifdef NETIMGUI_IMPLEMENTATION
+	#undef NETIMGUI_INTERNAL_INCLUDE
+#endif
 
 //=================================================================================================
-// NetImgui needs to detect Dear ImGui to be active
+// If 'NETIMGUI_ENABLED' hasn't been defined yet (in project settings or NetImgui_Config.h') 
+// we define this library as 'Disabled'
 //=================================================================================================
-#ifndef NETIMGUI_ENABLED
+#if !defined(NETIMGUI_ENABLED)
 	#define NETIMGUI_ENABLED 0
-#elif !defined(IMGUI_VERSION)
+#endif
+
+// NetImgui needs to detect Dear ImGui to be active, otherwise we disable it
+#if !defined(IMGUI_VERSION)
 	#undef	NETIMGUI_ENABLED
 	#define	NETIMGUI_ENABLED 0
 #endif
@@ -29,6 +39,7 @@
 //=================================================================================================
 // List of texture format supported
 //=================================================================================================
+#if NETIMGUI_ENABLED
 namespace NetImgui 
 { 
 enum class eTexFormat : uint8_t { 
@@ -52,7 +63,7 @@ bool				Startup(void);
 void				Shutdown(bool bWait);
 
 //=================================================================================================
-// Try to establish a connection to netImguiApp server. 
+// Try to establish a connection to NetImgui server application. 
 //
 // Can establish connection with netImgui Server application by either reaching it directly
 // using 'ConnectToApp' or waiting for Server to reach us after Client called 'ConnectFromApp'.
@@ -116,7 +127,7 @@ void				SendDataTexture(ImTextureID textureId, void* pData, uint16_t width, uint
 // Note: If your code cannot handle skipping a ImGui frame, leave 'bSupportFrameSkip==false',
 //		 and an empty ImGui context will be assigned to receive discarded drawing commands
 //
-// Note: With Dear ImGui 1.80+, you can keep using the ImGui::BeginFrame()/Imgui::Render()
+// Note: With Dear ImGui 1.81+, you can keep using the ImGui::BeginFrame()/Imgui::Render()
 //		 without having to use these 2 functions.
 //=================================================================================================
 bool				NewFrame(bool bSupportFrameSkip=false);
@@ -132,6 +143,14 @@ void				EndFrame(void);
 ImGuiContext*		GetContext();
 
 //=================================================================================================
+// Set the remote client backoground color and texture
+// Note: If no TextureID is specified, will use the default server texture
+//=================================================================================================
+void				SetBackground(const ImVec4& bgColor);
+void				SetBackground(const ImVec4& bgColor, const ImVec4& textureTint );
+void				SetBackground(const ImVec4& bgColor, const ImVec4& textureTint, ImTextureID bgTextureID);
+
+//=================================================================================================
 // Helper function to quickly create a context duplicate (sames settings/font/styles)
 //=================================================================================================
 uint8_t				GetTexture_BitsPerPixel	(eTexFormat eFormat);
@@ -139,15 +158,13 @@ uint32_t			GetTexture_BytePerLine	(eTexFormat eFormat, uint32_t pixelWidth);
 uint32_t			GetTexture_BytePerImage	(eTexFormat eFormat, uint32_t pixelWidth, uint32_t pixelHeight);
 } 
 
-#include "Private/NetImgui_WarningReenable.h"
-
 //=================================================================================================
 // Optional single include compiling option
 // Note: User that do not wish adding the few NetImgui cpp files to their project,
 //		 can instead define 'NETIMGUI_IMPLEMENTATION' *once* before including 'NetImgui_Api.h'
 //		 and this will load the required cpp files alongside
 //=================================================================================================
-#if NETIMGUI_ENABLED && defined(NETIMGUI_IMPLEMENTATION)
+#if defined(NETIMGUI_IMPLEMENTATION)
 
 #include "Private/NetImgui_Api.cpp"
 #include "Private/NetImgui_Client.cpp"
@@ -157,3 +174,6 @@ uint32_t			GetTexture_BytePerImage	(eTexFormat eFormat, uint32_t pixelWidth, uin
 #include "Private/NetImgui_NetworkWin32.cpp"
 
 #endif
+#endif // NETIMGUI_ENABLED
+
+#include "Private/NetImgui_WarningReenable.h"

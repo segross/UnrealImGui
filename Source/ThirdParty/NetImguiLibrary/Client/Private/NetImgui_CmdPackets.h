@@ -10,7 +10,7 @@ namespace NetImgui { namespace Internal
 
 struct CmdHeader
 {
-	enum class eCommands : uint8_t { Invalid, Ping, Disconnect, Version, Texture, Input, DrawFrame };
+	enum class eCommands : uint8_t { Invalid, Ping, Disconnect, Version, Texture, Input, DrawFrame, Background };
 				CmdHeader(){}
 				CmdHeader(eCommands CmdType, uint16_t Size) : mSize(Size), mType(CmdType){}
 	uint32_t	mSize		= 0;
@@ -36,6 +36,8 @@ struct alignas(8) CmdVersion
 		NewTextureFormat	= 2,
 		ImguiVersionInfo	= 3,	// Added Dear Imgui/ NetImgui version info to 'CmdVersion'
 		ServerRefactor		= 4,	// Change to 'CmdInput' and 'CmdVersion' store size of 'ImWchar' to make sure they are compatible
+		BackgroundCmd		= 5,	// Added new command to control background appearance
+		ClientName			= 6,	// Increase maximum allowed client name that a program can set
 		// Insert new version here
 
 		//--------------------------------
@@ -45,7 +47,7 @@ struct alignas(8) CmdVersion
 
 	CmdHeader	mHeader					= CmdHeader(CmdHeader::eCommands::Version, sizeof(CmdVersion));
 	eVersion	mVersion				= eVersion::_Current;
-	char		mClientName[16]			= {0};
+	char		mClientName[64]			= {};
 	char		mImguiVerName[16]		= {IMGUI_VERSION};
 	char		mNetImguiVerName[16]	= {NETIMGUI_VERSION};
 	uint32_t	mImguiVerID				= IMGUI_VERSION_NUM;
@@ -105,7 +107,7 @@ struct alignas(8) CmdInput
 	ImWchar						mKeyChars[1024];		// Input characters	
 	uint64_t					mKeysDownMask[512/64];	// List of keys currently pressed (follow Windows Virtual-Key codes)
 	uint16_t					mKeyCharCount;			// Number of valid input characters
-	uint8_t						PADDING[6]		= {0};
+	uint8_t						PADDING[6]		= {};
 };
 
 struct alignas(8) CmdTexture
@@ -116,7 +118,7 @@ struct alignas(8) CmdTexture
 	uint16_t					mWidth			= 0;
 	uint16_t					mHeight			= 0;
 	eTexFormat					mFormat			= eTexFormat::kTexFmt_Invalid;	// eTexFormat
-	uint8_t						PADDING[3]		= {0};
+	uint8_t						PADDING[3]		= {};
 };
 
 struct alignas(8) CmdDrawFrame
@@ -127,7 +129,7 @@ struct alignas(8) CmdDrawFrame
 	uint32_t					mIndiceByteSize	= 0;
 	uint32_t					mDrawCount		= 0;
 	uint32_t					mMouseCursor	= 0;	// ImGuiMouseCursor value
-	float						mDisplayArea[4]	= {0};
+	float						mDisplayArea[4]	= {};
 	uint8_t						PADDING[4];
 	OffsetPointer<ImguiVert>	mpVertices;
 	OffsetPointer<uint8_t>		mpIndices;
@@ -135,6 +137,18 @@ struct alignas(8) CmdDrawFrame
 	inline void					ToPointers();
 	inline void					ToOffsets();
 };
+
+struct alignas(8) CmdBackground
+{
+	static constexpr uint64_t	kDefaultTexture		= ~0u;
+	CmdHeader					mHeader				= CmdHeader(CmdHeader::eCommands::Background, sizeof(CmdBackground));
+	float						mClearColor[4]		= {0.2f, 0.2f, 0.2f, 1.f};	// Background color 
+	float						mTextureTint[4]		= {1.f, 1.f, 1.f, 0.5f};	// Tint/alpha applied to texture
+	uint64_t					mTextureId			= kDefaultTexture;			// Texture rendered in background, use server texture by default
+	inline bool operator==(const CmdBackground& cmp)const;
+	inline bool operator!=(const CmdBackground& cmp)const;
+};
+
 
 }} // namespace NetImgui::Internal
 

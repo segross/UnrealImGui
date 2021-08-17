@@ -11,11 +11,10 @@
 // Non-editor version without container redirection
 //
 
-static FImGuiDelegatesContainer DelegatesContainer;
-
 FImGuiDelegatesContainer& FImGuiDelegatesContainer::Get()
 {
-	return DelegatesContainer;
+	static FImGuiDelegatesContainer* Container = new FImGuiDelegatesContainer();
+	return *Container;
 }
 
 #endif // !WITH_EDITOR
@@ -36,13 +35,10 @@ struct FImGuiDelegatesContainerHandle : Utilities::TRedirectingHandle<FImGuiDele
 	{
 		if (FImGuiModule* Module = FModuleManager::GetModulePtr<FImGuiModule>("ImGui"))
 		{
-			SetParent(&Module->GetDelegatesContainerHandle());
+			SetParent(Module->DelegatesContainerHandle);
 		}
 	}
 };
-
-static FImGuiDelegatesContainer DelegatesContainer;
-static FImGuiDelegatesContainerHandle DelegatesHandle(DelegatesContainer);
 
 FImGuiDelegatesContainer& FImGuiDelegatesContainer::Get()
 {
@@ -51,7 +47,14 @@ FImGuiDelegatesContainer& FImGuiDelegatesContainer::Get()
 
 FImGuiDelegatesContainerHandle& FImGuiDelegatesContainer::GetHandle()
 {
-	return DelegatesHandle;
+	struct FContainerInstance
+	{
+		FContainerInstance() : Container(), Handle(Container) {}
+		FImGuiDelegatesContainer Container;
+		FImGuiDelegatesContainerHandle Handle;
+	};
+	static FContainerInstance* Instance = new FContainerInstance();
+	return Instance->Handle;
 }
 
 void FImGuiDelegatesContainer::MoveContainer(FImGuiDelegatesContainerHandle& OtherContainerHandle)

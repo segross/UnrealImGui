@@ -21,6 +21,9 @@
 	#pragma warning (disable: 4820)		// 'xxx': 'yyy' bytes padding added after data member 'zzz'	
 	#pragma warning (disable: 5031)		// #pragma warning(pop): likely mismatch, popping warning state pushed in different file	
 	#pragma warning (disable: 5045)		// Compiler will insert Spectre mitigation for memory load if /Qspectre switch specified
+#if _MSC_VER >= 1920
+	#pragma warning (disable: 5219)		// implicit conversion from 'int' to 'float', possible loss of data
+#endif
 	#pragma warning (disable: 26495)	// Code Analysis warning : Variable 'ImGuiStorage::ImGuiStoragePair::<unnamed-tag>::val_p' is uninitialized. Always initialize a member variable (type.6).
 #endif
 

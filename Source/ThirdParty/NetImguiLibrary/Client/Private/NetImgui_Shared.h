@@ -23,7 +23,13 @@
 #include "NetImgui_WarningReenable.h"
 //=================================================================================================
 
-#define NETIMGUI_IMGUI_CALLBACK_ENABLED ((IMGUI_VERSION_NUM >= 18000) && 0)
+//=================================================================================================
+// Enable using Dear ImGui Callbacks support to automatically intercept BeginFrame/Render.
+// Needs Dear ImGui 1.81+
+//=================================================================================================
+#ifndef NETIMGUI_IMGUI_CALLBACK_ENABLED
+	#define NETIMGUI_IMGUI_CALLBACK_ENABLED (IMGUI_VERSION_NUM >= 18100)
+#endif
 
 //=================================================================================================
 #include "NetImgui_WarningDisable.h"
