@@ -23,7 +23,6 @@ public class ImGui : ModuleRules
 		// Enable runtime loader, if you want this module to be automatically loaded in runtime builds (monolithic).
 		bool bEnableRuntimeLoader = true;
 		bool bUnrealImguiEnabled = true;
-		bool bUnrealCommandEnabled = true;
 
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -68,7 +67,8 @@ public class ImGui : ModuleRules
 				"InputCore",
 				"Slate",
 				"SlateCore",
-				"NetImguiLibrary"
+				"NetImguiLibrary",
+				"ImGuiUnrealCommandLibrary"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
@@ -100,6 +100,5 @@ public class ImGui : ModuleRules
 #endif
 		PublicDefinitions.Add(string.Format("UNREAL_IMGUI_ENABLED={0}", bUnrealImguiEnabled ? 1 : 0));
 		PrivateDefinitions.Add(string.Format("RUNTIME_LOADER_ENABLED={0}", bEnableRuntimeLoader ? 1 : 0));
-		PrivateDefinitions.Add(string.Format("IMGUI_UNREAL_COMMAND_ENABLED={0}", bUnrealCommandEnabled ? 1 : 0));
 	}
 }

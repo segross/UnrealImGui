@@ -7,9 +7,7 @@
 
 #include <Framework/Application/SlateApplication.h>
 #include <Modules/ModuleManager.h>
-#include "ImGuiUnrealCommand.h"
 #include <imgui.h>
-
 
 // High enough z-order guarantees that ImGui output is rendered on top of the game UI.
 constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
@@ -19,6 +17,8 @@ const static FName PlainTextureName = "ImGuiModule_Plain";
 const static FName FontAtlasTextureName = "ImGuiModule_FontAtlas";
 
 #if IMGUI_UNREAL_COMMAND_ENABLED
+#include "ImGuiUnrealCommand.h"
+#include "ImGuiUnrealCommand.cpp" // Importing the source file for compilation
 static UECommandImgui::CommandContext* spUECommandContext = nullptr;
 #endif
 
