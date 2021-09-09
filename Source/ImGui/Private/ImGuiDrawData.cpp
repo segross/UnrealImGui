@@ -59,5 +59,5 @@ void FImGuiDrawList::TransferDrawData(ImDrawList& Src)
 
 	// ImGui seems to clear draw lists in every frame, but since source list can contain pointers to buffers that
 	// we just swapped, it is better to clear explicitly here.
-	Src.Clear();
+	//Src.Clear();
 }
