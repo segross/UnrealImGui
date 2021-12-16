@@ -337,7 +337,7 @@ void SImGuiWidget::SetHideMouseCursor(bool bHide)
 
 bool SImGuiWidget::IsConsoleOpened() const
 {
-	return GameViewport->ViewportConsole && GameViewport->ViewportConsole->ConsoleState != NAME_None;
+	return GameViewport->ViewportConsole && GameViewport->ViewportConsole->ConsoleState != NAME_None && GameViewport->ViewportConsole->ConsoleState != NAME_ImGuiBar;
 }
 
 void SImGuiWidget::UpdateVisibility()

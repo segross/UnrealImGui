@@ -7,9 +7,10 @@
 #include "TextureManager.h"
 #include "Utilities/WorldContext.h"
 #include "Utilities/WorldContextIndex.h"
+#include "ThirdPartyBuildNetImgui.h"
 
 #if WITH_EDITOR
-#include "ImGuiImplementation.h"
+#include "ThirdPartyBuildImGui.h"
 #include "Editor/ImGuiEditor.h"
 #endif
 
@@ -121,12 +122,13 @@ void FImGuiModule::StartupModule()
 	checkf(!ImGuiEditor, TEXT("Instance of the ImGui Editor already exists. Instance should be created only during module startup."));
 	ImGuiEditor = new FImGuiEditor();
 #endif
+
+	NetImGuiStartup();
 }
 
 void FImGuiModule::ShutdownModule()
 {
 	// In editor store data that we want to move to hot-reloaded module.
-
 #if WITH_EDITOR
 	static bool bMoveProperties = true;
 	static FImGuiModuleProperties PropertiesToMove = ImGuiModuleManager->GetProperties();
@@ -143,6 +145,8 @@ void FImGuiModule::ShutdownModule()
 	checkf(ImGuiModuleManager, TEXT("Null ImGui Module Manager. Module manager instance should be deleted during module shutdown."));
 	delete ImGuiModuleManager;
 	ImGuiModuleManager = nullptr;
+
+	NetImGuiShutdown();
 
 #if WITH_EDITOR
 	// When shutting down we leave the global ImGui context pointer and handle pointing to resources that are already
@@ -242,6 +246,23 @@ void FImGuiModule::ToggleShowDemo()
 	}
 }
 
+bool FImGuiModule::IsRemoteDrawing() const
+{
+#if NETIMGUI_ENABLED
+	return NetImgui::IsDrawingRemote();
+#else
+	return false;
+#endif
+}
+
+bool FImGuiModule::IsRemoteConnected() const
+{
+#if NETIMGUI_ENABLED
+	return NetImgui::IsConnected();
+#else
+	return false;
+#endif
+}
 
 //----------------------------------------------------------------------------------------------------
 // Runtime loader
@@ -303,7 +324,6 @@ bool FImGuiTextureHandle::HasValidEntry() const
 	const TextureIndex Index = ImGuiInterops::ToTextureIndex(TextureId);
 	return Index != INDEX_NONE && ImGuiModuleManager && ImGuiModuleManager->GetTextureManager().GetTextureName(Index) == Name;
 }
-
 
 #undef LOCTEXT_NAMESPACE
 

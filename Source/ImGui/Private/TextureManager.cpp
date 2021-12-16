@@ -1,7 +1,7 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
 #include "TextureManager.h"
-
+#include "ThirdPartyBuildNetImgui.h"
 #include <Engine/Texture2D.h>
 #include <Framework/Application/SlateApplication.h>
 
@@ -45,6 +45,8 @@ void FTextureManager::ReleaseTextureResources(TextureIndex Index)
 
 TextureIndex FTextureManager::CreateTextureInternal(const FName& Name, int32 Width, int32 Height, uint32 SrcBpp, uint8* SrcData, TFunction<void(uint8*)> SrcDataCleanup)
 {
+	TextureIndex texIndex(INDEX_NONE);
+
 	// Create a texture.
 	UTexture2D* Texture = UTexture2D::CreateTransient(Width, Height);
 
@@ -68,8 +70,18 @@ TextureIndex FTextureManager::CreateTextureInternal(const FName& Name, int32 Wid
 	}
 	else
 	{
-		return AddTextureEntry(Name, Texture, true);
+		texIndex = AddTextureEntry(Name, Texture, true);
+#if NETIMGUI_ENABLED
+		NetImgui::eTexFormat eFmt = SrcBpp == 1 ? NetImgui::eTexFormat::kTexFmtA8 :
+									SrcBpp == 4 ? NetImgui::eTexFormat::kTexFmtRGBA8 :
+									NetImgui::eTexFormat::kTexFmt_Invalid;
+		if (texIndex != INDEX_NONE && eFmt != NetImgui::eTexFormat::kTexFmt_Invalid)
+		{
+			NetImgui::SendDataTexture(ImGuiInterops::ToImTextureID(texIndex), SrcData, Width, Height, eFmt);
+		}
+#endif
 	}
+	return texIndex;
 }
 
 TextureIndex FTextureManager::CreatePlainTextureInternal(const FName& Name, int32 Width, int32 Height, const FColor& Color)

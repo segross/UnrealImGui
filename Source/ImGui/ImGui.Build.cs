@@ -33,7 +33,8 @@ public class ImGui : ModuleRules
 
 		PublicIncludePaths.AddRange(
 			new string[] {
-				Path.Combine(ModuleDirectory, "../ThirdParty/ImGuiLibrary/Include")
+				Path.Combine(ModuleDirectory, "../ThirdParty/ImGuiLibrary/Include"),
+				Path.Combine(ModuleDirectory, "../ThirdParty/NetImguiLibrary/Client"),
 				// ... add public include paths required here ...
 			}
 			);
@@ -42,7 +43,8 @@ public class ImGui : ModuleRules
 		PrivateIncludePaths.AddRange(
 			new string[] {
 				"ImGui/Private",
-				"ThirdParty/ImGuiLibrary/Private"
+				"ThirdParty/ImGuiLibrary/Private",
+				"ThirdParty/NetImguiLibrary/Client"
 				// ... add other private include paths required here ...
 			}
 			);
@@ -65,8 +67,9 @@ public class ImGui : ModuleRules
 				"Engine",
 				"InputCore",
 				"Slate",
-				"SlateCore"
-				// ... add private dependencies that you statically link with here ...	
+				"SlateCore",
+				"NetImguiLibrary"
+				// ... add private dependencies that you statically link with here ...
 			}
 			);
 

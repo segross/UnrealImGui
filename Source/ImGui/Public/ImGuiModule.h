@@ -12,6 +12,19 @@
 class FImGuiModule : public IModuleInterface
 {
 public:
+	enum class eFont
+	{
+		kProggyClean,
+		kCousineRegular,
+		kDroidSans,
+		kKarlaRegular,
+		kProggyTiny,
+		kRobotoMedium,
+
+		//... Your own font can be added here and loaded in 'FImGuiContextManager::BuildFontAtlas()'
+
+		_Count,
+	};
 
 	/**
 	 * Singleton-like access to this module's interface. This is just for convenience!
@@ -116,6 +129,28 @@ public:
 	virtual FImGuiModuleProperties& GetProperties();
 	virtual const FImGuiModuleProperties& GetProperties() const;
 
+	/** Check whether we are ~currently~ drawing for remote connection or locally **/
+	virtual bool IsRemoteDrawing() const;
+
+	/** Check whether we have a remote connection established or not **/
+	virtual bool IsRemoteConnected() const;
+
+	/** Change the current Font used for drawing (matching PopFont() is expected). Can also use struct ImGuiScopedFont **/
+	static inline void PushFont(eFont font)
+	{
+		check(font < eFont::_Count);
+		ImFont* pFont = font < eFont::_Count ? ImGui::GetIO().Fonts->Fonts[static_cast<int>(font)] : nullptr;
+		ImGui::PushFont(pFont ? pFont : ImGui::GetFont());
+	}
+
+	/**
+	 * Undo the last PushFont(), returning it to previous value.
+	 */
+	static inline void PopFont()
+	{
+		ImGui::PopFont();
+	}
+
 	/**
 	 * DEPRECIATED: Please use GetProperties() as this function is scheduled for removal.
 	 * Check whether Input Mode is enabled (tests ImGui.InputEnabled console variable).
@@ -173,4 +208,13 @@ private:
 	friend struct FImGuiContextHandle;
 	friend struct FImGuiDelegatesContainerHandle;
 #endif
+};
+
+/**
+// Helper class that change the font and automatically restore it when object is out of scope
+*/
+struct ImGuiScopedFont
+{
+	inline ImGuiScopedFont(FImGuiModule::eFont font){ FImGuiModule::PushFont(font); }
+	inline ~ImGuiScopedFont(){ FImGuiModule::PopFont(); }
 };
