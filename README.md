@@ -12,6 +12,8 @@ Please note that this is a forked project from [https://github.com/segross/Unrea
 
 I've removed large portions of this readme.md to keep redundant information between the base project and this fork to a minimum. If you wish to read the original readme.md, please see this link: [UnrealImGui ReadMe.md](https://github.com/segross/UnrealImGui/blob/master/README.md).
 
+Also note that the NetImGui branch is not up to date with any of this fork's changes.
+
 Fork Additions
 --------------
  - Updated core source files for Unreal Engine 5, new ImGui and ImPlot
