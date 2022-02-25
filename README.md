@@ -8,17 +8,19 @@ Dear ImGui is an immediate-mode graphical user interface library that is very li
 
 :stop_button: Read Me First
 ---------------------------
-Please note that this is a forked project from [https://github.com/segross/UnrealImGui](https://github.com/segross/UnrealImGui). I do not take credit for the work he's put into making Dear ImGui work in Unreal Engine. The only work I've done on this forked version is to update it to work with UE5, updated Dear ImGui and to add ImPlot into it (which are also listed below for brevity).
+Please note that this is a forked project from [https://github.com/segross/UnrealImGui](https://github.com/segross/UnrealImGui). I do not take credit for the work he's put into making Dear ImGui work in Unreal Engine. The work I've done to this fork is listed below.
 
 I've removed large portions of this readme.md to keep redundant information between the base project and this fork to a minimum. If you wish to read the original readme.md, please see this link: [UnrealImGui ReadMe.md](https://github.com/segross/UnrealImGui/blob/master/README.md).
 
 Also note that the NetImGui branch is not up to date with any of this fork's changes.
 
-Fork Additions
---------------
+Fork Additions/Fixes
+--------------------
  - Updated core source files for Unreal Engine 5, new ImGui and ImPlot
- - Updated ImGui to 1.87
+ - Updated Dear ImGui to 1.87
  - Added ImPlot v0.13 WIP
+ - `ImGui::IsKey*` now functional with all known ImGui keys.
+ - Updated input handling flow to be [standard compliant](https://github.com/ocornut/imgui/issues/4921) with Dear ImGui 1.87 which makes ImGui react better at low FPS. Will add `IMGUI_DISABLE_OBSOLETE_KEYIO` preprocessor once I've ripped out old style input.
 
 Status
 ------
