@@ -58,6 +58,16 @@ public:
 	virtual FImGuiDelegateHandle AddWorldImGuiDelegate(const FImGuiDelegate& Delegate);
 
 	/**
+	 * Add a delegate called at the end of a specific world's debug frame to draw debug controls in its ImGui context,
+	 * creating that context on demand.
+	 *
+	 * @param World - A specific world to add the delegate to to
+	 * @param Delegate - Delegate that we want to add (@see FImGuiDelegate::Create...)
+	 * @returns Returns handle that can be used to remove delegate (@see RemoveImGuiDelegate)
+	 */
+	virtual FImGuiDelegateHandle AddWorldImGuiDelegate(const UWorld* World, const FImGuiDelegate& Delegate);
+
+	/**
 	 * Add shared delegate called for each ImGui context at the end of debug frame, after calling context specific
 	 * delegate. This delegate will be used for any ImGui context, created before or after it is registered.
 	 *
