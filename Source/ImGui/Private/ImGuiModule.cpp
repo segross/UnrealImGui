@@ -84,7 +84,7 @@ FImGuiTextureHandle FImGuiModule::FindTextureHandle(const FName& Name)
 	return (Index != INDEX_NONE) ? FImGuiTextureHandle{ Name, ImGuiInterops::ToImTextureID(Index) } : FImGuiTextureHandle{};
 }
 
-FImGuiTextureHandle FImGuiModule::RegisterTexture(const FName& Name, class UTexture2D* Texture, bool bMakeUnique)
+FImGuiTextureHandle FImGuiModule::RegisterTexture(const FName& Name, class UTexture* Texture, bool bMakeUnique)
 {
 	FTextureManager& TextureManager = ImGuiModuleManager->GetTextureManager();
 

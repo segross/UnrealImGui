@@ -108,7 +108,7 @@ public:
 	 * @returns Handle to the texture resources, which can be used to release allocated resources and as an argument to
 	 *     relevant ImGui functions
 	 */
-	virtual FImGuiTextureHandle RegisterTexture(const FName& Name, class UTexture2D* Texture, bool bMakeUnique = false);
+	virtual FImGuiTextureHandle RegisterTexture(const FName& Name, class UTexture* Texture, bool bMakeUnique = false);
 
 	/**
 	 * Unregister texture and release its Slate resources. If handle is null or not valid, this function fails silently
