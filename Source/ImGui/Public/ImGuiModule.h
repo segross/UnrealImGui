@@ -165,6 +165,7 @@ public:
 	virtual void ShutdownModule() override;
 
 private:
+	TSharedPtr<class FImGuiInputPreprocessor> ImGuiInputPreprocessor;
 
 #if WITH_EDITOR
 	virtual void SetProperties(const FImGuiModuleProperties& Properties);
