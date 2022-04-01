@@ -118,6 +118,8 @@ public:
 	 */
 	virtual void ReleaseTexture(const FImGuiTextureHandle& Handle);
 
+	virtual void RebuildFontAtlas();
+
 	/**
 	 * Get ImGui module properties.
 	 *

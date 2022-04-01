@@ -104,6 +104,14 @@ void FImGuiModule::ReleaseTexture(const FImGuiTextureHandle& Handle)
 	}
 }
 
+void FImGuiModule::RebuildFontAtlas()
+{
+	if (ImGuiModuleManager)
+	{
+		ImGuiModuleManager->RebuildFontAtlas();
+	}
+}
+
 void FImGuiModule::StartupModule()
 {
 	// Initialize handles to allow cross-module redirections. Other handles will always look for parents in the active
