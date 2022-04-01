@@ -201,6 +201,9 @@ public:
 	// and information about dirty parts of keys or mouse buttons arrays.
 	void ClearUpdateState();
 
+	TMap<uint32, FKeyEvent> KeyDownEvents;
+	TMap<uint32, FKeyEvent> KeyUpEvents;
+
 private:
 
 	void SetKeyDown(uint32 KeyIndex, bool bIsDown);

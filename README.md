@@ -1,297 +1,186 @@
 Unreal ImGui
 ============
-
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 
 Unreal ImGui is an Unreal Engine 4 plug-in that integrates [Dear ImGui](https://github.com/ocornut/imgui) developed by Omar Cornut.
 
 Dear ImGui is an immediate-mode graphical user interface library that is very lightweight and easy to use. It can be very useful when creating debugging tools.
 
+:stop_button: Read Me First
+---------------------------
+Please note that this is a forked project from [https://github.com/segross/UnrealImGui](https://github.com/segross/UnrealImGui). I do not take credit for the work he's put into making Dear ImGui work in Unreal Engine. The work I've done to this fork is listed below.
+
+I've removed large portions of this readme.md to keep redundant information between the base project and this fork to a minimum. If you wish to read the original readme.md, please see this link: [UnrealImGui ReadMe.md](https://github.com/segross/UnrealImGui/blob/master/README.md).
+
+Also note that the NetImGui branch is not up to date with any of this fork's changes.
+
+Fork Additions/Fixes
+--------------------
+ - Updated core source files for Unreal Engine 5.
+ - Updated Dear ImGui to 1.87.
+ - Added ImPlot v0.13 WIP.
+ - `ImGui::IsKey*` now functional with all known ImGui keys.
+ - Updated input handling flow to be [standard compliant](https://github.com/ocornut/imgui/issues/4921) with Dear ImGui 1.87 which makes ImGui react better at low FPS. Will add `IMGUI_DISABLE_OBSOLETE_KEYIO` preprocessor once I've ripped out old style input.
+ - Allowed `UTexture` for Texture Manager so render targets can also be rendered to quads rather than just being limited to using `UTexture2D` instances.
+ - Added the ability to instruct ImGui context to build custom fonts (like FontAwesome).
+
 Status
 ------
-Version: 1.22
+UnrealImGui Version: 1.22
 
-ImGui version: 1.74
+ImGui version: 1.87
 
-Supported engine version: 4.26*
+ImPlot version: v0.13 WIP
 
-\* *Plugin has been tested and if necessary updated to compile and work with this engine version. As long as possible I will try to maintain backward compatibility of existing features and possibly but not necessarily when adding new features. When it comes to bare-bone ImGui version it should be at least backward compatible with the engine version 4.15. For NetImgui it needs to be determined.*
+Supported Unreal Engine version: 5.0*
 
-Current work
-------------
-
-Currently, I'm a little busy outside of this project so changes come slowly. But here is what to expect in the reasonably near future:
-- Stability first, so fixes for more critical issues like an invalidation of handles after reloading texture resources will be pushed first. The same goes for merges.
-- There are a few smaller issues that I'm aware of and that might be not reported but which I want to fix.
-- ImGui needs to be updated.
-- Smaller features might be slowly pushed but bigger ones will need to wait. The same goes for merges.
-- There is a branch with NetImgui which is really good, and which will be eventually merged to master, but first I want to fix a few issues that I know about (some are discussed in thread #28). In the meantime, the NetImgui branch is pretty much ready to use.
-
-
-About
------
-
-The main goal of this plugin is to provide a basic integration of the Dear ImGui which will be easy to use from the game code.
-
-My main focus used to be on debugging and for that this plugin should work out of the box. It is possible to use it for different purposes but depending on the use case it may require some adaptations.
-
-To support multi-PIE, each world gets its own ImGui context to which it can draw. All that is managed by the plugin in a way that should be invisible for the game code. I plan to extend it to allow own contexts and widgets but right now I don't have enough time to commit to that.
-
-As of recently, the plugin has the *net_imgui* branch with an integration of the [NetImgui](https://github.com/sammyfreg/netImgui) developed by Sammyfreg. This is still experimental, but it is possible to already download and use it. Many thanks for the library and for the initial integration.
-
-### Key features
-
-- Multi-PIE support with each world getting its own ImGui context.
-- Automatic switching between different ImGui contexts.
-- Delegates for functions with ImGui content.
-- Support for Unreal textures.
+\* *The original repository has support for later versions of UE4. I've not tested this fork on UE4 variants, I only know it works for UE5 currently.*
 
 How to Set up
 -------------
+On top of reading the base repository's [How to Set up](https://github.com/segross/UnrealImGui/blob/master/README.md#how-to-set-up) segment, you'll need to add the following line to your `[GameName].Build.cs` file otherwise you'll get linking errors:
 
-To use this plug-in, you will need a C++ Unreal project.
-
-### Installation
-
-Content of this repository needs to be placed in the *Plugins* directory under the project root: *[Project Root]/Plugins/ImGui/*. After you compile and run you should notice that *ImGui* module is now available.
-
-Note that plugins can be also placed in the engine directory *[UE4 Root]/Engine/Plugins/* but I didn't try it with this project.
-
-If you want to use NetImgui, instead of please look at the [How to Set up NetImgui](#how-to-set-up-netimgui).
-
-### Setting module type
-
-The *ImGui* module type is set to **Developer**, what means that if it is not referenced by other runtime modules, it can be automatically excluded from shipping builds. This is convenient when using this plugging for debugging but if you want to change it to other type, you can do it in module description section in `ImGui.uplugin` file.
-
-**Developer** type was depreciated in UE 4.24. I keep it for backward compatibility while I can, but if you get a UBT warning about module type, simply change it to **DeveloperTool** or **Runtime**.
-
-### Setting up module dependencies
-
-To use ImGui in other modules you need to add it as a private or public dependency in their Build.cs files:
-
-```C#
-PrivateDependencyModuleNames.Add("ImGui");
+```cpp
+// Tell the compiler we want to import the ImPlot symbols when linking against ImGui plugin 
+PrivateDefinitions.Add(string.Format("IMPLOT_API=DLLIMPORT"));
 ```
 
-or
+# Additional Knowledge
 
-```C#
-PublicDependencyModuleNames.Add("ImGui");
-```
+## Using ImPlot
 
-You might also want to use ImGui only in certain builds:
+It's pretty easy to use ImPlot, it's pretty much the same drill as using Dear ImGui with the UnrealImGui plugin. You can see documentation on how to use ImPlot here: [ImPlot](https://github.com/epezent/implot).
 
-```C#
-if (Target.Configuration != UnrealTargetConfiguration.Shipping)
+The only thing you won't need to do is call the `ImPlot::CreateContext()` and `ImPlot::DestroyContext` routines as they're already called when ImGui's context is created within UnrealImGui's guts.
+
+## Drawing a UTextureRenderTarget2D
+
+One might want to render viewports into the world in an ImGui window. You can do this pretty simply by generating a `UTextureRenderTarget2D` then assigning that to a `ASceneCapture2D` actor in your world. Here's some sample code for generating an correctly managing the `UTextureRenderTarget2D`:
+```cpp
+void Init()
 {
-	PrivateDependencyModuleNames.Add("ImGui");
+    TextureRenderTarget = NewObject<UTextureRenderTarget2D>();
+    if(IsValid(TextureRenderTarget))
+    {
+        TextureRenderTarget->InitAutoFormat(512, 512);
+        TextureRenderTarget->UpdateResourceImmediate(true);
+    }
+
+    // ... Generate a unique TextureName here
+    // Register this render target as an ImGui interop handled texture
+    ImGuiTextureHandle = FImGuiModule::Get().FindTextureHandle(TextureName);
+    if(!ImGuiTextureHandle.IsValid())
+    {
+        if(IsValid(TextureRenderTarget))
+        {
+            ImGuiTextureHandle = FImGuiModule::Get().RegisterTexture(TextureName, TextureRenderTarget, true);
+        }
+    }
+}
+
+~Class()
+{
+    // Requires releasing to avoid memory leak
+    FImGuiModule::Get().ReleaseTexture(ImGuiTextureHandle);
+}
+
+void Render()
+{
+    // Actually submit the draw command to ImGui to render the quad with the texture
+    if(ImGuiTextureHandle.IsValid())
+    {
+        ImGui::Image(ImGuiTextureHandle.GetTextureId(), {512.f, 512.f});
+    }
 }
 ```
 
-### Conditional compilation
+Then generating the `ASceneCapture2D`:
+```cpp
+void Init()
+{
+    FActorSpawnParameters SpawnInfo;
+    SceneCapture2D = World->SpawnActor<ASceneCapture2D>(FVector::ZeroVector, FRotator::ZeroRotator, SpawnInfo);
+    SceneCaptureComponent2D->TextureTarget = TextureRenderTarget;
+    SceneCaptureComponent2D->UpdateContent();
 
-You can conditionally compile ImGui code by checking `IMGUI_API`:
-
-```C++
-#ifded IMGUI_API
-#include <imgui.h>
-#endif
-
-// ... somewhere in your code
-#ifded IMGUI_API
-// ImGui code
-#endif
+    // Need to use this in order to force capture to use tone curve and also set alpha to scene alpha (1)
+    SceneCaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalToneCurveHDR;
+}
 ```
 
-Above code is fine but it requires wrapping include directives and does not follow the usual pattern used in Unreal. To improve that, you can add the following code to one of your headers (or a precompiled header, if you use one):
+### Troubleshooting
+If you're using a scene capture and your quad is not drawing at all, make sure your scene capture "Capture Source" is set to "Final Color (with tone curve) in Linear sRGB gamut" to avoid alpha being set to 0 (since there's no way to instruct ImGui to ignore alpha without modding the core UnrealImGui plugin).
 
-```C++
-// ImGuiCommon.h
-#pragma once
+If you're getting crashes or seg faults during rendering, make sure you're using `UPROPERTY()` on your class variables!
 
-#ifdef IMGUI_API
-#define WITH_IMGUI 1
-#else
-#define WITH_IMGUI 0
-#endif // IMGUI_API
+## Adding custom fonts
+### FontAwesome
+Adding custom fonts is fairly simple. As a more complex and more commonly done, we're going to embed and build FontAwesome 6 into the font atlas. First thing you'll need is a binary C version of the FontAwesome font along with the necessary [companion descriptors](https://github.com/juliettef/IconFontCppHeaders/blob/main/IconsFontAwesome6.h). The descriptors are pre-generated, however if you have a new version of FA you wish to use, then use the Python script in that repository. As for the binary C, you'll need to compile Dear ImGui's [binary_to_compressed_c.cpp](https://github.com/ocornut/imgui/blob/master/misc/fonts/binary_to_compressed_c.cpp).
 
-#if WITH_IMGUI
-#include <imgui.h>
-#endif // WITH_IMGUI
+Once you have the necessary files, you'll need to encode your FontAwesome font using the command:
+```
+binary_to_compressed_c.exe -nocompress fa-solid-900.ttf FontAwesomeFont > FontAwesomeFont.h
+```
+The only mandatory field here is `-nocompress` as this instructs the encoder to create an uncompressed binary file (1:1) since currently there's no immediate support for compressed fonts.
+
+Move over your descriptors and your binary C font file to an appropriate location for inclusion in your Unreal Engine project. The following code is how to instruct ImGui to build the font atlas with your FontAwesome font:
+
+```cpp
+#include "FontAwesomeFont.h"
+#include "IconsFontAwesome6.h"
+
+// Add FontAwesome font glyphs from memory
+if(TSharedPtr<ImFontConfig> FAFontConfig = MakeShareable(new ImFontConfig()))
+{
+    static const ImWchar IconRange[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+    
+    FAFontConfig->FontDataOwnedByAtlas = false; // Global font data lifetime
+    FAFontConfig->FontData             = (void*)FontAwesomeData; // Declared in binary C .h file
+    FAFontConfig->FontDataSize         = FontAwesomeSize; // Declared in binary C .h file
+    FAFontConfig->SizePixels           = 16;
+    FAFontConfig->MergeMode            = true; // Forces ImGui to place this font into the same atlas as the previous font
+    FAFontConfig->GlyphRanges          = IconRange; // Required; instructs ImGui to use these glyphs
+    FAFontConfig->GlyphMinAdvanceX     = 16.f; // Use for monospaced icons
+    FAFontConfig->PixelSnapH           = true; // Better rendering (align to pixel grid)
+    FAFontConfig->GlyphOffset          = {0, 3}; // Moves icons around, for alignment with general typesets
+
+    FImGuiModule::Get().GetProperties().AddCustomFont("FontAwesome", FAFontConfig);
+    FImGuiModule::Get().RebuildFontAtlas();
+}
 ```
 
-And then use it like this:
+That's it. Make sure you execute the above code once at the beginning of the first ImGui frame (or at any point of your framework where the ImGui context has been initialized correctly) and it should build the main atlas with FontAwesome inside it. ImFontConfig lifetime is currently managed via reference counting (`TSharedPtr`).
 
-```C++
-#include "ImGuiCommon.h"
+### Using the icons
+```cpp
+#include "IconsFontAwesome6.h"
 
-// ... somewhere in your code
-#if WITH_IMGUI
-// ImGui code
-#endif
+void OnPaint()
+{
+    ImGui::Text(ICON_FA_AWARD);
+}
 ```
 
-How to Set up NetImgui
-----------------------
-
-To use NetImgui, use content of the *net_imgui* branch in place of *master*. This will be gradually merged into the *master* but until then you need to use that experimental branch.
-
-Similarly like ImGui, NetImgui is built as part of the UnrealImGui plugin and no other integration steps are required.
-
-To be able to connect to the Unreal editor or application that use NetImgui, you need to run a server (netImguiServer). Please, see the [NetImgui](https://github.com/sammyfreg/netImgui) page for instructions how to get it.
-
-After launching the server for the first time, you need to add two client configurations, for ports 8889 and 8890. After that, you can either initialise connection from the server or set it to autoconnection mode. More info will be added later.
-
-Once you establish connection, you can use a top bar to switch between contexts and modes. In standalone game it should be one context and in the editor one editor context, plus one for each PIE instance.
-Please, note that all those features are experimental and might evolve. Any input is welcomed.
-
-How to use it
--------------
-
-### Using ImGui in code
-
-ImGui can be used from functions registered as ImGui delegates or directly in game code. However, if code is running outside of the game thread or is executed outside of the world update scope, delegates are a better choice.
-
-Delegates have an additional advantage that their content will work also when game is paused.
-
-### ImGui Delegates
-
-To use ImGui delegates, include `ImGuiDelegates.h`.
-
-There are two major types of ImGui delegates: world and multi-context. First are created on demand for every world and are cleared once that world becomes invalid. They are designed to be used primarily by worlds objects. In opposition, multi-context delegates are called for every updated world, so the same code can be called multiple times per frame but in different contexts.
-
-Delegates are called typically during world post actor tick event but they have alternative versions called during world tick start. In engine versions that does not support world post actor tick, that is below 4.18, all delegates are called during world tick start.
-
-Delegates are called in order that allows multi-context delegates to add content before and after world objects:
-- multi-context early debug
-- world early debug
-- world update
-- world debug
-- multi-context debug.
-
-> `FImGuiModule` has delegates interface but it is depreciated and will be removed soon. Major issue with that interface is that it needs a module instance, what can be a problem when trying to register static objects. Additional issue is a requirement to always unregister with a handle.
-
-### Multi-context
-
-In multi-PIE sessions each world gets its own ImGui context which is selected at the beginning of the world update. All that happens in the background and should allow debug code to stay context agnostic.
-
-If your content is rendered in the wrong context, try using one of the [ImGui delegates](#imgui-delegates) that should be always called after the right context is already set in ImGui.
-
-### Using Unreal textures
-
-Unreal ImGui allows to register textures in order to use them in ImGui. To do that, include `ImGuiModule.h` and use `FImGuiModule` interface.
-
-After registration you will get a texture handle, declared in `ImGuiTextureHandle.h`, that you need to pass to the ImGui API.
-
-```C++
-// Texture handle defined like this
-FImGuiTextureHandle TextureHandle;
-
-// Registration and update
-TextureHandle = FImGuiModule::Get().RegisterTexture("TextureName", Texture);
-
-// Release
-FImGuiModule::Get().ReleaseTexture(TextureHandle);
-
-// Find by name
-TextureHandle = FImGuiModule::Get().FindTextureHandle("TextureName");
-
-// Example of usage (it is implicitly converted to ImTextureID)
-ImGui::Image(TextureHandle, Size);
+Pretty simple. Building FStrings that incorporate FontAwesome icons however gets a little trickier:
+```cpp
+FString Str = "Hello " + FString(UTF8_TO_TCHAR(ICON_FA_WAVE_SQUARE)) " World";
+ImGui::TextUnformatted(TCHAR_TO_UTF8(*Str));
 ```
 
-### Input mode
+### More info
+ - [Dear ImGui: Using Fonts](https://github.com/ocornut/imgui/blob/master/docs/FONTS.md)
+ - [IconFontCppHeaders](https://github.com/juliettef/IconFontCppHeaders)
+ - [FontAwesome with general Dear ImGui](https://pixtur.github.io/mkdocs-for-imgui/site/FONTS/)
 
-Right after the start ImGui will work in render-only mode. To interact with it, you need to activate input mode either by changing `Input Enabled` [property](#properties) from code, using `ImGui.ToggleInput` [command](#console-commands) or with a [keyboard shortcut](#keyboard-shortcuts).
-
-#### Sharing input
-
-It is possible to enable input sharing features to pass keyboard, gamepad or mouse events to the game. Note, that the original design assumed that plugin should consume all input to isolate debug from game. While sharing keyboard or gamepad is pretty straightforward and works by passing input events to the viewport, mouse sharing works in a bit different way. Since the ImGui widget overlays the whole viewport, widget needs to switch hit visibility and update position in the background. It might be possible to generate a custom collision geometry matching ImGui and simplifying working with mouse and touch inputs, but I don't plan to work on this right now.
-
-The default behaviour can be configured in [input settings](#input) and changed during runtime by modifying `Keyboard Input Shared`, `Gamepad Input Shared` and `Mouse Input Shared` [properties](#properties) or `ImGui.ToggleKeyboardInputSharing`, `ImGui.ToggleGamepadInputSharing` and `ImGui.ToggleMouseInputSharing` [commands](#console-commands).
-
-#### Keyboard and gamepad navigation
-
-When using ImGui on consoles you most probably need to enable keyboard and/or gamepad navigaiton. Both are ImGui features that allow to use it without mouse. See ImGui documentation for more details.
-
-You can toggle those features by changing `Keyboard Navigation` and `Gamepad Navigation` [properties](#properties) or using `ImGui.ToggleKeyboardNavigation`and `ImGui.ToggleGamepadNavigation` [commands](#console-commands).
-
-#### Navigating around ImGui canvas
-
-Most of the time ImGui canvas will be larger from the viewport. When ImGui is in the input mode, it is possible to change which part of the canvas should be visible on the screen. To do that press and hold `Left Shift` + `Left Alt` and use mouse to adjust.
-
-- `Mouse Wheel` - Zoom in or out.
-- `Right Mouse Button` - Drag canvas with ImGui content.
-- `Middle Mouse Button` - Drag frame representing which part of the canvas will be visible after ending the navigation mode.
-
-The orange rectangle represents a scaled viewport and the area that will be visible on the screen after releasing keys. Zooming will scale that box and dragging with the middle mouse button will move everything.
-
-The black rectangle represents a canvas border. You can drag canvas using the right mouse button. Dragging canvas will add a render offset between ImGui content and the viewport.
-
-> Image(s) needed.
-
-### Properties
-
-ImGui module has a set of properties that allow to modify its behaviour:
-
-- `Input Enabled` - Whether ImGui should receive [input](#input-mode). It is possible to assign a [keyboard shortcut](#keyboard-shortcuts) to toggle this property.
-- `Keyboard Navigation`- Whether ImGui [keyboard navigation feature](#keyboard-and-gamepad-navigation) is enabled.
-- `Gamepad Navigation` - Whether ImGui [gamepad navigation feature](#keyboard-and-gamepad-navigation) is enabled.
-- `Keyboard Input Shared` - Whether keyboard input should be [shared with the game](#sharing-input). Default behaviour can be configured in [input settings](#input).
-- `Gamepad Input Shared` - Whether gamepad input should be [shared with the game](#sharing-input). Default behaviour can be configured in [input settings](#input).
-- `Mouse Input Shared` - Whether mouse input should be [shared with the game](#sharing-input). Default behaviour can be configured in [input settings](#input).
-- `Show Demo` - Whether to show ImGui demo.
-
-All properties can be changed by corresponding [console commands](#console-commands) or from code.
-
-You can get properties interface through the module instance:
-
-```C++
-FImGuiModule::Get().GetProperties();
-```
-
-### Console commands
-
-- `ImGui.ToggleInput` - Toggle ImGui input mode. It is possible to assign a [keyboard shortcut](#keyboard-shortcuts) to this command.
-- `ImGui.ToggleKeyboardNavigation` - Toggle ImGui keyboard navigation.
-- `ImGui.ToggleGamepadNavigation` - Toggle ImGui gamepad navigation.
-- `ImGui.ToggleKeyboardInputSharing` - Toggle ImGui keyboard input sharing.
-- `ImGui.ToggleGamepadInputSharing` - Toggle ImGui gamepad input sharing.
-- `ImGui.ToggleMouseInputSharing` - Toggle ImGui mouse input sharing.
-- `ImGui.ToggleDemo` - Toggle ImGui demo.
-
-### Console debug variables
-
-There is a self-debug functionality build into this plugin. This is hidden by default as it is hardly useful outside of this pluguin. To enable it, go to `ImGuiModuleDebug.h` and change `IMGUI_MODULE_DEVELOPER`.
-
-- `ImGui.Debug.Widget` - Show debug for SImGuiWidget.
-- `ImGui.Debug.Input` - Show debug for input state.
-
-### Settings
-Plugin settings can be found in *Project Settings/Plugins/ImGui* panel. There is a bunch of properties allowing to tweak input handling, keyboard shortcuts (one for now), canvas size and DPI scale.
-
-##### Extensions
-- `ImGui Input Handler Class` - Path to own implementation of ImGui Input Handler that allows limited customization of the input handling. If not set, then the default implementation is used.
-
->*If you decide to implement an own handler, please keep in mind that I'm thinking about replacing it.*
-
-##### Input
-- `Share Keyboard Input` - Whether by default, ImGui should [share with game](#sharing-input) keyboard input.
-- `Share Gamepad Input` - Whether by default, ImGui should [share with game](#sharing-input) gamepad input.
-- `Share Mouse Input` - Whether by default, ImGui should [share with game](#sharing-input) mouse input.
-- `Use Software Cursor` - Whether ImGui should draw its own cursor in place of the hardware one.
-
-##### Keyboard shortcuts
-- `Toggle Input` - Allows to define a shortcut key to a command that toggles the input mode. Note that this is using `DebugExecBindings` which is not available in shipping builds.
+# Misc
 
 See also
 --------
-
+ - [Original Project by segross](https://github.com/segross/UnrealImGui)
  - [Dear ImGui](https://github.com/ocornut/imgui)
- - [An Introduction to UE4 Plugins](https://wiki.unrealengine.com/An_Introduction_to_UE4_Plugins).
+ - [ImPlot](https://github.com/epezent/implot)
 
 
 License
 -------
-
-Unreal ImGui is licensed under the MIT License, see LICENSE for more information.
+Unreal ImGui (and this fork) is licensed under the MIT License, see LICENSE for more information.

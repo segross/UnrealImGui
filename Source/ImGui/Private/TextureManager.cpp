@@ -27,7 +27,7 @@ TextureIndex FTextureManager::CreatePlainTexture(const FName& Name, int32 Width,
 	return CreatePlainTextureInternal(Name, Width, Height, Color);
 }
 
-TextureIndex FTextureManager::CreateTextureResources(const FName& Name, UTexture2D* Texture)
+TextureIndex FTextureManager::CreateTextureResources(const FName& Name, UTexture* Texture)
 {
 	checkf(Name != NAME_None, TEXT("Trying to create texture resources with a name 'NAME_None' is not allowed."));
 	checkf(Texture, TEXT("Null Texture."));
@@ -87,7 +87,7 @@ TextureIndex FTextureManager::CreatePlainTextureInternal(const FName& Name, int3
 	return CreateTextureInternal(Name, Width, Height, Bpp, SrcData, SrcDataCleanup);
 }
 
-TextureIndex FTextureManager::AddTextureEntry(const FName& Name, UTexture2D* Texture, bool bAddToRoot)
+TextureIndex FTextureManager::AddTextureEntry(const FName& Name, UTexture* Texture, bool bAddToRoot)
 {
 	// Try to find an entry with that name.
 	TextureIndex Index = FindTextureIndex(Name);
@@ -110,7 +110,7 @@ TextureIndex FTextureManager::AddTextureEntry(const FName& Name, UTexture2D* Tex
 	}
 }
 
-FTextureManager::FTextureEntry::FTextureEntry(const FName& InName, UTexture2D* InTexture, bool bAddToRoot)
+FTextureManager::FTextureEntry::FTextureEntry(const FName& InName, UTexture* InTexture, bool bAddToRoot)
 	: Name(InName)
 {
 	checkf(InTexture, TEXT("Null texture."));

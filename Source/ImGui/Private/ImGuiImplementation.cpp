@@ -47,6 +47,8 @@ static FImGuiContextHandle ImGuiContextPtrHandle(ImGuiContextPtr);
 #include "imgui_draw.cpp"
 #include "imgui_widgets.cpp"
 
+#include "imgui_tables.cpp"
+
 #if PLATFORM_WINDOWS
 #include <Windows/HideWindowsPlatformTypes.h>
 #endif // PLATFORM_WINDOWS

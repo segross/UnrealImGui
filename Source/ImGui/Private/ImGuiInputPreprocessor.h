@@ -30,6 +30,7 @@ public:
 
 	virtual bool HandleMouseMoveEvent(FSlateApplication& SlateApp, const FPointerEvent& InPointerEvent) override
 	{
+/*
 		const bool bIsWindowHovered = ImGui::IsWindowHovered();
 		FImGuiContextProxy* Proxy = ModuleManager.GetContextManager().GetContextProxy(0);
 		if (Proxy)
@@ -42,16 +43,20 @@ public:
 		}
 		
 		GEngine->AddOnScreenDebugMessage(1, 0, bIsWindowHovered ? FColor::Green : FColor::Red, TEXT("Move Hover"));
+		*/
 		return false;
 	}
 
 	virtual bool HandleMouseButtonDownEvent(FSlateApplication& SlateApp, const FPointerEvent& InPointerEvent) override
 	{
 		//if (ModuleManager.GetProperties().IsMouseInputShared())
-		{
+		if (false) {
+			FImGuiContextProxy* Proxy = ModuleManager.GetContextManager().GetContextProxy(0);
+			const bool bWantsCapture = Proxy ? Proxy->WantsMouseCapture() : false;
 			const bool bIsWindowHovered = ImGui::IsWindowHovered();
-			GEngine->AddOnScreenDebugMessage(2, 10, bIsWindowHovered ? FColor::Green : FColor::Red, TEXT("Click Hover"));
-			return bIsWindowHovered;
+			GEngine->AddOnScreenDebugMessage(2, 10, bIsWindowHovered ? FColor::Green : FColor::Red, TEXT("InputPreproc: Click Hover"));
+			GEngine->AddOnScreenDebugMessage(3, 10, bWantsCapture ? FColor::Green : FColor::Red, TEXT("InputPreproc: Wants capture"));
+			return bWantsCapture;
 		}
 		return false;
 	}
