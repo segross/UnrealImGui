@@ -275,7 +275,7 @@ FReply SImGuiWidget::OnTouchEnded(const FGeometry& MyGeometry, const FPointerEve
 	return InputHandler->OnTouchEnded(TransformScreenPointToImGui(MyGeometry, TouchEvent.GetScreenSpacePosition()), TouchEvent);
 }
 
-void SImGuiWidget::CreateInputHandler(const FStringClassReference& HandlerClassReference)
+void SImGuiWidget::CreateInputHandler(const FSoftClassPath& HandlerClassReference)
 {
 	ReleaseInputHandler();
 
