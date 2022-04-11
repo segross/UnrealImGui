@@ -85,41 +85,108 @@ namespace ImGuiInterops
 	// Input Mapping
 	//====================================================================================================
 
+	static TMap<FKey, ImGuiKey> UnrealToImGuiKeyMap;
+
 	void SetUnrealKeyMap(ImGuiIO& IO)
 	{
-		struct FUnrealToImGuiMapping
-		{
-			FUnrealToImGuiMapping()
-			{
-				KeyMap[ImGuiKey_Tab] = GetKeyIndex(EKeys::Tab);
-				KeyMap[ImGuiKey_LeftArrow] = GetKeyIndex(EKeys::Left);
-				KeyMap[ImGuiKey_RightArrow] = GetKeyIndex(EKeys::Right);
-				KeyMap[ImGuiKey_UpArrow] = GetKeyIndex(EKeys::Up);
-				KeyMap[ImGuiKey_DownArrow] = GetKeyIndex(EKeys::Down);
-				KeyMap[ImGuiKey_PageUp] = GetKeyIndex(EKeys::PageUp);
-				KeyMap[ImGuiKey_PageDown] = GetKeyIndex(EKeys::PageDown);
-				KeyMap[ImGuiKey_Home] = GetKeyIndex(EKeys::Home);
-				KeyMap[ImGuiKey_End] = GetKeyIndex(EKeys::End);
-				KeyMap[ImGuiKey_Insert] = GetKeyIndex(EKeys::Insert);
-				KeyMap[ImGuiKey_Delete] = GetKeyIndex(EKeys::Delete);
-				KeyMap[ImGuiKey_Backspace] = GetKeyIndex(EKeys::BackSpace);
-				KeyMap[ImGuiKey_Space] = GetKeyIndex(EKeys::SpaceBar);
-				KeyMap[ImGuiKey_Enter] = GetKeyIndex(EKeys::Enter);
-				KeyMap[ImGuiKey_Escape] = GetKeyIndex(EKeys::Escape);
-				KeyMap[ImGuiKey_A] = GetKeyIndex(EKeys::A);
-				KeyMap[ImGuiKey_C] = GetKeyIndex(EKeys::C);
-				KeyMap[ImGuiKey_V] = GetKeyIndex(EKeys::V);
-				KeyMap[ImGuiKey_X] = GetKeyIndex(EKeys::X);
-				KeyMap[ImGuiKey_Y] = GetKeyIndex(EKeys::Y);
-				KeyMap[ImGuiKey_Z] = GetKeyIndex(EKeys::Z);
-			}
+		UnrealToImGuiKeyMap.Add(EKeys::Tab, ImGuiKey_Tab);
+		
+		UnrealToImGuiKeyMap.Add(EKeys::Left,  ImGuiKey_LeftArrow);
+		UnrealToImGuiKeyMap.Add(EKeys::Right, ImGuiKey_RightArrow);
+		UnrealToImGuiKeyMap.Add(EKeys::Up,    ImGuiKey_UpArrow);
+		UnrealToImGuiKeyMap.Add(EKeys::Down,  ImGuiKey_DownArrow);
+		
+		UnrealToImGuiKeyMap.Add(EKeys::PageUp,   ImGuiKey_PageUp);
+		UnrealToImGuiKeyMap.Add(EKeys::PageDown, ImGuiKey_PageDown);
+		UnrealToImGuiKeyMap.Add(EKeys::Home,     ImGuiKey_Home);
+		UnrealToImGuiKeyMap.Add(EKeys::End,      ImGuiKey_End);
+		UnrealToImGuiKeyMap.Add(EKeys::Insert,   ImGuiKey_Insert);
+		UnrealToImGuiKeyMap.Add(EKeys::Delete,   ImGuiKey_Delete);
 
-			ImGuiTypes::FKeyMap KeyMap;
-		};
+		UnrealToImGuiKeyMap.Add(EKeys::NumLock,    ImGuiKey_NumLock);
+		UnrealToImGuiKeyMap.Add(EKeys::ScrollLock, ImGuiKey_ScrollLock);
+		UnrealToImGuiKeyMap.Add(EKeys::Pause,      ImGuiKey_Pause);
+		
+		UnrealToImGuiKeyMap.Add(EKeys::BackSpace, ImGuiKey_Backspace);
+		UnrealToImGuiKeyMap.Add(EKeys::SpaceBar,  ImGuiKey_Space);
+		UnrealToImGuiKeyMap.Add(EKeys::Enter,     ImGuiKey_Enter);
+		UnrealToImGuiKeyMap.Add(EKeys::Escape,     ImGuiKey_Escape);
+		
+		UnrealToImGuiKeyMap.Add(EKeys::A, ImGuiKey_A);
+		UnrealToImGuiKeyMap.Add(EKeys::B, ImGuiKey_B);
+		UnrealToImGuiKeyMap.Add(EKeys::C, ImGuiKey_C);
+		UnrealToImGuiKeyMap.Add(EKeys::D, ImGuiKey_D);
+		UnrealToImGuiKeyMap.Add(EKeys::E, ImGuiKey_E);
+		UnrealToImGuiKeyMap.Add(EKeys::F, ImGuiKey_F);
+		UnrealToImGuiKeyMap.Add(EKeys::G, ImGuiKey_G);
+		UnrealToImGuiKeyMap.Add(EKeys::H, ImGuiKey_H);
+		UnrealToImGuiKeyMap.Add(EKeys::I, ImGuiKey_I);
+		UnrealToImGuiKeyMap.Add(EKeys::J, ImGuiKey_J);
+		UnrealToImGuiKeyMap.Add(EKeys::K, ImGuiKey_K);
+		UnrealToImGuiKeyMap.Add(EKeys::L, ImGuiKey_L);
+		UnrealToImGuiKeyMap.Add(EKeys::M, ImGuiKey_M);
+		UnrealToImGuiKeyMap.Add(EKeys::N, ImGuiKey_N);
+		UnrealToImGuiKeyMap.Add(EKeys::O, ImGuiKey_O);
+		UnrealToImGuiKeyMap.Add(EKeys::P, ImGuiKey_P);
+		UnrealToImGuiKeyMap.Add(EKeys::Q, ImGuiKey_Q);
+		UnrealToImGuiKeyMap.Add(EKeys::R, ImGuiKey_R);
+		UnrealToImGuiKeyMap.Add(EKeys::S, ImGuiKey_S);
+		UnrealToImGuiKeyMap.Add(EKeys::T, ImGuiKey_T);
+		UnrealToImGuiKeyMap.Add(EKeys::U, ImGuiKey_U);
+		UnrealToImGuiKeyMap.Add(EKeys::V, ImGuiKey_V);
+		UnrealToImGuiKeyMap.Add(EKeys::W, ImGuiKey_W);
+		UnrealToImGuiKeyMap.Add(EKeys::X, ImGuiKey_X);
+		UnrealToImGuiKeyMap.Add(EKeys::Y, ImGuiKey_Y);
+		UnrealToImGuiKeyMap.Add(EKeys::Z, ImGuiKey_Z);
+		
+		UnrealToImGuiKeyMap.Add(EKeys::F1,  ImGuiKey_F1);
+		UnrealToImGuiKeyMap.Add(EKeys::F2,  ImGuiKey_F2);
+		UnrealToImGuiKeyMap.Add(EKeys::F3,  ImGuiKey_F3);
+		UnrealToImGuiKeyMap.Add(EKeys::F4,  ImGuiKey_F4);
+		UnrealToImGuiKeyMap.Add(EKeys::F5,  ImGuiKey_F5);
+		UnrealToImGuiKeyMap.Add(EKeys::F6,  ImGuiKey_F6);
+		UnrealToImGuiKeyMap.Add(EKeys::F7,  ImGuiKey_F7);
+		UnrealToImGuiKeyMap.Add(EKeys::F8,  ImGuiKey_F8);
+		UnrealToImGuiKeyMap.Add(EKeys::F9,  ImGuiKey_F9);
+		UnrealToImGuiKeyMap.Add(EKeys::F10, ImGuiKey_F10);
+		UnrealToImGuiKeyMap.Add(EKeys::F11, ImGuiKey_F11);
+		UnrealToImGuiKeyMap.Add(EKeys::F12, ImGuiKey_F12);
+		
+		UnrealToImGuiKeyMap.Add(EKeys::One,   ImGuiKey_0);
+		UnrealToImGuiKeyMap.Add(EKeys::Two,   ImGuiKey_1);
+		UnrealToImGuiKeyMap.Add(EKeys::Three, ImGuiKey_2);
+		UnrealToImGuiKeyMap.Add(EKeys::Four,  ImGuiKey_3);
+		UnrealToImGuiKeyMap.Add(EKeys::Five,  ImGuiKey_4);
+		UnrealToImGuiKeyMap.Add(EKeys::Six,   ImGuiKey_5);
+		UnrealToImGuiKeyMap.Add(EKeys::Seven, ImGuiKey_6);
+		UnrealToImGuiKeyMap.Add(EKeys::Eight, ImGuiKey_7);
+		UnrealToImGuiKeyMap.Add(EKeys::Nine,  ImGuiKey_8);
+		
+		UnrealToImGuiKeyMap.Add(EKeys::Equals,       ImGuiKey_Equal);
+		UnrealToImGuiKeyMap.Add(EKeys::Comma,        ImGuiKey_Comma);
+		UnrealToImGuiKeyMap.Add(EKeys::Period,       ImGuiKey_Period);
+		UnrealToImGuiKeyMap.Add(EKeys::Slash,        ImGuiKey_Slash);
+		UnrealToImGuiKeyMap.Add(EKeys::LeftBracket,  ImGuiKey_LeftBracket);
+		UnrealToImGuiKeyMap.Add(EKeys::RightBracket, ImGuiKey_RightBracket);
+		UnrealToImGuiKeyMap.Add(EKeys::Apostrophe,   ImGuiKey_Apostrophe);
+		UnrealToImGuiKeyMap.Add(EKeys::Semicolon,    ImGuiKey_Semicolon);
 
-		static const FUnrealToImGuiMapping Mapping;
+		UnrealToImGuiKeyMap.Add(EKeys::NumPadZero,  ImGuiKey_Keypad0);
+		UnrealToImGuiKeyMap.Add(EKeys::NumPadOne,   ImGuiKey_Keypad1);
+		UnrealToImGuiKeyMap.Add(EKeys::NumPadTwo,   ImGuiKey_Keypad2);
+		UnrealToImGuiKeyMap.Add(EKeys::NumPadThree, ImGuiKey_Keypad3);
+		UnrealToImGuiKeyMap.Add(EKeys::NumPadFour,  ImGuiKey_Keypad4);
+		UnrealToImGuiKeyMap.Add(EKeys::NumPadFive,  ImGuiKey_Keypad5);
+		UnrealToImGuiKeyMap.Add(EKeys::NumPadSix,   ImGuiKey_Keypad6);
+		UnrealToImGuiKeyMap.Add(EKeys::NumPadSeven, ImGuiKey_Keypad7);
+		UnrealToImGuiKeyMap.Add(EKeys::NumPadEight, ImGuiKey_Keypad8);
+		UnrealToImGuiKeyMap.Add(EKeys::NumPadNine,  ImGuiKey_Keypad9);
 
-		Copy(Mapping.KeyMap, IO.KeyMap);
+		UnrealToImGuiKeyMap.Add(EKeys::Multiply, ImGuiKey_KeypadMultiply);
+		UnrealToImGuiKeyMap.Add(EKeys::Add,      ImGuiKey_KeypadAdd);
+		UnrealToImGuiKeyMap.Add(EKeys::Subtract, ImGuiKey_KeypadSubtract);
+		UnrealToImGuiKeyMap.Add(EKeys::Decimal,  ImGuiKey_KeypadDecimal);
+		UnrealToImGuiKeyMap.Add(EKeys::Divide,   ImGuiKey_KeypadDivide);
 	}
 
 	// Simple transform mapping key codes to 0-511 range used in ImGui.
@@ -302,7 +369,23 @@ namespace ImGuiInterops
 		// Copy buffers.
 		if (!InputState.GetKeysUpdateRange().IsEmpty())
 		{
-			Copy(InputState.GetKeys(), IO.KeysDown, InputState.GetKeysUpdateRange());
+			// Key down events
+			for(const auto& Pair : InputState.KeyDownEvents)
+			{
+				if(UnrealToImGuiKeyMap.Contains(Pair.Value.GetKey()))
+				{
+					IO.AddKeyEvent(UnrealToImGuiKeyMap[Pair.Value.GetKey()], true);
+				}
+			}
+
+			// Key up events
+			for(const auto& Pair : InputState.KeyUpEvents)
+			{
+				if(UnrealToImGuiKeyMap.Contains(Pair.Value.GetKey()))
+				{
+					IO.AddKeyEvent(UnrealToImGuiKeyMap[Pair.Value.GetKey()], false);
+				}
+			}
 		}
 
 		if (!InputState.GetMouseButtonsUpdateRange().IsEmpty())
