@@ -263,6 +263,7 @@ void FImGuiContextManager::BuildFontAtlas(const TMap<FName, TSharedPtr<ImFontCon
 		FontConfig.SizePixels = FMath::RoundFromZero(13.f * DPIScale);
 		FontAtlas.AddFontDefault(&FontConfig);
 
+#if PLATFORM_WINDOWS
 		// Build custom fonts
 		for (const TPair<FName, TSharedPtr<ImFontConfig>>& CustomFontPair : CustomFontConfigs)
 		{
@@ -277,7 +278,7 @@ void FImGuiContextManager::BuildFontAtlas(const TMap<FName, TSharedPtr<ImFontCon
 		
 			FontAtlas.AddFont(CustomFontConfig.Get());
 		}
-
+#endif
 		unsigned char* Pixels;
 		int Width, Height, Bpp;
 		FontAtlas.GetTexDataAsRGBA32(&Pixels, &Width, &Height, &Bpp);
