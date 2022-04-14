@@ -4,7 +4,6 @@
 
 #include "ImGuiDelegatesContainer.h"
 #include "ImGuiModuleManager.h"
-#include "ImGuiInputPreprocessor.h"
 #include "TextureManager.h"
 #include "Utilities/WorldContext.h"
 #include "Utilities/WorldContextIndex.h"
@@ -131,9 +130,6 @@ void FImGuiModule::StartupModule()
 
 	checkf(!ImGuiModuleManager, TEXT("Instance of the ImGui Module Manager already exists. Instance should be created only during module startup."));
 	ImGuiModuleManager = new FImGuiModuleManager();
-
-	ImGuiInputPreprocessor = MakeShared<FImGuiInputPreprocessor>(*ImGuiModuleManager);
-	FSlateApplication::Get().RegisterInputPreProcessor(ImGuiInputPreprocessor, 0);
 
 #if WITH_EDITOR
 	checkf(!ImGuiEditor, TEXT("Instance of the ImGui Editor already exists. Instance should be created only during module startup."));
