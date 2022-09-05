@@ -93,12 +93,12 @@ if (Target.Configuration != UnrealTargetConfiguration.Shipping)
 You can conditionally compile ImGui code by checking `IMGUI_API`:
 
 ```C++
-#ifded IMGUI_API
+#ifdef IMGUI_API
 #include <imgui.h>
 #endif
 
 // ... somewhere in your code
-#ifded IMGUI_API
+#ifdef IMGUI_API
 // ImGui code
 #endif
 ```
