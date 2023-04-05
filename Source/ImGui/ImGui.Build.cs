@@ -98,5 +98,6 @@ public class ImGui : ModuleRules
 
 		PrivateDefinitions.Add(string.Format("RUNTIME_LOADER_ENABLED={0}", bEnableRuntimeLoader ? 1 : 0));
 		PrivateDefinitions.Add("PLATFORM_XBOXONE=0");
+		PrivateDefinitions.Add("IMGUI_DEFINE_MATH_OPERATORS");
 	}
 }
