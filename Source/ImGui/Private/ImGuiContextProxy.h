@@ -45,11 +45,11 @@ public:
 	void SetAsCurrent() { ImGui::SetCurrentContext(Context); }
 
 	// Get the desired context display size.
-	const FVector2D& GetDisplaySize() const { return DisplaySize; }
+	const FVector2f& GetDisplaySize() const { return DisplaySize; }
 
 	// Set the desired context display size.
-	void SetDisplaySize(const FVector2D& Size) { DisplaySize = Size; }
-
+	void SetDisplaySize(const FVector2D& Size) { SetDisplaySize(FVector2f(Size.X, Size.Y)); }
+	void SetDisplaySize(const FVector2f& Size) { DisplaySize = Size; }
 	// Reset the desired context display size to default size.
 	void ResetDisplaySize();
 
@@ -96,7 +96,7 @@ private:
 
 	ImGuiContext* Context;
 
-	FVector2D DisplaySize = FVector2D::ZeroVector;
+	FVector2f DisplaySize = FVector2f::ZeroVector;
 	float DPIScale = 1.f;
 
 	EMouseCursor::Type MouseCursor = EMouseCursor::None;

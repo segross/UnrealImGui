@@ -97,5 +97,6 @@ public class ImGui : ModuleRules
 #endif
 
 		PrivateDefinitions.Add(string.Format("RUNTIME_LOADER_ENABLED={0}", bEnableRuntimeLoader ? 1 : 0));
+		PrivateDefinitions.Add("PLATFORM_XBOXONE=0");
 	}
 }
