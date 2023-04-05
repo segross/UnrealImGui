@@ -1,7 +1,7 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "SImGuiWidget.h"
-#include "SImGuiCanvasControl.h"
+#include "Widgets/SImGuiWidget.h"
+#include "Widgets/SImGuiCanvasControl.h"
 
 #include "ImGuiContextManager.h"
 #include "ImGuiContextProxy.h"

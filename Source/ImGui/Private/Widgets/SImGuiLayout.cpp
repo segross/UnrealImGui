@@ -1,7 +1,7 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "SImGuiLayout.h"
-#include "SImGuiWidget.h"
+#include "Widgets/SImGuiLayout.h"
+#include "Widgets/SImGuiWidget.h"
 
 #include "ImGuiModuleManager.h"
 #include "ImGuiModuleSettings.h"

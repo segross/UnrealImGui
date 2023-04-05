@@ -1,6 +1,6 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
-#include "SImGuiCanvasControl.h"
+#include "Widgets/SImGuiCanvasControl.h"
 
 #include "VersionCompatibility.h"
 
