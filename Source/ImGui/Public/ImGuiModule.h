@@ -8,6 +8,8 @@
 
 #include <Modules/ModuleManager.h>
 
+#include "Widgets/SCommonGuiLayout.h"
+
 
 class FImGuiModule : public IModuleInterface
 {
@@ -160,10 +162,12 @@ public:
 	 */
 	virtual void ToggleShowDemo();
 
+	virtual TSharedPtr<SCommonGuiLayout> CreateCommonGuiLayout(int ContextIndex, UObject* Outer = nullptr) const;
+
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
-
+	
 private:
 
 #if WITH_EDITOR

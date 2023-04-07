@@ -9,7 +9,7 @@
 #include <InputCoreTypes.h>
 
 
-UImGuiInputHandler* FImGuiInputHandlerFactory::NewHandler(const FSoftClassPath& HandlerClassReference, FImGuiModuleManager* ModuleManager, UGameViewportClient* GameViewport, int32 ContextIndex)
+UImGuiInputHandler* FImGuiInputHandlerFactory::NewHandler(const FSoftClassPath& HandlerClassReference, FImGuiModuleManager* ModuleManager, UObject* GameViewport, int32 ContextIndex)
 {
 	UClass* HandlerClass = nullptr;
 	if (HandlerClassReference.IsValid())
@@ -30,7 +30,7 @@ UImGuiInputHandler* FImGuiInputHandlerFactory::NewHandler(const FSoftClassPath& 
 	UImGuiInputHandler* Handler = NewObject<UImGuiInputHandler>(GameViewport, HandlerClass);
 	if (Handler)
 	{
-		Handler->Initialize(ModuleManager, GameViewport, ContextIndex);
+		Handler->Initialize(ModuleManager, ContextIndex);
 		Handler->AddToRoot();
 	}
 	else

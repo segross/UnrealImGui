@@ -316,10 +316,10 @@ void UImGuiInputHandler::OnPostImGuiUpdate()
 	InputState->SetGamepad(PlatformApplication.IsValid() && PlatformApplication->IsGamepadAttached());
 }
 
-void UImGuiInputHandler::Initialize(FImGuiModuleManager* InModuleManager, UGameViewportClient* InGameViewport, int32 InContextIndex)
+void UImGuiInputHandler::Initialize(FImGuiModuleManager* InModuleManager, int32 InContextIndex)
 {
 	ModuleManager = InModuleManager;
-	GameViewport = InGameViewport;
+	GameViewport = nullptr;
 	ContextIndex = InContextIndex;
 
 	auto* ContextProxy = ModuleManager->GetContextManager().GetContextProxy(ContextIndex);

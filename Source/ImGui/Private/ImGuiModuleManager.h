@@ -8,8 +8,11 @@
 #include "ImGuiModuleProperties.h"
 #include "ImGuiModuleSettings.h"
 #include "TextureManager.h"
+#include "Widgets/SCommonGuiLayout.h"
 #include "Widgets/SImGuiLayout.h"
 
+
+class SCommonImGuiWidget;
 
 // Central manager that implements module logic. It initializes and controls remaining module components.
 class FImGuiModuleManager
@@ -34,6 +37,7 @@ public:
 	// Event called right after ImGui is updated, to give other subsystems chance to react.
 	FSimpleMulticastDelegate& OnPostImGuiUpdate() { return PostImGuiUpdateEvent; }
 
+	TSharedRef<SCommonGuiLayout> CreateCommonWidget(int ContextIndex, UObject* Outer);
 private:
 
 	FImGuiModuleManager();

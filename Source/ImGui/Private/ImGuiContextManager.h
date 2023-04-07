@@ -54,6 +54,13 @@ public:
 	// Get context proxy by index, or null if context with that index doesn't exist.
 	FORCEINLINE FImGuiContextProxy* GetContextProxy(int32 ContextIndex)
 	{
+#if WITH_EDITOR
+		if(ContextIndex == Utilities::EDITOR_CONTEXT_INDEX)
+		{
+			return &GetEditorContextProxy();
+		}
+#endif
+		
 		FContextData* Data = Contexts.Find(ContextIndex);
 		return Data ? Data->ContextProxy.Get() : nullptr;
 	}

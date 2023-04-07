@@ -4,11 +4,14 @@
 
 #include "ImGuiInteroperability.h"
 #include "Utilities/WorldContextIndex.h"
+#include "Widgets/SCommonGuiLayout.h"
 
 #include <Framework/Application/SlateApplication.h>
 #include <Modules/ModuleManager.h>
 
 #include <imgui.h>
+
+#include "Widgets/SCommonImGuiWidget.h"
 
 
 // High enough z-order guarantees that ImGui output is rendered on top of the game UI.
@@ -17,6 +20,28 @@ constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
 // Module texture names.
 const static FName PlainTextureName = "ImGuiModule_Plain";
 const static FName FontAtlasTextureName = "ImGuiModule_FontAtlas";
+
+TSharedRef<SCommonGuiLayout> FImGuiModuleManager::CreateCommonWidget(int ContextIndex, UObject* Outer)
+{
+	LoadTextures();
+
+	auto Widget = SNew(SCommonImGuiWidget).ModuleManager(this).ContextIndex(ContextIndex).Outer(Outer);
+	// Create and initialize the widget.
+	TSharedPtr<SCommonGuiLayout> SharedWidget;
+	SAssignNew(SharedWidget, SCommonGuiLayout).ModuleManager(this).Content(Widget);
+	
+	// We transfer widget ownerships to viewports but we keep weak references in case we need to manually detach active
+	// widgets during module shutdown (important during hot-reloading).
+	if (TWeakPtr<SImGuiLayout>* Slot = Widgets.FindByPredicate([](auto& Widget) { return !Widget.IsValid(); }))
+	{
+		*Slot = SharedWidget;
+	}
+	else
+	{
+		Widgets.Emplace(SharedWidget);
+	}
+	return SharedWidget.ToSharedRef();
+}
 
 FImGuiModuleManager::FImGuiModuleManager()
 	: Commands(Properties)
@@ -227,6 +252,20 @@ void FImGuiModuleManager::AddWidgetsToActiveViewports()
 			}
 		}
 	}
+#if WITH_EDITOR
+	auto& AllViewportClients = GEditor->GetLevelViewportClients();
+	if (AllViewportClients.Num() != 0)
+	{
+		// for (FLevelEditorViewportClient* Client : AllViewportClients)
+		// {
+		// 	Client->GetEditorViewportWidget()->ViewportOverlay->AddSlot()
+		// 	[
+		// 		SNew(SImGuiLayout).ModuleManager(this).GameViewport(Client->Viewport).ContextIndex(0)
+		// 	];
+		// }
+	}
+#endif
+	
 }
 
 void FImGuiModuleManager::OnContextProxyCreated(int32 ContextIndex, FImGuiContextProxy& ContextProxy)

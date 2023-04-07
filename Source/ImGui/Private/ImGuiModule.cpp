@@ -98,6 +98,7 @@ void FImGuiModule::ReleaseTexture(const FImGuiTextureHandle& Handle)
 	}
 }
 
+
 void FImGuiModule::StartupModule()
 {
 	// Initialize handles to allow cross-module redirections. Other handles will always look for parents in the active
@@ -240,6 +241,19 @@ void FImGuiModule::ToggleShowDemo()
 	{
 		ImGuiModuleManager->GetProperties().ToggleDemo();
 	}
+}
+
+TSharedPtr<SCommonGuiLayout> FImGuiModule::CreateCommonGuiLayout(int ContextIndex, UObject* Outer) const
+{
+	if (ImGuiModuleManager)
+	{
+		if(ContextIndex == 0)
+		{
+			ContextIndex = Utilities::EDITOR_CONTEXT_INDEX;
+		}
+		return ImGuiModuleManager->CreateCommonWidget(ContextIndex, Outer);
+	}
+	return {};
 }
 
 

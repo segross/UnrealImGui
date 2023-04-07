@@ -27,11 +27,11 @@ public:
 
 	void Construct(const FArguments& InArgs);
 
-	~SImGuiLayout();
+	virtual ~SImGuiLayout() override;
 
 	const TWeakObjectPtr<UGameViewportClient>& GetGameViewport() const { return GameViewport; }
 
-private:
+protected:
 
 	float GetDPIScale() const { return DPIScale; }
 	void SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo);

@@ -1,18 +1,6 @@
-// Distributed under the MIT License (MIT) (see accompanying LICENSE file)
+﻿#pragma once
 
-#pragma once
-
-#include "ImGuiModuleSettings.h"
-
-#include <Rendering/RenderingCommon.h>
-#include <UObject/WeakObjectPtr.h>
-#include <Widgets/DeclarativeSyntaxSupport.h>
-#include <Widgets/SCompoundWidget.h>
-
-
-// Hide ImGui Widget debug in non-developer mode.
-#define IMGUI_WIDGET_DEBUG IMGUI_MODULE_DEVELOPER
-
+#include "SImGuiWidget.h"
 class FImGuiModuleManager;
 class SImGuiCanvasControl;
 class UImGuiInputHandler;
@@ -20,23 +8,24 @@ class UImGuiInputHandler;
 class UGameViewportClient;
 class ULocalPlayer;
 
-// Slate widget for rendering ImGui output and storing Slate inputs.
-class SImGuiWidget : public SCompoundWidget
+
+class SCommonImGuiWidget :  public SCompoundWidget
 {
+public:
 	typedef SCompoundWidget Super;
 
 public:
 
-	SLATE_BEGIN_ARGS(SImGuiWidget)
+	SLATE_BEGIN_ARGS(SCommonImGuiWidget)
 	{}
 	SLATE_ARGUMENT(FImGuiModuleManager*, ModuleManager)
-	SLATE_ARGUMENT(UGameViewportClient*, GameViewport)
 	SLATE_ARGUMENT(int32, ContextIndex)
+	SLATE_ARGUMENT(UObject*, Outer)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
 
-	~SImGuiWidget();
+	~SCommonImGuiWidget();
 
 	// Get index of the context that this widget is targeting.
 	int32 GetContextIndex() const { return ContextIndex; }
@@ -111,7 +100,7 @@ private:
 	void SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo);
 
 	void SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasSizeInfo);
-	void UpdateCanvasSize();
+	void UpdateCanvasSize(const FGeometry& AllottedGeometry);
 
 	void UpdateCanvasControlMode(const FInputEvent& InputEvent);
 
@@ -125,13 +114,15 @@ private:
 
 	void SetImGuiTransform(const FSlateRenderTransform& Transform) { ImGuiTransform = Transform; }
 
+	bool GetIsForegroundWindow() const { return true; } //TODO::需要重新实现
+
 #if IMGUI_WIDGET_DEBUG
 	void OnDebugDraw();
 #endif // IMGUI_WIDGET_DEBUG
 
 	FImGuiModuleManager* ModuleManager = nullptr;
-	TWeakObjectPtr<UGameViewportClient> GameViewport;
 	TWeakObjectPtr<UImGuiInputHandler> InputHandler;
+	TWeakObjectPtr<UObject> Outer;
 
 	FSlateRenderTransform ImGuiTransform;
 	FSlateRenderTransform ImGuiRenderTransform;
