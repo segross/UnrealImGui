@@ -32,7 +32,7 @@ namespace
 		switch (WorldContext->WorldType)
 		{
 		case EWorldType::PIE:
-			return FString::Printf(TEXT("PIEContext%d"), GetWorldContextIndex(*WorldContext));
+			return FString::Printf(TEXT("PIEContext %s"), *GetWorldContextIndex(*WorldContext).GetContextName().ToString());
 		case EWorldType::Game:
 			return TEXT("Game");
 		case EWorldType::Editor:
@@ -174,7 +174,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetStandaloneWorldCont
 }
 #endif // !WITH_EDITOR
 
-FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(const UWorld& World, int32* OutIndex)
+FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(const UWorld& World, FName* OutIndex)
 {
 	using namespace Utilities;
 
@@ -192,7 +192,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 #endif
 
 	const FWorldContext* WorldContext = GetWorldContext(World);
-	const int32 Index = GetWorldContextIndex(*WorldContext);
+	const FName Index = GetWorldContextIndex(*WorldContext).GetContextName();
 
 	checkf(Index != Utilities::INVALID_CONTEXT_INDEX, TEXT("Couldn't find context index for world %s: WorldType = %d"),
 		*World.GetName(), static_cast<int32>(World.WorldType));

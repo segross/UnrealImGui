@@ -5,8 +5,11 @@
 #include <Containers/Map.h>
 #include <Delegates/Delegate.h>
 
+#include "ImguiContextHandle.h"
+
 
 #if WITH_EDITOR
+struct FImguiContextHandle;
 struct FImGuiDelegatesContainerHandle;
 #endif
 
@@ -29,7 +32,7 @@ public:
 	FSimpleMulticastDelegate& OnWorldEarlyDebug(UWorld* World) { return OnWorldEarlyDebug(GetContextIndex(World)); }
 
 	// Get delegate to ImGui world early debug event from known context index.
-	FSimpleMulticastDelegate& OnWorldEarlyDebug(int32 ContextIndex) { return WorldEarlyDebugDelegates.FindOrAdd(ContextIndex); }
+	FSimpleMulticastDelegate& OnWorldEarlyDebug(FImguiContextHandle ContextIndex) { return WorldEarlyDebugDelegates.FindOrAdd(ContextIndex.GetContextName()); }
 
 	// Get delegate to ImGui multi-context early debug event.
 	FSimpleMulticastDelegate& OnMultiContextEarlyDebug() { return MultiContextEarlyDebugDelegate; }
@@ -38,19 +41,19 @@ public:
 	FSimpleMulticastDelegate& OnWorldDebug(UWorld* World) { return OnWorldDebug(GetContextIndex(World)); }
 
 	// Get delegate to ImGui world debug event from known context index.
-	FSimpleMulticastDelegate& OnWorldDebug(int32 ContextIndex) { return WorldDebugDelegates.FindOrAdd(ContextIndex); }
+	FSimpleMulticastDelegate& OnWorldDebug(FImguiContextHandle ContextIndex) { return WorldDebugDelegates.FindOrAdd(ContextIndex.GetContextName()); }
 
 	// Get delegate to ImGui multi-context debug event.
 	FSimpleMulticastDelegate& OnMultiContextDebug() { return MultiContextDebugDelegate; }
 
 private:
 
-	int32 GetContextIndex(UWorld* World);
+	FImguiContextHandle GetContextIndex(UWorld* World);
 
 	void Clear();
 
-	TMap<int32, FSimpleMulticastDelegate> WorldEarlyDebugDelegates;
-	TMap<int32, FSimpleMulticastDelegate> WorldDebugDelegates;
+	TMap<FName, FSimpleMulticastDelegate> WorldEarlyDebugDelegates;
+	TMap<FName, FSimpleMulticastDelegate> WorldDebugDelegates;
 	FSimpleMulticastDelegate MultiContextEarlyDebugDelegate;
 	FSimpleMulticastDelegate MultiContextDebugDelegate;
 };

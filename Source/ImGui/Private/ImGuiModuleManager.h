@@ -37,7 +37,7 @@ public:
 	// Event called right after ImGui is updated, to give other subsystems chance to react.
 	FSimpleMulticastDelegate& OnPostImGuiUpdate() { return PostImGuiUpdateEvent; }
 
-	TSharedRef<SCommonGuiLayout> CreateCommonWidget(int ContextIndex, UObject* Outer);
+	TSharedRef<SCommonGuiLayout> CreateCommonWidget(FImguiContextHandle ContextIndex, UObject* Outer);
 private:
 
 	FImGuiModuleManager();
@@ -66,7 +66,7 @@ private:
 	void AddWidgetToViewport(UGameViewportClient* GameViewport);
 	void AddWidgetsToActiveViewports();
 
-	void OnContextProxyCreated(int32 ContextIndex, FImGuiContextProxy& ContextProxy);
+	void OnContextProxyCreated(FImguiContextHandle ContextIndex, FImGuiContextProxy& ContextProxy);
 
 	// Event that we call after ImGui is updated.
 	FSimpleMulticastDelegate PostImGuiUpdateEvent;

@@ -15,7 +15,7 @@ struct FImGuiDPIScaleInfo;
 // Delegate called when new context proxy is created.
 // @param ContextIndex - Index for that world
 // @param ContextProxy - Created context proxy
-DECLARE_MULTICAST_DELEGATE_TwoParams(FContextProxyCreatedDelegate, int32, FImGuiContextProxy&);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FContextProxyCreatedDelegate, FImguiContextHandle, FImGuiContextProxy&);
 
 // Manages ImGui context proxies.
 class FImGuiContextManager
@@ -49,19 +49,19 @@ public:
 	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy(const UWorld& World) { return *GetWorldContextData(World).ContextProxy; }
 
 	// Get or create ImGui context proxy for given world. Additionally get context index for that proxy.
-	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy(const UWorld& World, int32& OutContextIndex) { return *GetWorldContextData(World, &OutContextIndex).ContextProxy; }
+	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy(const UWorld& World, FName& OutContextIndex) { return *GetWorldContextData(World, &OutContextIndex).ContextProxy; }
 
 	// Get context proxy by index, or null if context with that index doesn't exist.
-	FORCEINLINE FImGuiContextProxy* GetContextProxy(int32 ContextIndex)
+	FORCEINLINE FImGuiContextProxy* GetContextProxy(FImguiContextHandle ContextIndex)
 	{
 #if WITH_EDITOR
-		if(ContextIndex == Utilities::EDITOR_CONTEXT_INDEX)
+		if(ContextIndex.GetContextName() == Utilities::EDITOR_CONTEXT_INDEX)
 		{
 			return &GetEditorContextProxy();
 		}
 #endif
 		
-		FContextData* Data = Contexts.Find(ContextIndex);
+		FContextData* Data = Contexts.Find(ContextIndex.GetContextName());
 		return Data ? Data->ContextProxy.Get() : nullptr;
 	}
 
@@ -77,7 +77,7 @@ private:
 
 	struct FContextData
 	{
-		FContextData(const FString& ContextName, int32 ContextIndex, ImFontAtlas& FontAtlas, float DPIScale, int32 InPIEInstance = -1)
+		FContextData(const FString& ContextName, FName ContextIndex, ImFontAtlas& FontAtlas, float DPIScale, int32 InPIEInstance = -1)
 			: PIEInstance(InPIEInstance)
 			, ContextProxy(new FImGuiContextProxy(ContextName, ContextIndex, &FontAtlas, DPIScale))
 		{
@@ -106,13 +106,13 @@ private:
 	FContextData& GetStandaloneWorldContextData();
 #endif
 
-	FContextData& GetWorldContextData(const UWorld& World, int32* OutContextIndex = nullptr);
+	FContextData& GetWorldContextData(const UWorld& World, FName* OutContextIndex = nullptr);
 
 	void SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo);
 	void BuildFontAtlas();
 	void RebuildFontAtlas();
 
-	TMap<int32, FContextData> Contexts;
+	TMap<FName, FContextData> Contexts;
 
 	ImFontAtlas FontAtlas;
 	TArray<TUniquePtr<ImFontAtlas>> FontResourcesToRelease;

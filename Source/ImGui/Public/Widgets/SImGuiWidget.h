@@ -31,7 +31,7 @@ public:
 	{}
 	SLATE_ARGUMENT(FImGuiModuleManager*, ModuleManager)
 	SLATE_ARGUMENT(UGameViewportClient*, GameViewport)
-	SLATE_ARGUMENT(int32, ContextIndex)
+	SLATE_ARGUMENT(FName, ContextIndex)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);
@@ -39,7 +39,7 @@ public:
 	~SImGuiWidget();
 
 	// Get index of the context that this widget is targeting.
-	int32 GetContextIndex() const { return ContextIndex; }
+	FName GetContextIndex() const { return ContextIndex; }
 
 	//----------------------------------------------------------------------------------------------------
 	// SWidget overrides
@@ -139,7 +139,7 @@ private:
 	mutable TArray<FSlateVertex> VertexBuffer;
 	mutable TArray<SlateIndex> IndexBuffer;
 
-	int32 ContextIndex = 0;
+	FName ContextIndex = NAME_None;
 
 	FVector2D MinCanvasSize = FVector2D::ZeroVector;
 	FVector2D CanvasSize = FVector2D::ZeroVector;

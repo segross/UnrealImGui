@@ -19,7 +19,7 @@ class FImGuiContextProxy
 {
 public:
 
-	FImGuiContextProxy(const FString& Name, int32 InContextIndex, ImFontAtlas* InFontAtlas, float InDPIScale);
+	FImGuiContextProxy(const FString& Name, FName InContextIndex, ImFontAtlas* InFontAtlas, float InDPIScale);
 	~FImGuiContextProxy();
 
 	FImGuiContextProxy(const FImGuiContextProxy&) = delete;
@@ -112,7 +112,7 @@ private:
 	TArray<FImGuiDrawList> DrawLists;
 
 	FString Name;
-	int32 ContextIndex = Utilities::INVALID_CONTEXT_INDEX;
+	FName ContextName = Utilities::INVALID_CONTEXT_INDEX;
 
 	uint32 LastFrameNumber = 0;
 

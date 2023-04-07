@@ -8,11 +8,11 @@
 
 
 // Demo copied (with minor modifications) from ImGui examples. See https://github.com/ocornut/imgui.
-void FImGuiDemo::DrawControls(int32 ContextIndex)
+void FImGuiDemo::DrawControls(FName ContextIndex)
 {
 	if (Properties.ShowDemo())
 	{
-		const int32 ContextBit = ContextIndex < 0 ? 0 : 1 << ContextIndex;
+		const int32 ContextBit = 0;
 
 		// 1. Show a simple window
 		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"

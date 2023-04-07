@@ -174,7 +174,7 @@ private:
 
 	void OnPostImGuiUpdate();
 
-	void Initialize(FImGuiModuleManager* InModuleManager,  int32 InContextIndex);
+	void Initialize(FImGuiModuleManager* InModuleManager,  FName InContextIndex);
 
 	virtual void BeginDestroy() override;
 
@@ -188,7 +188,7 @@ private:
 
 	TWeakObjectPtr<UGameViewportClient> GameViewport;
 
-	int32 ContextIndex = -1;
+	FName ContextIndex = NAME_None;
 
 #if WITH_EDITOR
 	TSharedPtr<FUICommandInfo> StopPlaySessionCommandInfo;

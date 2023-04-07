@@ -13,6 +13,6 @@ class FImGuiInputHandlerFactory
 {
 public:
 
-	static UImGuiInputHandler* NewHandler(const FSoftClassPath& HandlerClassReference, FImGuiModuleManager* ModuleManager, UObject* Outer, int32 ContextIndex);
+	static UImGuiInputHandler* NewHandler(const FSoftClassPath& HandlerClassReference, FImGuiModuleManager* ModuleManager, UObject* Outer, FName ContextIndex);
 	static void ReleaseHandler(UImGuiInputHandler* Handler);
 };

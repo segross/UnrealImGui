@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "SImGuiWidget.h"
+#include "ImguiContextHandle.h"
 class FImGuiModuleManager;
 class SImGuiCanvasControl;
 class UImGuiInputHandler;
@@ -19,7 +20,7 @@ public:
 	SLATE_BEGIN_ARGS(SCommonImGuiWidget)
 	{}
 	SLATE_ARGUMENT(FImGuiModuleManager*, ModuleManager)
-	SLATE_ARGUMENT(int32, ContextIndex)
+	SLATE_ARGUMENT(FName, ContextIndex)
 	SLATE_ARGUMENT(UObject*, Outer)
 	SLATE_END_ARGS()
 
@@ -28,7 +29,7 @@ public:
 	~SCommonImGuiWidget();
 
 	// Get index of the context that this widget is targeting.
-	int32 GetContextIndex() const { return ContextIndex; }
+	FImguiContextHandle GetContextIndex() const { return ContextIndex; }
 
 	//----------------------------------------------------------------------------------------------------
 	// SWidget overrides
@@ -130,7 +131,7 @@ private:
 	mutable TArray<FSlateVertex> VertexBuffer;
 	mutable TArray<SlateIndex> IndexBuffer;
 
-	int32 ContextIndex = 0;
+	FName ContextIndex;
 
 	FVector2D MinCanvasSize = FVector2D::ZeroVector;
 	FVector2D CanvasSize = FVector2D::ZeroVector;

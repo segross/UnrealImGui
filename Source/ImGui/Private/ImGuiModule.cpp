@@ -15,6 +15,8 @@
 
 #include <Interfaces/IPluginManager.h>
 
+#include "ImguiContextHandle.h"
+
 
 #define LOCTEXT_NAMESPACE "FImGuiModule"
 
@@ -49,7 +51,7 @@ FImGuiDelegateHandle FImGuiModule::AddEditorImGuiDelegate(const FImGuiDelegate& 
 
 FImGuiDelegateHandle FImGuiModule::AddWorldImGuiDelegate(const FImGuiDelegate& Delegate)
 {
-	const int32 ContextIndex = Utilities::GetWorldContextIndex((UWorld*)GWorld);
+	const FName ContextIndex = Utilities::GetWorldContextIndex((UWorld*)GWorld).GetContextName();
 	return { FImGuiDelegatesContainer::Get().OnWorldDebug(ContextIndex).Add(Delegate), EDelegateCategory::Default, ContextIndex };
 }
 
@@ -243,11 +245,11 @@ void FImGuiModule::ToggleShowDemo()
 	}
 }
 
-TSharedPtr<SCommonGuiLayout> FImGuiModule::CreateCommonGuiLayout(int ContextIndex, UObject* Outer) const
+TSharedPtr<SCommonGuiLayout> FImGuiModule::CreateCommonGuiLayout(FImguiContextHandle ContextIndex, UObject* Outer) const
 {
 	if (ImGuiModuleManager)
 	{
-		if(ContextIndex == 0)
+		if (ContextIndex.IsValid())
 		{
 			ContextIndex = Utilities::EDITOR_CONTEXT_INDEX;
 		}

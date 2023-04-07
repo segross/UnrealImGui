@@ -85,12 +85,12 @@ public:
 	void Reset()
 	{
 		Handle.Reset();
-		Index = 0;
+		Index = NAME_None;
 	}
 
 private:
 
-	FImGuiDelegateHandle(const FDelegateHandle& InHandle, int32 InCategory, int32 InIndex = 0)
+	FImGuiDelegateHandle(const FDelegateHandle& InHandle, int32 InCategory, FName InIndex = NAME_None)
 		: Handle(InHandle)
 		, Category(InCategory)
 		, Index(InIndex)
@@ -109,7 +109,7 @@ private:
 
 	FDelegateHandle Handle;
 	int32 Category = 0;
-	int32 Index = 0;
+	FName Index = NAME_None;
 
 	friend class FImGuiModule;
 };

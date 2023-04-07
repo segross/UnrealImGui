@@ -22,7 +22,7 @@ public:
 	{}
 	SLATE_ARGUMENT(FImGuiModuleManager*, ModuleManager)
 	SLATE_ARGUMENT(UGameViewportClient*, GameViewport)
-	SLATE_ARGUMENT(int32, ContextIndex)
+	SLATE_ARGUMENT(FName, ContextIndex)
 	SLATE_END_ARGS()
 
 	void Construct(const FArguments& InArgs);

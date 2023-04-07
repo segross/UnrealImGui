@@ -316,7 +316,7 @@ void UImGuiInputHandler::OnPostImGuiUpdate()
 	InputState->SetGamepad(PlatformApplication.IsValid() && PlatformApplication->IsGamepadAttached());
 }
 
-void UImGuiInputHandler::Initialize(FImGuiModuleManager* InModuleManager, int32 InContextIndex)
+void UImGuiInputHandler::Initialize(FImGuiModuleManager* InModuleManager, FName InContextIndex)
 {
 	ModuleManager = InModuleManager;
 	GameViewport = nullptr;

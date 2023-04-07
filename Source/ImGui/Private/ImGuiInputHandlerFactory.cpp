@@ -9,7 +9,7 @@
 #include <InputCoreTypes.h>
 
 
-UImGuiInputHandler* FImGuiInputHandlerFactory::NewHandler(const FSoftClassPath& HandlerClassReference, FImGuiModuleManager* ModuleManager, UObject* GameViewport, int32 ContextIndex)
+UImGuiInputHandler* FImGuiInputHandlerFactory::NewHandler(const FSoftClassPath& HandlerClassReference, FImGuiModuleManager* ModuleManager, UObject* GameViewport, FName ContextIndex)
 {
 	UClass* HandlerClass = nullptr;
 	if (HandlerClassReference.IsValid())

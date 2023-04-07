@@ -74,7 +74,7 @@ void FImGuiDelegatesContainer::MoveContainer(FImGuiDelegatesContainerHandle& Oth
 #endif // WITH_EDITOR
 
 
-int32 FImGuiDelegatesContainer::GetContextIndex(UWorld* World)
+FImguiContextHandle FImGuiDelegatesContainer::GetContextIndex(UWorld* World)
 {
 	return Utilities::GetWorldContextIndex(*World);
 }

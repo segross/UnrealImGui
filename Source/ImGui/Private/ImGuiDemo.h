@@ -18,7 +18,7 @@ public:
 	{
 	}
 
-	void DrawControls(int32 ContextIndex);
+	void DrawControls(FName ContextIndex);
 
 private:
 

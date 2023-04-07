@@ -11,6 +11,8 @@
 #include "Widgets/SCommonGuiLayout.h"
 
 
+struct FImguiContextHandle;
+
 class FImGuiModule : public IModuleInterface
 {
 public:
@@ -162,8 +164,9 @@ public:
 	 */
 	virtual void ToggleShowDemo();
 
-	virtual TSharedPtr<SCommonGuiLayout> CreateCommonGuiLayout(int ContextIndex, UObject* Outer = nullptr) const;
-
+	
+	virtual TSharedPtr<SCommonGuiLayout> CreateCommonGuiLayout(FImguiContextHandle ContextIndex, UObject* Outer = nullptr) const;
+	
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;

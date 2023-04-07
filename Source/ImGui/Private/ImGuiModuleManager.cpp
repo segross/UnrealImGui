@@ -21,11 +21,11 @@ constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
 const static FName PlainTextureName = "ImGuiModule_Plain";
 const static FName FontAtlasTextureName = "ImGuiModule_FontAtlas";
 
-TSharedRef<SCommonGuiLayout> FImGuiModuleManager::CreateCommonWidget(int ContextIndex, UObject* Outer)
+TSharedRef<SCommonGuiLayout> FImGuiModuleManager::CreateCommonWidget(FImguiContextHandle ContextIndex, UObject* Outer)
 {
 	LoadTextures();
 
-	auto Widget = SNew(SCommonImGuiWidget).ModuleManager(this).ContextIndex(ContextIndex).Outer(Outer);
+	auto Widget = SNew(SCommonImGuiWidget).ModuleManager(this).ContextIndex(ContextIndex.GetContextName()).Outer(Outer);
 	// Create and initialize the widget.
 	TSharedPtr<SCommonGuiLayout> SharedWidget;
 	SAssignNew(SharedWidget, SCommonGuiLayout).ModuleManager(this).Content(Widget);
@@ -211,7 +211,7 @@ void FImGuiModuleManager::AddWidgetToViewport(UGameViewportClient* GameViewport)
 	checkf(FSlateApplication::IsInitialized(), TEXT("Slate should be initialized before we can add widget to game viewports."));
 
 	// Make sure that we have a context for this viewport's world and get its index.
-	int32 ContextIndex;
+	FName ContextIndex;
 	auto& ContextProxy = ContextManager.GetWorldContextProxy(*GameViewport->GetWorld(), ContextIndex);
 
 	// Make sure that textures are loaded before the first Slate widget is created.
@@ -268,7 +268,7 @@ void FImGuiModuleManager::AddWidgetsToActiveViewports()
 	
 }
 
-void FImGuiModuleManager::OnContextProxyCreated(int32 ContextIndex, FImGuiContextProxy& ContextProxy)
+void FImGuiModuleManager::OnContextProxyCreated(FImguiContextHandle ContextIndex, FImGuiContextProxy& ContextProxy)
 {
-	ContextProxy.OnDraw().AddLambda([this, ContextIndex]() { ImGuiDemo.DrawControls(ContextIndex); });
+	ContextProxy.OnDraw().AddLambda([this, ContextIndex]() { ImGuiDemo.DrawControls(ContextIndex.GetContextName()); });
 }

@@ -73,9 +73,9 @@ namespace
 	};
 }
 
-FImGuiContextProxy::FImGuiContextProxy(const FString& InName, int32 InContextIndex, ImFontAtlas* InFontAtlas, float InDPIScale)
+FImGuiContextProxy::FImGuiContextProxy(const FString& InName, FName InContextIndex, ImFontAtlas* InFontAtlas, float InDPIScale)
 	: Name(InName)
-	, ContextIndex(InContextIndex)
+	, ContextName(InContextIndex)
 	, IniFilename(TCHAR_TO_ANSI(*GetIniFile(InName)))
 {
 	// Create context.
@@ -256,9 +256,9 @@ void FImGuiContextProxy::UpdateDrawData(ImDrawData* DrawData)
 
 void FImGuiContextProxy::BroadcastWorldEarlyDebug()
 {
-	if (ContextIndex != Utilities::INVALID_CONTEXT_INDEX)
+	if (ContextName != Utilities::INVALID_CONTEXT_INDEX)
 	{
-		FSimpleMulticastDelegate& WorldEarlyDebugEvent = FImGuiDelegatesContainer::Get().OnWorldEarlyDebug(ContextIndex);
+		FSimpleMulticastDelegate& WorldEarlyDebugEvent = FImGuiDelegatesContainer::Get().OnWorldEarlyDebug(ContextName);
 		if (WorldEarlyDebugEvent.IsBound())
 		{
 			WorldEarlyDebugEvent.Broadcast();
@@ -282,9 +282,9 @@ void FImGuiContextProxy::BroadcastWorldDebug()
 		DrawEvent.Broadcast();
 	}
 
-	if (ContextIndex != Utilities::INVALID_CONTEXT_INDEX)
+	if (ContextName != Utilities::INVALID_CONTEXT_INDEX)
 	{
-		FSimpleMulticastDelegate& WorldDebugEvent = FImGuiDelegatesContainer::Get().OnWorldDebug(ContextIndex);
+		FSimpleMulticastDelegate& WorldDebugEvent = FImGuiDelegatesContainer::Get().OnWorldDebug(ContextName);
 		if (WorldDebugEvent.IsBound())
 		{
 			WorldDebugEvent.Broadcast();
