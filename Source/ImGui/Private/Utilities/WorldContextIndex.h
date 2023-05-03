@@ -20,13 +20,14 @@ namespace Utilities
 
 	// Editor context index. We are lacking flexibility here, so we might need to change it somehow.
 	static const FName EDITOR_CONTEXT_INDEX = {TEXT("EDITOR_CONTEXT_INDEX")};
+	static const FName PIE_CONTEXT_INDEX = {TEXT("PIE_CONTEXT_INDEX")};
 
-	FORCEINLINE FImguiContextHandle GetWorldContextIndex(const FWorldContext& WorldContext)
+	FORCEINLINE FImguiViewHandle GetWorldContextIndex(const FWorldContext& WorldContext)
 	{
 		switch (WorldContext.WorldType)
 		{
 		case EWorldType::PIE:
-			return FName(TEXT("PIE_INSTANCE") ,WorldContext.PIEInstance);
+			return FName(PIE_CONTEXT_INDEX ,WorldContext.PIEInstance);
 		case EWorldType::Game:
 			return STANDALONE_GAME_CONTEXT_INDEX;
 		case EWorldType::Editor:
@@ -35,20 +36,24 @@ namespace Utilities
 			return INVALID_CONTEXT_INDEX;
 		}
 	}
+	FORCEINLINE FImguiViewHandle GetEditorContextIndex()
+	{
+		return EDITOR_CONTEXT_INDEX;
+	}
 
 	template<typename T>
-	FORCEINLINE FImguiContextHandle GetWorldContextIndex(const T& Obj)
+	FORCEINLINE FImguiViewHandle GetWorldContextIndex(const T& Obj)
 	{
 		const FWorldContext* WorldContext = GetWorldContext(Obj);
 		return WorldContext ? GetWorldContextIndex(*WorldContext) : INVALID_CONTEXT_INDEX;
 	}
 
-	FORCEINLINE FImguiContextHandle GetWorldContextIndex(const UWorld& World)
+	FORCEINLINE FImguiViewHandle GetWorldContextIndex(const UWorld& World)
 	{
 		return (World.WorldType == EWorldType::Editor) ? EDITOR_CONTEXT_INDEX : GetWorldContextIndex(World.GetGameInstance());
 	}
 
-	FORCEINLINE FImguiContextHandle GetWorldContextIndex(const UWorld* World)
+	FORCEINLINE FImguiViewHandle GetWorldContextIndex(const UWorld* World)
 	{
 		return World ? GetWorldContextIndex(*World) : INVALID_CONTEXT_INDEX;
 	}

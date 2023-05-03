@@ -80,7 +80,7 @@ public:
 
 	// Tick to advance context to the next frame. Only one call per frame will be processed.
 	void Tick(float DeltaSeconds);
-
+	
 private:
 
 	void BeginFrame(float DeltaTime = 1.f / 60.f);

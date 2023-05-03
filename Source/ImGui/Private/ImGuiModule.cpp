@@ -55,6 +55,11 @@ FImGuiDelegateHandle FImGuiModule::AddWorldImGuiDelegate(const FImGuiDelegate& D
 	return { FImGuiDelegatesContainer::Get().OnWorldDebug(ContextIndex).Add(Delegate), EDelegateCategory::Default, ContextIndex };
 }
 
+FImGuiDelegateHandle FImGuiModule::AddImguiDelegate(const  FImguiViewHandle& Handle, const FImGuiDelegate& Delegate)
+{
+	return { FImGuiDelegatesContainer::Get().OnWorldDebug(Handle.GetContextName()).Add(Delegate), EDelegateCategory::Default, Handle.GetContextName() };
+}
+
 FImGuiDelegateHandle FImGuiModule::AddMultiContextImGuiDelegate(const FImGuiDelegate& Delegate)
 {
 	return { FImGuiDelegatesContainer::Get().OnMultiContextDebug().Add(Delegate), EDelegateCategory::MultiContext };
@@ -70,6 +75,11 @@ void FImGuiModule::RemoveImGuiDelegate(const FImGuiDelegateHandle& Handle)
 	{
 		FImGuiDelegatesContainer::Get().OnWorldDebug(Handle.Index).Remove(Handle.Handle);
 	}
+}
+
+void FImGuiModule::ClearImguiDelegate(const FImguiViewHandle& Handle)
+{
+	FImGuiDelegatesContainer::Get().OnWorldDebug(Handle).Clear();
 }
 
 #endif // IMGUI_WITH_OBSOLETE_DELEGATES
@@ -245,17 +255,25 @@ void FImGuiModule::ToggleShowDemo()
 	}
 }
 
-TSharedPtr<SCommonGuiLayout> FImGuiModule::CreateCommonGuiLayout(FImguiContextHandle ContextIndex, UObject* Outer) const
+TSharedPtr<SCommonGuiLayout> FImGuiModule::CreateCommonGuiLayout(FImguiViewHandle ContextIndex, UObject* Outer) const
 {
 	if (ImGuiModuleManager)
 	{
-		if (ContextIndex.IsValid())
+		if (!ContextIndex.IsValid())
 		{
 			ContextIndex = Utilities::EDITOR_CONTEXT_INDEX;
 		}
 		return ImGuiModuleManager->CreateCommonWidget(ContextIndex, Outer);
 	}
 	return {};
+}
+
+FImguiViewHandle FImGuiModule::GetOrCreateContextIndex(FName Name) const
+{
+	const FImguiViewHandle Handle{Name};
+	const auto Proxy = ImGuiModuleManager->ContextManager.GetOrCreateContextProxy(Handle);
+	check(Proxy != nullptr);
+	return Handle;
 }
 
 

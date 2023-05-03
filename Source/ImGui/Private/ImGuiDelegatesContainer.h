@@ -9,7 +9,7 @@
 
 
 #if WITH_EDITOR
-struct FImguiContextHandle;
+struct FImguiViewHandle;
 struct FImGuiDelegatesContainerHandle;
 #endif
 
@@ -32,7 +32,7 @@ public:
 	FSimpleMulticastDelegate& OnWorldEarlyDebug(UWorld* World) { return OnWorldEarlyDebug(GetContextIndex(World)); }
 
 	// Get delegate to ImGui world early debug event from known context index.
-	FSimpleMulticastDelegate& OnWorldEarlyDebug(FImguiContextHandle ContextIndex) { return WorldEarlyDebugDelegates.FindOrAdd(ContextIndex.GetContextName()); }
+	FSimpleMulticastDelegate& OnWorldEarlyDebug(FImguiViewHandle ContextIndex) { return WorldEarlyDebugDelegates.FindOrAdd(ContextIndex.GetContextName()); }
 
 	// Get delegate to ImGui multi-context early debug event.
 	FSimpleMulticastDelegate& OnMultiContextEarlyDebug() { return MultiContextEarlyDebugDelegate; }
@@ -41,14 +41,14 @@ public:
 	FSimpleMulticastDelegate& OnWorldDebug(UWorld* World) { return OnWorldDebug(GetContextIndex(World)); }
 
 	// Get delegate to ImGui world debug event from known context index.
-	FSimpleMulticastDelegate& OnWorldDebug(FImguiContextHandle ContextIndex) { return WorldDebugDelegates.FindOrAdd(ContextIndex.GetContextName()); }
+	FSimpleMulticastDelegate& OnWorldDebug(FImguiViewHandle ContextIndex) { return WorldDebugDelegates.FindOrAdd(ContextIndex.GetContextName()); }
 
 	// Get delegate to ImGui multi-context debug event.
 	FSimpleMulticastDelegate& OnMultiContextDebug() { return MultiContextDebugDelegate; }
 
 private:
 
-	FImguiContextHandle GetContextIndex(UWorld* World);
+	FImguiViewHandle GetContextIndex(UWorld* World);
 
 	void Clear();
 

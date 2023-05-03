@@ -15,7 +15,7 @@ struct FImGuiDPIScaleInfo;
 // Delegate called when new context proxy is created.
 // @param ContextIndex - Index for that world
 // @param ContextProxy - Created context proxy
-DECLARE_MULTICAST_DELEGATE_TwoParams(FContextProxyCreatedDelegate, FImguiContextHandle, FImGuiContextProxy&);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FContextProxyCreatedDelegate, FImguiViewHandle, FImGuiContextProxy&);
 
 // Manages ImGui context proxies.
 class FImGuiContextManager
@@ -52,7 +52,7 @@ public:
 	FORCEINLINE FImGuiContextProxy& GetWorldContextProxy(const UWorld& World, FName& OutContextIndex) { return *GetWorldContextData(World, &OutContextIndex).ContextProxy; }
 
 	// Get context proxy by index, or null if context with that index doesn't exist.
-	FORCEINLINE FImGuiContextProxy* GetContextProxy(FImguiContextHandle ContextIndex)
+	FORCEINLINE FImGuiContextProxy* GetContextProxy(FImguiViewHandle ContextIndex)
 	{
 #if WITH_EDITOR
 		if(ContextIndex.GetContextName() == Utilities::EDITOR_CONTEXT_INDEX)
@@ -64,7 +64,9 @@ public:
 		FContextData* Data = Contexts.Find(ContextIndex.GetContextName());
 		return Data ? Data->ContextProxy.Get() : nullptr;
 	}
-
+	
+	FORCEINLINE FImGuiContextProxy* GetOrCreateContextProxy(FImguiViewHandle ContextIndex);
+	
 	// Delegate called when a new context proxy is created.
 	FContextProxyCreatedDelegate OnContextProxyCreated;
 

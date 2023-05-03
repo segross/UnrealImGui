@@ -29,7 +29,7 @@ public:
 	~SCommonImGuiWidget();
 
 	// Get index of the context that this widget is targeting.
-	FImguiContextHandle GetContextIndex() const { return ContextIndex; }
+	FImguiViewHandle GetContextIndex() const { return ContextIndex; }
 
 	//----------------------------------------------------------------------------------------------------
 	// SWidget overrides

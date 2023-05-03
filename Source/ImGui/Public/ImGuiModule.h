@@ -9,9 +9,8 @@
 #include <Modules/ModuleManager.h>
 
 #include "Widgets/SCommonGuiLayout.h"
+#include "ImguiContextHandle.h"
 
-
-struct FImguiContextHandle;
 
 class FImGuiModule : public IModuleInterface
 {
@@ -60,7 +59,7 @@ public:
 	 * @returns Returns handle that can be used to remove delegate (@see RemoveImGuiDelegate)
 	 */
 	virtual FImGuiDelegateHandle AddWorldImGuiDelegate(const FImGuiDelegate& Delegate);
-
+	virtual FImGuiDelegateHandle AddImguiDelegate(const FImguiViewHandle& Handle, const FImGuiDelegate& Delegate);
 	/**
 	 * Add shared delegate called for each ImGui context at the end of debug frame, after calling context specific
 	 * delegate. This delegate will be used for any ImGui context, created before or after it is registered.
@@ -76,7 +75,7 @@ public:
 	 * @param Handle - Delegate handle that was returned by adding function
 	 */
 	virtual void RemoveImGuiDelegate(const FImGuiDelegateHandle& Handle);
-
+	virtual void ClearImguiDelegate(const FImguiViewHandle& Handle);
 #endif // #if IMGUI_WITH_OBSOLETE_DELEGATES
 
 	/**
@@ -165,8 +164,8 @@ public:
 	virtual void ToggleShowDemo();
 
 	
-	virtual TSharedPtr<SCommonGuiLayout> CreateCommonGuiLayout(FImguiContextHandle ContextIndex, UObject* Outer = nullptr) const;
-	
+	virtual TSharedPtr<SCommonGuiLayout> CreateCommonGuiLayout(FImguiViewHandle ContextIndex, UObject* Outer = nullptr) const;
+	virtual FImguiViewHandle GetOrCreateContextIndex(FName Name) const;
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;

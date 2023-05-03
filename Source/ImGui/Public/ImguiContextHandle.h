@@ -1,15 +1,19 @@
 ﻿#pragma once
+#include "ImGuiDelegates.h"
 
-struct FImguiContextHandle
+struct FImguiViewHandle
 {
 public:
-	FImguiContextHandle()
+	FImguiViewHandle()
 	{
 		ContextName = NAME_None;
 	}
-	FImguiContextHandle(FName Name){ ContextName = Name;}
+	FImguiViewHandle(const FName& Name){ ContextName = Name;}
 	FName GetContextName() const {  return ContextName; }
-	bool IsValid(){ return ContextName != NAME_None;}
+	bool IsValid() const { return ContextName != NAME_None;}
+
+	FImGuiDelegateHandle AddEditorImGuiDelegate(const FImGuiDelegate& Delegate) const;
+	static void RemoveImGuiDelegate(const FImGuiDelegateHandle& Handle);
 protected:
 	FName ContextName;
 };

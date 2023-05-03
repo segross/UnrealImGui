@@ -37,7 +37,7 @@ public:
 	// Event called right after ImGui is updated, to give other subsystems chance to react.
 	FSimpleMulticastDelegate& OnPostImGuiUpdate() { return PostImGuiUpdateEvent; }
 
-	TSharedRef<SCommonGuiLayout> CreateCommonWidget(FImguiContextHandle ContextIndex, UObject* Outer);
+	TSharedRef<SCommonGuiLayout> CreateCommonWidget(FImguiViewHandle ContextIndex, UObject* Outer);
 private:
 
 	FImGuiModuleManager();
@@ -62,11 +62,13 @@ private:
 	void Tick(float DeltaSeconds);
 
 	void OnViewportCreated();
+	void OnMainFrameCreationFinished(TSharedPtr<SWindow, ESPMode::ThreadSafe> Window, bool bArg);
+	void PostEngineInited();
 
 	void AddWidgetToViewport(UGameViewportClient* GameViewport);
 	void AddWidgetsToActiveViewports();
 
-	void OnContextProxyCreated(FImguiContextHandle ContextIndex, FImGuiContextProxy& ContextProxy);
+	void OnContextProxyCreated(FImguiViewHandle ContextIndex, FImGuiContextProxy& ContextProxy);
 
 	// Event that we call after ImGui is updated.
 	FSimpleMulticastDelegate PostImGuiUpdateEvent;
@@ -95,6 +97,7 @@ private:
 	FDelegateHandle TickInitializerHandle;
 	FDelegateHandle TickDelegateHandle;
 	FDelegateHandle ViewportCreatedHandle;
+	FDelegateHandle EnginePostInitedHandle;
 
 	bool bTexturesLoaded = false;
 };

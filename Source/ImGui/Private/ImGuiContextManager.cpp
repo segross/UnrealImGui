@@ -82,6 +82,19 @@ FImGuiContextManager::~FImGuiContextManager()
 #endif
 }
 
+FImGuiContextProxy* FImGuiContextManager::GetOrCreateContextProxy(FImguiViewHandle ContextIndex)
+{
+	check(ContextIndex.IsValid())
+	auto Index = ContextIndex.GetContextName();
+	FContextData* Data = Contexts.Find(Index);
+	if (UNLIKELY(!Data))
+	{
+		Data = &Contexts.Emplace(Index, FContextData{ Index.ToString(), Index, FontAtlas, DPIScale });
+		OnContextProxyCreated.Broadcast(Index, *Data->ContextProxy);
+	}
+	return Data->ContextProxy.Get();
+}
+
 void FImGuiContextManager::Tick(float DeltaSeconds)
 {
 	// In editor, worlds can get invalid. We could remove corresponding entries, but that would mean resetting ImGui
@@ -100,6 +113,13 @@ void FImGuiContextManager::Tick(float DeltaSeconds)
 			FImGuiDelegatesContainer::Get().OnWorldDebug(Pair.Key).Clear();
 		}
 	}
+
+	//保证当前设置的Context永远是编辑器下的
+#if WITH_EDITOR
+		GetEditorContextData().ContextProxy->SetAsCurrent();
+#else
+		//Imgui::SetCurrentContext(nullptr);
+#endif
 
 	// Once all context tick they should use new fonts and we can release the old resources. Extra countdown is added
 	// wait for contexts that ticked outside of this function, before rebuilding fonts.

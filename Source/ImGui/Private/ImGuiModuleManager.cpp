@@ -11,6 +11,7 @@
 
 #include <imgui.h>
 
+#include "Interfaces/IMainFrameModule.h"
 #include "Widgets/SCommonImGuiWidget.h"
 
 
@@ -21,7 +22,7 @@ constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
 const static FName PlainTextureName = "ImGuiModule_Plain";
 const static FName FontAtlasTextureName = "ImGuiModule_FontAtlas";
 
-TSharedRef<SCommonGuiLayout> FImGuiModuleManager::CreateCommonWidget(FImguiContextHandle ContextIndex, UObject* Outer)
+TSharedRef<SCommonGuiLayout> FImGuiModuleManager::CreateCommonWidget(FImguiViewHandle ContextIndex, UObject* Outer)
 {
 	LoadTextures();
 
@@ -51,10 +52,11 @@ FImGuiModuleManager::FImGuiModuleManager()
 {
 	// Register in context manager to get information whenever a new context proxy is created.
 	ContextManager.OnContextProxyCreated.AddRaw(this, &FImGuiModuleManager::OnContextProxyCreated);
-
+	
 	// Typically we will use viewport created events to add widget to new game viewports.
 	ViewportCreatedHandle = UGameViewportClient::OnViewportCreated().AddRaw(this, &FImGuiModuleManager::OnViewportCreated);
-
+	EnginePostInitedHandle = FCoreDelegates::OnPostEngineInit.AddRaw(this, &FImGuiModuleManager::PostEngineInited);
+	
 	// Try to register tick delegate (it may fail if Slate application isn't yet ready).
 	RegisterTick();
 
@@ -67,6 +69,8 @@ FImGuiModuleManager::FImGuiModuleManager()
 	// We need to add widgets to active game viewports as they won't generate on-created events. This is especially
 	// important during hot-reloading.
 	AddWidgetsToActiveViewports();
+	
+	
 }
 
 FImGuiModuleManager::~FImGuiModuleManager()
@@ -78,6 +82,12 @@ FImGuiModuleManager::~FImGuiModuleManager()
 	{
 		UGameViewportClient::OnViewportCreated().Remove(ViewportCreatedHandle);
 		ViewportCreatedHandle.Reset();
+	}
+	
+	if(EnginePostInitedHandle.IsValid())
+	{
+		FCoreDelegates::OnPostEngineInit.Remove(EnginePostInitedHandle);
+		EnginePostInitedHandle.Reset();
 	}
 
 	// Remove still active widgets (important during hot-reloading).
@@ -201,8 +211,28 @@ void FImGuiModuleManager::OnViewportCreated()
 {
 	checkf(FSlateApplication::IsInitialized(), TEXT("We expect Slate to be initialized when game viewport is created."));
 
+	//不再将ImGui添加到Viewport中
 	// Create widget to viewport responsible for this event.
 	AddWidgetToViewport(GEngine->GameViewport);
+}
+
+void FImGuiModuleManager::OnMainFrameCreationFinished(TSharedPtr<SWindow, ESPMode::ThreadSafe> Window, bool bArg)
+{
+#if WITH_EDITOR
+	auto GlobalWidget = CreateCommonWidget(Utilities::GetEditorContextIndex(), GEditor);
+	FGlobalTabmanager::Get()->GetRootWindow()->AddOverlaySlot().HAlign(HAlign_Fill).VAlign(VAlign_Fill).Padding(0.f)[
+		GlobalWidget
+	];
+	IMainFrameModule::Get().OnMainFrameCreationFinished().RemoveAll(this);
+#endif
+	
+}
+
+void FImGuiModuleManager::PostEngineInited()
+{
+#if WITH_EDITOR
+	//IMainFrameModule::Get().OnMainFrameCreationFinished().AddRaw(this, &FImGuiModuleManager::OnMainFrameCreationFinished);
+#endif
 }
 
 void FImGuiModuleManager::AddWidgetToViewport(UGameViewportClient* GameViewport)
@@ -268,7 +298,7 @@ void FImGuiModuleManager::AddWidgetsToActiveViewports()
 	
 }
 
-void FImGuiModuleManager::OnContextProxyCreated(FImguiContextHandle ContextIndex, FImGuiContextProxy& ContextProxy)
+void FImGuiModuleManager::OnContextProxyCreated(FImguiViewHandle ContextIndex, FImGuiContextProxy& ContextProxy)
 {
 	ContextProxy.OnDraw().AddLambda([this, ContextIndex]() { ImGuiDemo.DrawControls(ContextIndex.GetContextName()); });
 }
