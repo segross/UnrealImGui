@@ -67,7 +67,7 @@ private:
 
 	void UpdateVisibility();
 
-	void Zoom(const FGeometry& MyGeometry, const float Delta, const FVector2D& MousePosition);
+	void Zoom(const FGeometry& MyGeometry, const float Delta, const FVector2f& MousePosition);
 
 	void UpdateRenderTransform();
 
@@ -82,10 +82,10 @@ private:
 	FSlateRenderTransform Transform;
 
 	// Offset of the ImGui content in ImGui space.
-	FVector2D ContentOffset = FVector2D::ZeroVector;
+	FVector2f ContentOffset = FVector2f::ZeroVector;
 
 	// Offset of the ImGui canvas in widget local space.
-	FVector2D CanvasOffset = FVector2D::ZeroVector;
+	FVector2f CanvasOffset = FVector2f::ZeroVector;
 
 	// Scale of the ImGui canvas in widget local space.
 	float CanvasScale = 1.f;

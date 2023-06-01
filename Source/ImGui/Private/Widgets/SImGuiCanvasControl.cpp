@@ -41,7 +41,7 @@ namespace
 
 		DRAG_DROP_OPERATOR_TYPE(FImGuiDragDropOperation, FDragDropOperation)
 
-			FImGuiDragDropOperation(const FVector2D& InPosition, const FVector2D& InOffset, EDragType InDragType)
+			FImGuiDragDropOperation(const FVector2f& InPosition, const FVector2f& InOffset, EDragType InDragType)
 			: StartPosition(InPosition)
 			, StartOffset(InOffset)
 			, DragType(InDragType)
@@ -50,8 +50,8 @@ namespace
 			MouseCursor = EMouseCursor::GrabHandClosed;
 		}
 
-		FVector2D StartPosition;
-		FVector2D StartOffset;
+		FVector2f StartPosition;
+		FVector2f StartOffset;
 		EDragType DragType;
 	};
 }
@@ -86,7 +86,7 @@ void SImGuiCanvasControl::Tick(const FGeometry& AllottedGeometry, const double I
 	{
 		if (FMath::IsNearlyEqual(CanvasScale, 1.f, ZoomScrollSpeed) && CanvasOffset.IsNearlyZero(1.f))
 		{
-			CanvasOffset = FVector2D::ZeroVector;
+			CanvasOffset = FVector2f::ZeroVector;
 			CanvasScale = 1.f;
 			Opacity = 0.f;
 			bBlendingOut = false;
@@ -94,7 +94,7 @@ void SImGuiCanvasControl::Tick(const FGeometry& AllottedGeometry, const double I
 		}
 		else
 		{
-			CanvasOffset = FMath::Lerp(CanvasOffset, FVector2D::ZeroVector, BlendOutSpeed);
+			CanvasOffset = FMath::Lerp(CanvasOffset, FVector2f::ZeroVector, BlendOutSpeed);
 			CanvasScale = FMath::Lerp(CanvasScale, 1.f, BlendOutSpeed);
 			Opacity = FMath::Lerp(Opacity, 0.f, BlendOutSpeed);
 		}
@@ -176,7 +176,7 @@ FReply SImGuiCanvasControl::OnDragOver(const FGeometry& MyGeometry, const FDragD
 	if (Operation.IsValid())
 	{
 		const FSlateRenderTransform ScreenToWidget = MyGeometry.GetAccumulatedRenderTransform().Inverse();
-		const FVector2D DragDelta = ScreenToWidget.TransformVector(DragDropEvent.GetScreenSpacePosition() - Operation->StartPosition);
+		const FVector2f DragDelta = ScreenToWidget.TransformVector(DragDropEvent.GetScreenSpacePosition() - Operation->StartPosition);
 	
 		if (Operation->DragType == EDragType::Content)
 		{
@@ -223,9 +223,9 @@ namespace
 		return Color;
 	}
 
-	FORCEINLINE FVector2D Round(const FVector2D& Vec)
+	FORCEINLINE FVector2f Round(const FVector2f& Vec)
 	{
-		return FVector2D{ FMath::FloorToFloat(Vec.X), FMath::FloorToFloat(Vec.Y) };
+		return FVector2f{ FMath::FloorToFloat(Vec.X), FMath::FloorToFloat(Vec.Y) };
 	}
 }
 
@@ -299,7 +299,7 @@ void SImGuiCanvasControl::UpdateVisibility()
 	SetVisibility(bActive ? EVisibility::Visible : bBlendingOut ? EVisibility::HitTestInvisible : EVisibility::Hidden);
 }
 
-void SImGuiCanvasControl::Zoom(const FGeometry& MyGeometry, const float Delta, const FVector2D& MousePosition)
+void SImGuiCanvasControl::Zoom(const FGeometry& MyGeometry, const float Delta, const FVector2f& MousePosition)
 {
 	// If blending out, then cancel.
 	bBlendingOut = false;
@@ -320,8 +320,8 @@ void SImGuiCanvasControl::Zoom(const FGeometry& MyGeometry, const float Delta, c
 		// 1) Around mouse: MousePosition
 		// 2) Fixed in top-left corner: MyGeometry.GetLayoutBoundingRect().GetTopLeft()
 		// 3) Fixed in centre: MyGeometry.GetLayoutBoundingRect().GetCenter()
-		const FVector2D PivotPoint = MyGeometry.GetAccumulatedRenderTransform().Inverse().TransformPoint(MousePosition);
-		const FVector2D Pivot = PivotPoint - CanvasOffset;
+		const FVector2f PivotPoint = MyGeometry.GetAccumulatedRenderTransform().Inverse().TransformPoint(MousePosition);
+		const FVector2f Pivot = PivotPoint - CanvasOffset;
 
 		CanvasOffset += Pivot * (OldCanvasScale - CanvasScale) / OldCanvasScale;
 	}
@@ -331,7 +331,7 @@ void SImGuiCanvasControl::Zoom(const FGeometry& MyGeometry, const float Delta, c
 
 void SImGuiCanvasControl::UpdateRenderTransform()
 {
-	const FVector2D RenderOffset = Round(ContentOffset * CanvasScale + CanvasOffset);
+	const FVector2f RenderOffset = Round(ContentOffset * CanvasScale + CanvasOffset);
 	Transform = FSlateRenderTransform(CanvasScale, RenderOffset);
 	OnTransformChanged.ExecuteIfBound(Transform);
 }
