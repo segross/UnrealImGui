@@ -135,7 +135,7 @@ FReply UImGuiInputHandler::OnMouseButtonDown(const FPointerEvent& MouseEvent)
 		FImGuiContextProxy* Proxy = ModuleManager->GetContextManager().GetContextProxy(0);
 		if (Proxy)
 		{
-			GEngine->AddOnScreenDebugMessage(15, 10, Proxy->WantsMouseCapture() ? FColor::Green : FColor::Red, TEXT("Handler Down"));
+			//GEngine->AddOnScreenDebugMessage(15, 10, Proxy->WantsMouseCapture() ? FColor::Green : FColor::Red, TEXT("Handler Down"));
 			return ToReply(Proxy->WantsMouseCapture());
 		}
 	}
