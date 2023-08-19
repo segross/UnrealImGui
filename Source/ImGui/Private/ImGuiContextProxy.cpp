@@ -92,7 +92,7 @@ FImGuiContextProxy::FImGuiContextProxy(const FString& InName, int32 InContextInd
 
 	// Start with the default canvas size.
 	ResetDisplaySize();
-	IO.DisplaySize = { DisplaySize.X, DisplaySize.Y };
+	IO.DisplaySize = { (float)DisplaySize.X, (float)DisplaySize.Y };
 
 	// Set the initial DPI scale.
 	SetDPIScale(InDPIScale);
@@ -211,7 +211,7 @@ void FImGuiContextProxy::BeginFrame(float DeltaTime)
 		ImGuiInterops::CopyInput(IO, InputState);
 		InputState.ClearUpdateState();
 
-		IO.DisplaySize = { DisplaySize.X, DisplaySize.Y };
+		IO.DisplaySize = { (float)DisplaySize.X, (float)DisplaySize.Y };
 
 		ImGui::NewFrame();
 

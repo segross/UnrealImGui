@@ -84,7 +84,7 @@ public:
 
 private:
 
-	void CreateInputHandler(const FStringClassReference& HandlerClassReference);
+	void CreateInputHandler(const FSoftClassPath& HandlerClassReference);
 	void ReleaseInputHandler();
 
 	void RegisterImGuiSettingsDelegates();
@@ -118,7 +118,7 @@ private:
 
 	void OnPostImGuiUpdate();
 
-	FVector2D TransformScreenPointToImGui(const FGeometry& MyGeometry, const FVector2D& Point) const;
+	FVector2f TransformScreenPointToImGui(const FGeometry& MyGeometry, const FVector2f& Point) const;
 
 	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyClippingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& WidgetStyle, bool bParentEnabled) const override;
 
@@ -142,8 +142,8 @@ private:
 
 	int32 ContextIndex = 0;
 
-	FVector2D MinCanvasSize = FVector2D::ZeroVector;
-	FVector2D CanvasSize = FVector2D::ZeroVector;
+	FVector2f MinCanvasSize = FVector2f::ZeroVector;
+	FVector2f CanvasSize = FVector2f::ZeroVector;
 
 	float DPIScale = 1.f;
 

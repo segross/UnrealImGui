@@ -82,11 +82,11 @@ public:
 	void AddMouseWheelDelta(float DeltaValue) { MouseWheelDelta += DeltaValue; }
 
 	// Get the mouse position.
-	const FVector2D& GetMousePosition() const { return MousePosition; }
+	const FVector2f& GetMousePosition() const { return MousePosition; }
 
 	// Set the mouse position.
 	// @param Position - Mouse position
-	void SetMousePosition(const FVector2D& Position) { MousePosition = Position; }
+	void SetMousePosition(const FVector2f& Position) { MousePosition = Position; }
 
 	// Check whether input has active mouse pointer.
 	bool HasMousePointer() const { return bHasMousePointer; }
@@ -107,11 +107,11 @@ public:
 	void SetTouchDown(bool bIsDown) { bTouchDown = bIsDown; }
 
 	// Get the touch position.
-	const FVector2D& GetTouchPosition() const { return TouchPosition; }
+	const FVector2f& GetTouchPosition() const { return TouchPosition; }
 
 	// Set the touch position.
 	// @param Position - Touch position
-	void SetTouchPosition(const FVector2D& Position) { TouchPosition = Position; }
+	void SetTouchPosition(const FVector2f& Position) { TouchPosition = Position; }
 
 	// Get Control down state.
 	bool IsControlDown() const { return bIsControlDown; }
@@ -213,8 +213,8 @@ private:
 	void ClearModifierKeys();
 	void ClearNavigationInputs();
 
-	FVector2D MousePosition = FVector2D::ZeroVector;
-	FVector2D TouchPosition = FVector2D::ZeroVector;
+	FVector2f MousePosition = FVector2f::ZeroVector;
+	FVector2f TouchPosition = FVector2f::ZeroVector;
 	float MouseWheelDelta = 0.f;
 
 	FMouseButtonsArray MouseButtonsDown;

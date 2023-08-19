@@ -78,7 +78,7 @@ void FImGuiInputState::ClearMouseButtons()
 
 void FImGuiInputState::ClearMouseAnalogue()
 {
-	MousePosition = FVector2D::ZeroVector;
+	MousePosition = FVector2f::ZeroVector;
 	MouseWheelDelta = 0.f;
 }
 

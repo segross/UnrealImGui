@@ -63,19 +63,19 @@ namespace CVars
 
 namespace
 {
-	FORCEINLINE FVector2D MaxVector(const FVector2D& A, const FVector2D& B)
+	FORCEINLINE FVector2f MaxVector(const FVector2f& A, const FVector2f& B)
 	{
-		return FVector2D(FMath::Max(A.X, B.X), FMath::Max(A.Y, B.Y));
+		return FVector2f(FMath::Max(A.X, B.X), FMath::Max(A.Y, B.Y));
 	}
 
-	FORCEINLINE FVector2D RoundVector(const FVector2D& Vector)
+	FORCEINLINE FVector2f RoundVector(const FVector2f& Vector)
 	{
-		return FVector2D(FMath::RoundToFloat(Vector.X), FMath::RoundToFloat(Vector.Y));
+		return FVector2f(FMath::RoundToFloat(Vector.X), FMath::RoundToFloat(Vector.Y));
 	}
 
 	FORCEINLINE FSlateRenderTransform RoundTranslation(const FSlateRenderTransform& Transform)
 	{
-		return FSlateRenderTransform(Transform.GetMatrix(), RoundVector(Transform.GetTranslation()));
+		return FSlateRenderTransform(Transform.GetMatrix(), RoundVector(FVector2f(Transform.GetTranslation())));
 	}
 }
 
@@ -275,7 +275,7 @@ FReply SImGuiWidget::OnTouchEnded(const FGeometry& MyGeometry, const FPointerEve
 	return InputHandler->OnTouchEnded(TransformScreenPointToImGui(MyGeometry, TouchEvent.GetScreenSpacePosition()), TouchEvent);
 }
 
-void SImGuiWidget::CreateInputHandler(const FStringClassReference& HandlerClassReference)
+void SImGuiWidget::CreateInputHandler(const FSoftClassPath& HandlerClassReference)
 {
 	ReleaseInputHandler();
 
@@ -429,7 +429,7 @@ void SImGuiWidget::UpdateInputState()
 
 	const bool bEnableTransparentMouseInput = Properties.IsMouseInputShared()
 #if PLATFORM_ANDROID || PLATFORM_IOS
-		&& (FSlateApplication::Get().GetCursorPos() != FVector2D::ZeroVector)
+		&& (FSlateApplication::Get().GetCursorPos() != FVector2f::ZeroVector)
 #endif
 		&& !(ContextProxy->WantsMouseCapture() || ContextProxy->HasActiveItem());
 	if (bTransparentMouseInput != bEnableTransparentMouseInput)
@@ -553,14 +553,14 @@ void SImGuiWidget::SetCanvasSizeInfo(const FImGuiCanvasSizeInfo& CanvasSizeInfo)
 
 		case EImGuiCanvasSizeType::Desktop:
 			MinCanvasSize = (GEngine && GEngine->GameUserSettings)
-				? GEngine->GameUserSettings->GetDesktopResolution() : FVector2D::ZeroVector;
+				? GEngine->GameUserSettings->GetDesktopResolution() : FVector2f::ZeroVector;
 			bAdaptiveCanvasSize = CanvasSizeInfo.bExtendToViewport;
 			bCanvasControlEnabled = true;
 			break;
 
 		case EImGuiCanvasSizeType::Viewport:
 		default:
-			MinCanvasSize = FVector2D::ZeroVector;
+			MinCanvasSize = FVector2f::ZeroVector;
 			bAdaptiveCanvasSize = true;
 			bCanvasControlEnabled = false;
 	}
@@ -586,7 +586,7 @@ void SImGuiWidget::UpdateCanvasSize()
 			{
 				FVector2D ViewportSize;
 				GameViewport->GetViewportSize(ViewportSize);
-				CanvasSize = MaxVector(CanvasSize, ViewportSize);
+				CanvasSize = MaxVector(CanvasSize, FVector2f(ViewportSize));
 			}
 			else
 			{
@@ -617,7 +617,7 @@ void SImGuiWidget::OnPostImGuiUpdate()
 	UpdateMouseCursor();
 }
 
-FVector2D SImGuiWidget::TransformScreenPointToImGui(const FGeometry& MyGeometry, const FVector2D& Point) const
+FVector2f SImGuiWidget::TransformScreenPointToImGui(const FGeometry& MyGeometry, const FVector2f& Point) const
 {
 	const FSlateRenderTransform ImGuiToScreen = ImGuiTransform.Concatenate(MyGeometry.GetAccumulatedRenderTransform());
 	return ImGuiToScreen.Inverse().TransformPoint(Point);
@@ -689,7 +689,7 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 
 FVector2D SImGuiWidget::ComputeDesiredSize(float Scale) const
 {
-	return CanvasSize * Scale;
+	return FVector2D(CanvasSize*Scale);
 }
 
 #if IMGUI_WIDGET_DEBUG
@@ -813,7 +813,7 @@ namespace TwoColumns
 	}
 
 	template<typename LabelType>
-	static void ValueWidthHeight(LabelType&& Label, const FVector2D& Value)
+	static void ValueWidthHeight(LabelType&& Label, const FVector2f& Value)
 	{
 		Text(Label); ImGui::NextColumn();
 		ImGui::Text("Width = %.0f, Height = %.0f", Value.X, Value.Y); ImGui::NextColumn();

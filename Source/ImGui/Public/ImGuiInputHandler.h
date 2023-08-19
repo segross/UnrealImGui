@@ -87,8 +87,8 @@ public:
 	 * @param MouseEvent Optional mouse event passed from Slate
 	 * @returns Response whether the event was handled
 	 */
-	virtual FReply OnMouseMove(const FVector2D& MousePosition, const FPointerEvent& MouseEvent);
-	virtual FReply OnMouseMove(const FVector2D& MousePosition);
+	virtual FReply OnMouseMove(const FVector2f& MousePosition, const FPointerEvent& MouseEvent);
+	virtual FReply OnMouseMove(const FVector2f& MousePosition);
 
 	/**
 	 * Called to handle touch started event.
@@ -96,7 +96,7 @@ public:
 	 * @param TouchEvent Touch event passed from Slate
 	 * @returns Response whether the event was handled
 	 */
-	virtual FReply OnTouchStarted(const FVector2D& TouchPosition, const FPointerEvent& TouchEvent);
+	virtual FReply OnTouchStarted(const FVector2f& TouchPosition, const FPointerEvent& TouchEvent);
 
 	/**
 	 * Called to handle touch moved event.
@@ -104,7 +104,7 @@ public:
 	 * @param TouchEvent Touch event passed from Slate
 	 * @returns Response whether the event was handled
 	 */
-	virtual FReply OnTouchMoved(const FVector2D& TouchPosition, const FPointerEvent& TouchEvent);
+	virtual FReply OnTouchMoved(const FVector2f& TouchPosition, const FPointerEvent& TouchEvent);
 
 	/**
 	 * Called to handle touch ended event.
@@ -112,7 +112,7 @@ public:
 	 * @param TouchEvent Touch event passed from Slate
 	 * @returns Response whether the event was handled
 	 */
-	virtual FReply OnTouchEnded(const FVector2D& TouchPosition, const FPointerEvent& TouchEvent);
+	virtual FReply OnTouchEnded(const FVector2f& TouchPosition, const FPointerEvent& TouchEvent);
 
 	/** Called to handle activation of the keyboard input. */
 	virtual void OnKeyboardInputEnabled();

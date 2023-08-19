@@ -152,7 +152,7 @@ FReply UImGuiInputHandler::OnMouseWheel(const FPointerEvent& MouseEvent)
 	return ToReply(true);
 }
 
-FReply UImGuiInputHandler::OnMouseMove(const FVector2D& MousePosition, const FPointerEvent& MouseEvent)
+FReply UImGuiInputHandler::OnMouseMove(const FVector2f& MousePosition, const FPointerEvent& MouseEvent)
 {
 	if (MouseEvent.IsTouchEvent())
 	{
@@ -162,26 +162,26 @@ FReply UImGuiInputHandler::OnMouseMove(const FVector2D& MousePosition, const FPo
 	return OnMouseMove(MousePosition);
 }
 
-FReply UImGuiInputHandler::OnMouseMove(const FVector2D& MousePosition)
+FReply UImGuiInputHandler::OnMouseMove(const FVector2f& MousePosition)
 {
 	InputState->SetMousePosition(MousePosition);
 	return ToReply(true);
 }
 
-FReply UImGuiInputHandler::OnTouchStarted(const FVector2D& CursorPosition, const FPointerEvent& TouchEvent)
+FReply UImGuiInputHandler::OnTouchStarted(const FVector2f& CursorPosition, const FPointerEvent& TouchEvent)
 {
 	InputState->SetTouchDown(true);
 	InputState->SetTouchPosition(CursorPosition);
 	return ToReply(true);
 }
 
-FReply UImGuiInputHandler::OnTouchMoved(const FVector2D& CursorPosition, const FPointerEvent& TouchEvent)
+FReply UImGuiInputHandler::OnTouchMoved(const FVector2f& CursorPosition, const FPointerEvent& TouchEvent)
 {
 	InputState->SetTouchPosition(CursorPosition);
 	return ToReply(true);
 }
 
-FReply UImGuiInputHandler::OnTouchEnded(const FVector2D& CursorPosition, const FPointerEvent& TouchEvent)
+FReply UImGuiInputHandler::OnTouchEnded(const FVector2f& CursorPosition, const FPointerEvent& TouchEvent)
 {
 	InputState->SetTouchDown(false);
 	return ToReply(true);

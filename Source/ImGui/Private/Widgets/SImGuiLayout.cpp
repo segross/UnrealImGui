@@ -49,7 +49,7 @@ void SImGuiLayout::Construct(const FArguments& InArgs)
 				.Anchors(FAnchors(0.f, 0.f, 1.f, 1.f))
 				.AutoSize(true)
 				.Offset(FMargin(1.f, 1.f, 0.f, 1.f))
-				.Alignment(FVector2D::ZeroVector)
+				.Alignment(FVector2f::ZeroVector)
 				[
 					SNew(SImGuiWidget)
 					.ModuleManager(InArgs._ModuleManager)
