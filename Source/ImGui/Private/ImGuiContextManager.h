@@ -65,7 +65,7 @@ public:
 		return Data ? Data->ContextProxy.Get() : nullptr;
 	}
 	
-	FORCEINLINE FImGuiContextProxy* GetOrCreateContextProxy(FImguiViewHandle ContextIndex);
+	IMGUI_API FORCEINLINE FImGuiContextProxy* GetOrCreateContextProxy(FImguiViewHandle ContextIndex);
 	
 	// Delegate called when a new context proxy is created.
 	FContextProxyCreatedDelegate OnContextProxyCreated;
