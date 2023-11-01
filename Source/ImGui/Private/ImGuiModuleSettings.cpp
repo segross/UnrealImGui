@@ -128,7 +128,7 @@ void FImGuiModuleSettings::UpdateDPIScaleInfo()
 	}
 }
 
-void FImGuiModuleSettings::SetImGuiInputHandlerClass(const FStringClassReference& ClassReference)
+void FImGuiModuleSettings::SetImGuiInputHandlerClass(const FSoftClassPath& ClassReference)
 {
 	if (ImGuiInputHandlerClass != ClassReference)
 	{

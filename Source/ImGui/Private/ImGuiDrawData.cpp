@@ -29,7 +29,11 @@ void FImGuiDrawList::CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const
 		SlateVertex.Position[1] = VertexPosition.Y;
 		SlateVertex.ClipRect = VertexClippingRect;
 #else
+#if ENGINE_COMPATIBILITY_LEGACY_VECTOR2F
 		SlateVertex.Position = Transform.TransformPoint(ImGuiInterops::ToVector2D(ImGuiVertex.pos));
+#else
+		SlateVertex.Position = (FVector2f)Transform.TransformPoint(ImGuiInterops::ToVector2D(ImGuiVertex.pos));
+#endif // ENGINE_COMPATIBILITY_LEGACY_VECTOR2F
 #endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 
 		// Unpack ImU32 color.
@@ -56,8 +60,4 @@ void FImGuiDrawList::TransferDrawData(ImDrawList& Src)
 	Src.CmdBuffer.swap(ImGuiCommandBuffer);
 	Src.IdxBuffer.swap(ImGuiIndexBuffer);
 	Src.VtxBuffer.swap(ImGuiVertexBuffer);
-
-	// ImGui seems to clear draw lists in every frame, but since source list can contain pointers to buffers that
-	// we just swapped, it is better to clear explicitly here.
-	Src.Clear();
 }

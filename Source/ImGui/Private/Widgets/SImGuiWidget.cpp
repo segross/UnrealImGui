@@ -275,7 +275,7 @@ FReply SImGuiWidget::OnTouchEnded(const FGeometry& MyGeometry, const FPointerEve
 	return InputHandler->OnTouchEnded(TransformScreenPointToImGui(MyGeometry, TouchEvent.GetScreenSpacePosition()), TouchEvent);
 }
 
-void SImGuiWidget::CreateInputHandler(const FStringClassReference& HandlerClassReference)
+void SImGuiWidget::CreateInputHandler(const FSoftClassPath& HandlerClassReference)
 {
 	ReleaseInputHandler();
 
@@ -441,13 +441,13 @@ void SImGuiWidget::UpdateInputState()
 		}
 	}
 
-	const bool bEnableInput = Properties.IsInputEnabled();
-	if (bInputEnabled != bEnableInput)
+	const bool bPropertiesInputEnabled = Properties.IsInputEnabled();
+	if (bInputEnabled != bPropertiesInputEnabled)
 	{
 		IMGUI_WIDGET_LOG(Log, TEXT("ImGui Widget %d - Input Enabled changed to '%s'."),
-			ContextIndex, TEXT_BOOL(bEnableInput));
+			ContextIndex, TEXT_BOOL(bPropertiesInputEnabled));
 
-		bInputEnabled = bEnableInput;
+		bInputEnabled = bPropertiesInputEnabled;
 
 		UpdateVisibility();
 		UpdateMouseCursor();
@@ -477,8 +477,9 @@ void SImGuiWidget::UpdateInputState()
 			// the whole input to match that state.
 			if (GameViewport->GetGameViewportWidget()->HasMouseCapture())
 			{
-				Properties.SetInputEnabled(false);
-				UpdateInputState();
+				// DON'T DISABLE OUR INPUT WHEN WE LOSE FOCUS
+				//Properties.SetInputEnabled(false);
+				//UpdateInputState();
 			}
 		}
 		else
