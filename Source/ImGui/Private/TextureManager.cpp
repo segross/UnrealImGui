@@ -1,7 +1,7 @@
 // Distributed under the MIT License (MIT) (see accompanying LICENSE file)
 
 #include "TextureManager.h"
-
+#include "RHITypes.h"
 #include <Engine/Texture2D.h>
 #include <Framework/Application/SlateApplication.h>
 
