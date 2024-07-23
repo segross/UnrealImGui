@@ -5,6 +5,7 @@
 #include "ImGuiDelegatesContainer.h"
 #include "ImGuiImplementation.h"
 #include "ImGuiModuleSettings.h"
+#include "ImGuiModule.h"
 #include "Utilities/WorldContext.h"
 #include "Utilities/WorldContextIndex.h"
 
@@ -254,13 +255,28 @@ void FImGuiContextManager::SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo)
 	}
 }
 
-void FImGuiContextManager::BuildFontAtlas()
+void FImGuiContextManager::BuildFontAtlas(const TMap<FName, TSharedPtr<ImFontConfig>>& CustomFontConfigs)
 {
 	if (!FontAtlas.IsBuilt())
 	{
 		ImFontConfig FontConfig = {};
 		FontConfig.SizePixels = FMath::RoundFromZero(13.f * DPIScale);
 		FontAtlas.AddFontDefault(&FontConfig);
+
+		// Build custom fonts
+		for (const TPair<FName, TSharedPtr<ImFontConfig>>& CustomFontPair : CustomFontConfigs)
+		{
+			FName CustomFontName = CustomFontPair.Key;
+			TSharedPtr<ImFontConfig> CustomFontConfig = CustomFontPair.Value;
+
+			// Set font name for debugging
+			if (CustomFontConfig.IsValid())
+			{
+				strcpy_s(CustomFontConfig->Name, 40, TCHAR_TO_ANSI(*CustomFontName.ToString()));
+			}
+		
+			FontAtlas.AddFont(CustomFontConfig.Get());
+		}
 
 		unsigned char* Pixels;
 		int Width, Height, Bpp;
@@ -283,5 +299,5 @@ void FImGuiContextManager::RebuildFontAtlas()
 		FontResourcesReleaseCountdown = 3;
 	}
 
-	BuildFontAtlas();
+	BuildFontAtlas(FImGuiModule::Get().GetProperties().GetCustomFonts());
 }

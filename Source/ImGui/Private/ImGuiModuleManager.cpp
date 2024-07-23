@@ -74,6 +74,11 @@ FImGuiModuleManager::~FImGuiModuleManager()
 	UnregisterTick();
 }
 
+void FImGuiModuleManager::RebuildFontAtlas()
+{
+	ContextManager.RebuildFontAtlas();
+}
+
 void FImGuiModuleManager::LoadTextures()
 {
 	checkf(FSlateApplication::IsInitialized(), TEXT("Slate should be initialized before we can create textures."));

@@ -66,6 +66,8 @@ public:
 
 	void Tick(float DeltaSeconds);
 
+	void RebuildFontAtlas();
+
 private:
 
 	struct FContextData
@@ -102,8 +104,7 @@ private:
 	FContextData& GetWorldContextData(const UWorld& World, int32* OutContextIndex = nullptr);
 
 	void SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo);
-	void BuildFontAtlas();
-	void RebuildFontAtlas();
+	void BuildFontAtlas(const TMap<FName, TSharedPtr<ImFontConfig>>& CustomFontConfigs = {});
 
 	TMap<int32, FContextData> Contexts;
 

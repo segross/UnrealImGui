@@ -34,6 +34,8 @@ public:
 	// Event called right after ImGui is updated, to give other subsystems chance to react.
 	FSimpleMulticastDelegate& OnPostImGuiUpdate() { return PostImGuiUpdateEvent; }
 
+	void RebuildFontAtlas();
+
 private:
 
 	FImGuiModuleManager();

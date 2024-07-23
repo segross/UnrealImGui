@@ -6,7 +6,10 @@
 
 // For convenience and easy access to the ImGui source code, we build it as part of this module.
 // We don't need to define IMGUI_API manually because it is already done for this module.
-
+// UE 5.1 stopped defining PLATFORM_XBOXONE, so be safe if not defined
+#if !defined(PLATFORM_XBOXONE)
+	#define PLATFORM_XBOXONE 0
+#endif
 #if PLATFORM_XBOXONE
 // Disable Win32 functions used in ImGui and not supported on XBox.
 #define IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS
@@ -46,6 +49,8 @@ static FImGuiContextHandle ImGuiContextPtrHandle(ImGuiContextPtr);
 #include "imgui_demo.cpp"
 #include "imgui_draw.cpp"
 #include "imgui_widgets.cpp"
+
+#include "imgui_tables.cpp"
 
 #if PLATFORM_WINDOWS
 #include <Windows/HideWindowsPlatformTypes.h>

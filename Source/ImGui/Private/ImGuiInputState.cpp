@@ -45,6 +45,9 @@ void FImGuiInputState::ClearUpdateState()
 {
 	ClearCharacters();
 
+	KeyDownEvents.Reset();
+	KeyUpEvents.Reset();
+
 	KeysUpdateRange.SetEmpty();
 	MouseButtonsUpdateRange.SetEmpty();
 

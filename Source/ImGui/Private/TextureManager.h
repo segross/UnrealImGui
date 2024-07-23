@@ -84,7 +84,7 @@ public:
 	// @param Name - The texture name
 	// @param Texture - The texture
 	// @returns The index to created/updated texture resources
-	TextureIndex CreateTextureResources(const FName& Name, UTexture2D* Texture);
+	TextureIndex CreateTextureResources(const FName& Name, UTexture* Texture);
 
 	// Release resources for given texture. Ignores invalid indices.
 	// @param Index - The index of a texture resources
@@ -107,7 +107,7 @@ private:
 	// @param Texture - The texture
 	// @param bAddToRoot - If true, we should add texture to root to prevent garbage collection (use for own textures)
 	// @returns The index of the entry that we created or reused
-	TextureIndex AddTextureEntry(const FName& Name, UTexture2D* Texture, bool bAddToRoot);
+	TextureIndex AddTextureEntry(const FName& Name, UTexture* Texture, bool bAddToRoot);
 
 	// Check whether index is in range allocated for TextureResources (it doesn't mean that resources are valid).
 	FORCEINLINE bool IsInRange(TextureIndex Index) const
@@ -125,7 +125,7 @@ private:
 	struct FTextureEntry
 	{
 		FTextureEntry() = default;
-		FTextureEntry(const FName& InName, UTexture2D* InTexture, bool bAddToRoot);
+		FTextureEntry(const FName& InName, UTexture* InTexture, bool bAddToRoot);
 		~FTextureEntry();
 
 		// Copying is not supported.
@@ -146,7 +146,7 @@ private:
 
 		FName Name = NAME_None;
 		mutable FSlateResourceHandle CachedResourceHandle;
-		TWeakObjectPtr<UTexture2D> Texture;
+		TWeakObjectPtr<UTexture> Texture;
 		FSlateBrush Brush;
 	};
 

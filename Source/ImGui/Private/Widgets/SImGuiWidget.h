@@ -84,7 +84,7 @@ public:
 
 private:
 
-	void CreateInputHandler(const FStringClassReference& HandlerClassReference);
+	void CreateInputHandler(const FSoftClassPath& HandlerClassReference);
 	void ReleaseInputHandler();
 
 	void RegisterImGuiSettingsDelegates();
