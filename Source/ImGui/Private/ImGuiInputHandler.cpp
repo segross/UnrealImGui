@@ -76,8 +76,8 @@ FReply UImGuiInputHandler::OnKeyDown(const FKeyEvent& KeyEvent)
 			ModuleManager->GetProperties().ToggleInput();
 		}
 
-		InputState->SetKeyDown(KeyEvent, true);
 		CopyModifierKeys(KeyEvent);
+		InputState->SetKeyDown(KeyEvent, true);
 
 		return ToReply(bConsume);
 	}
@@ -98,8 +98,8 @@ FReply UImGuiInputHandler::OnKeyUp(const FKeyEvent& KeyEvent)
 	}
 	else
 	{
-		InputState->SetKeyDown(KeyEvent, false);
 		CopyModifierKeys(KeyEvent);
+		InputState->SetKeyDown(KeyEvent, false);
 
 		return ToReply(!ModuleManager->GetProperties().IsKeyboardInputShared());
 	}
@@ -125,12 +125,14 @@ FReply UImGuiInputHandler::OnMouseButtonDown(const FPointerEvent& MouseEvent)
 		return ToReply(false);
 	}
 
+	CopyModifierKeys(MouseEvent);
 	InputState->SetMouseDown(MouseEvent, true);
 	return ToReply(true);
 }
 
 FReply UImGuiInputHandler::OnMouseButtonDoubleClick(const FPointerEvent& MouseEvent)
 {
+	CopyModifierKeys(MouseEvent);
 	InputState->SetMouseDown(MouseEvent, true);
 	return ToReply(true);
 }
@@ -142,12 +144,14 @@ FReply UImGuiInputHandler::OnMouseButtonUp(const FPointerEvent& MouseEvent)
 		return ToReply(false);
 	}
 
+	CopyModifierKeys(MouseEvent);
 	InputState->SetMouseDown(MouseEvent, false);
 	return ToReply(true);
 }
 
 FReply UImGuiInputHandler::OnMouseWheel(const FPointerEvent& MouseEvent)
 {
+	CopyModifierKeys(MouseEvent);
 	InputState->AddMouseWheelDelta(MouseEvent.GetWheelDelta());
 	return ToReply(true);
 }
@@ -170,8 +174,8 @@ FReply UImGuiInputHandler::OnMouseMove(const FVector2D& MousePosition)
 
 FReply UImGuiInputHandler::OnTouchStarted(const FVector2D& CursorPosition, const FPointerEvent& TouchEvent)
 {
-	InputState->SetTouchDown(true);
 	InputState->SetTouchPosition(CursorPosition);
+	InputState->SetTouchDown(true);
 	return ToReply(true);
 }
 
@@ -183,12 +187,14 @@ FReply UImGuiInputHandler::OnTouchMoved(const FVector2D& CursorPosition, const F
 
 FReply UImGuiInputHandler::OnTouchEnded(const FVector2D& CursorPosition, const FPointerEvent& TouchEvent)
 {
+	InputState->SetTouchPosition(CursorPosition);
 	InputState->SetTouchDown(false);
 	return ToReply(true);
 }
 
 void UImGuiInputHandler::OnKeyboardInputEnabled()
 {
+	InputState->SetFocused(true);
 	bKeyboardInputEnabled = true;
 }
 
@@ -197,7 +203,7 @@ void UImGuiInputHandler::OnKeyboardInputDisabled()
 	if (bKeyboardInputEnabled)
 	{
 		bKeyboardInputEnabled = false;
-		InputState->ResetKeyboard();
+		InputState->SetFocused(false);
 	}
 }
 
@@ -239,6 +245,7 @@ void UImGuiInputHandler::CopyModifierKeys(const FInputEvent& InputEvent)
 	InputState->SetControlDown(InputEvent.IsControlDown());
 	InputState->SetShiftDown(InputEvent.IsShiftDown());
 	InputState->SetAltDown(InputEvent.IsAltDown());
+	InputState->SetSuperDown(InputEvent.IsCommandDown());
 }
 
 bool UImGuiInputHandler::IsConsoleEvent(const FKeyEvent& KeyEvent) const
@@ -304,10 +311,8 @@ void UImGuiInputHandler::OnSoftwareCursorChanged(bool)
 	UpdateInputStatePointer();
 }
 
-void UImGuiInputHandler::OnPostImGuiUpdate()
+void UImGuiInputHandler::OnPreImGuiUpdate()
 {
-	InputState->ClearUpdateState();
-
 	// TODO Replace with delegates after adding property change events.
 	InputState->SetKeyboardNavigationEnabled(ModuleManager->GetProperties().IsKeyboardNavigationEnabled());
 	InputState->SetGamepadNavigationEnabled(ModuleManager->GetProperties().IsGamepadNavigationEnabled());
@@ -326,8 +331,9 @@ void UImGuiInputHandler::Initialize(FImGuiModuleManager* InModuleManager, UGameV
 	checkf(ContextProxy, TEXT("Missing context during initialization of input handler: ContextIndex = %d"), ContextIndex);
 	InputState = &ContextProxy->GetInputState();
 
-	// Register to get post-update notifications, so we can clean frame updates.
-	ModuleManager->OnPostImGuiUpdate().AddUObject(this, &UImGuiInputHandler::OnPostImGuiUpdate);
+	// Slate already detected connected devices before this phase; preserve their first queued inputs.
+	ModuleManager->OnPreImGuiUpdate().AddUObject(this, &UImGuiInputHandler::OnPreImGuiUpdate);
+	OnPreImGuiUpdate();
 
 	auto& Settings = ModuleManager->GetSettings();
 	if (!Settings.OnUseSoftwareCursorChanged.IsBoundToObject(this))

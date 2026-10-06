@@ -1,0 +1,18 @@
+using UnrealBuildTool;
+public class ImGuiValidation : ModuleRules
+{
+    public ImGuiValidation(ReadOnlyTargetRules Target) : base(Target)
+    {
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        PrivateDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine" });
+        if (Target.bBuildDeveloperTools)
+        {
+            PrivateDependencyModuleNames.Add("ImGui");
+            PrivateDefinitions.Add("WITH_IMGUI=1");
+        }
+        else
+        {
+            PrivateDefinitions.Add("WITH_IMGUI=0");
+        }
+    }
+}

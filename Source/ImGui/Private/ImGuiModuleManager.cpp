@@ -16,13 +16,12 @@ constexpr int32 IMGUI_WIDGET_Z_ORDER = 10000;
 
 // Module texture names.
 const static FName PlainTextureName = "ImGuiModule_Plain";
-const static FName FontAtlasTextureName = "ImGuiModule_FontAtlas";
 
 FImGuiModuleManager::FImGuiModuleManager()
 	: Commands(Properties)
 	, Settings(Properties, Commands)
 	, ImGuiDemo(Properties)
-	, ContextManager(Settings)
+	, ContextManager(Settings, TextureManager)
 {
 	// Register in context manager to get information whenever a new context proxy is created.
 	ContextManager.OnContextProxyCreated.AddRaw(this, &FImGuiModuleManager::OnContextProxyCreated);
@@ -46,8 +45,6 @@ FImGuiModuleManager::FImGuiModuleManager()
 
 FImGuiModuleManager::~FImGuiModuleManager()
 {
-	ContextManager.OnFontAtlasBuilt.RemoveAll(this);
-
 	// We are no longer interested with adding widgets to viewports.
 	if (ViewportCreatedHandle.IsValid())
 	{
@@ -87,26 +84,7 @@ void FImGuiModuleManager::LoadTextures()
 		// Create an empty texture at index 0. We will use it for ImGui outputs with null texture id.
 		TextureManager.CreatePlainTexture(PlainTextureName, 2, 2, FColor::White);
 
-		// Register for atlas built events, so we can rebuild textures.
-		ContextManager.OnFontAtlasBuilt.AddRaw(this, &FImGuiModuleManager::BuildFontAtlasTexture);
-
-		BuildFontAtlasTexture();
 	}
-}
-
-void FImGuiModuleManager::BuildFontAtlasTexture()
-{
-	// Create a font atlas texture.
-	ImFontAtlas& Fonts = ContextManager.GetFontAtlas();
-
-	unsigned char* Pixels;
-	int Width, Height, Bpp;
-	Fonts.GetTexDataAsRGBA32(&Pixels, &Width, &Height, &Bpp);
-
-	const TextureIndex FontsTexureIndex = TextureManager.CreateTexture(FontAtlasTextureName, Width, Height, Bpp, Pixels);
-
-	// Set the font texture index in the ImGui.
-	Fonts.TexID = ImGuiInterops::ToImTextureID(FontsTexureIndex);
 }
 
 void FImGuiModuleManager::RegisterTick()
@@ -164,6 +142,8 @@ void FImGuiModuleManager::Tick(float DeltaSeconds)
 {
 	if (IsInGameThread())
 	{
+		LoadTextures();
+		PreImGuiUpdateEvent.Broadcast();
 		// Update context manager to advance all ImGui contexts to the next frame.
 		ContextManager.Tick(DeltaSeconds);
 

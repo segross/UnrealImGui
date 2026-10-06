@@ -172,7 +172,7 @@ private:
 
 	void OnSoftwareCursorChanged(bool);
 
-	void OnPostImGuiUpdate();
+	void OnPreImGuiUpdate();
 
 	void Initialize(FImGuiModuleManager* InModuleManager, UGameViewportClient* InGameViewport, int32 InContextIndex);
 

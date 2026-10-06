@@ -1,31 +1,30 @@
 Unreal ImGui
 ============
 
-[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Unreal ImGui is an Unreal Engine 4 plug-in that integrates [Dear ImGui](https://github.com/ocornut/imgui) developed by Omar Cornut.
+Unreal ImGui is an Unreal Engine 5 plug-in that integrates [Dear ImGui](https://github.com/ocornut/imgui) developed by Omar Cornut.
 
 Dear ImGui is an immediate-mode graphical user interface library that is very lightweight and easy to use. It can be very useful when creating debugging tools.
 
 Status
 ------
-Version: 1.22
+Version: 1.23
 
-ImGui version: 1.74
+ImGui version: [1.92.9b](https://github.com/ocornut/imgui/releases/tag/v1.92.9b) (stable, non-docking branch).
 
-Supported engine version: 4.26*
+Validated engine version: **Unreal Engine 5.8.0 source editor build / Win64**. See [validation results and instructions](Docs/UE58Validation.md).
 
-\* *Plugin has been tested and if necessary updated to compile and work with this engine version. As long as possible I will try to maintain backward compatibility of existing features and possibly but not necessarily when adding new features. When it comes to bare-bone ImGui version it should be at least backward compatible with the engine version 4.15. For NetImgui it needs to be determined.*
+The plugin uses current UE5 build rules, soft class paths, and Slate coordinate types. Older engines and other platforms require their own validation.
 
-Current work
-------------
+Upgrading from ImGui 1.74
+------------------------
 
-Currently, I'm a little busy outside of this project so changes come slowly. But here is what to expect in the reasonably near future:
-- Stability first, so fixes for more critical issues like an invalidation of handles after reloading texture resources will be pushed first. The same goes for merges.
-- There are a few smaller issues that I'm aware of and that might be not reported but which I want to fix.
-- ImGui needs to be updated.
-- Smaller features might be slowly pushed but bigger ones will need to wait. The same goes for merges.
-- There is a branch with NetImgui which is really good, and which will be eventually merged to master, but first I want to fix a few issues that I know about (some are discussed in thread #28). In the meantime, the NetImgui branch is pretty much ready to use.
+The integration now submits named keyboard and gamepad events, supports dynamic font atlas textures and font sizes, and honors draw command index/vertex offsets. Each PIE world still has its own ImGui context and shares the font atlas. Clipboard operations use Unreal's platform API.
+
+`FImGuiTextureHandle` can still be passed directly to `ImGui::Image()`. ImGui now uses integer texture IDs and `ImTextureRef`; register Unreal textures through `FImGuiModule::RegisterTexture()` rather than casting texture pointers. For other application API changes, see the vendored [Dear ImGui changelog](Source/ThirdParty/ImGuiLibrary/Docs/CHANGELOG.txt).
+
+Input events preserve Slate arrival order, including fast button taps and mixed pointer/text input. Losing focus cancels pending input. Runtime DPI changes preserve custom themes and fractional sizes. Texture IDs are opaque session values: releasing a registration invalidates its old handles, while updating a live registration by name preserves its ID. Keep externally registered Unreal textures referenced by their owner so they survive garbage collection. See the [independent review and fixes](Docs/UE58Review.md).
 
 
 About
@@ -55,15 +54,13 @@ To use this plug-in, you will need a C++ Unreal project.
 
 Content of this repository needs to be placed in the *Plugins* directory under the project root: *[Project Root]/Plugins/ImGui/*. After you compile and run you should notice that *ImGui* module is now available.
 
-Note that plugins can be also placed in the engine directory *[UE4 Root]/Engine/Plugins/* but I didn't try it with this project.
+Plugins can also be placed in the engine directory *[Engine Root]/Engine/Plugins/*.
 
 If you want to use NetImgui, instead of please look at the [How to Set up NetImgui](#how-to-set-up-netimgui).
 
 ### Setting module type
 
-The *ImGui* module type is set to **Developer**, what means that if it is not referenced by other runtime modules, it can be automatically excluded from shipping builds. This is convenient when using this plugging for debugging but if you want to change it to other type, you can do it in module description section in `ImGui.uplugin` file.
-
-**Developer** type was depreciated in UE 4.24. I keep it for backward compatibility while I can, but if you get a UBT warning about module type, simply change it to **DeveloperTool** or **Runtime**.
+The *ImGui* module uses **DeveloperTool**, the supported replacement for the old **Developer** type. It is available when the target builds developer tools, including normal Editor and Development targets. Keep game-module dependencies conditional when excluding it from Shipping. If your application needs ImGui in Shipping, use **Runtime** and validate that target explicitly.
 
 ### Setting up module dependencies
 
@@ -82,7 +79,7 @@ PublicDependencyModuleNames.Add("ImGui");
 You might also want to use ImGui only in certain builds:
 
 ```C#
-if (Target.Configuration != UnrealTargetConfiguration.Shipping)
+if (Target.bBuildDeveloperTools)
 {
 	PrivateDependencyModuleNames.Add("ImGui");
 }
@@ -93,12 +90,12 @@ if (Target.Configuration != UnrealTargetConfiguration.Shipping)
 You can conditionally compile ImGui code by checking `IMGUI_API`:
 
 ```C++
-#ifded IMGUI_API
+#ifdef IMGUI_API
 #include <imgui.h>
 #endif
 
 // ... somewhere in your code
-#ifded IMGUI_API
+#ifdef IMGUI_API
 // ImGui code
 #endif
 ```

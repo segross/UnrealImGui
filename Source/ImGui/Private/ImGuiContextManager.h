@@ -22,7 +22,7 @@ class FImGuiContextManager
 {
 public:
 
-	FImGuiContextManager(FImGuiModuleSettings& InSettings);
+	FImGuiContextManager(FImGuiModuleSettings& InSettings, FTextureManager& InTextureManager);
 
 	FImGuiContextManager(const FImGuiContextManager&) = delete;
 	FImGuiContextManager& operator=(const FImGuiContextManager&) = delete;
@@ -61,18 +61,15 @@ public:
 	// Delegate called when a new context proxy is created.
 	FContextProxyCreatedDelegate OnContextProxyCreated;
 
-	// Delegate called after font atlas is built.
-	FSimpleMulticastDelegate OnFontAtlasBuilt;
-
 	void Tick(float DeltaSeconds);
 
 private:
 
 	struct FContextData
 	{
-		FContextData(const FString& ContextName, int32 ContextIndex, ImFontAtlas& FontAtlas, float DPIScale, int32 InPIEInstance = -1)
+		FContextData(const FString& ContextName, int32 ContextIndex, ImFontAtlas& FontAtlas, float DPIScale, FTextureManager& TextureManager, int32 InPIEInstance = -1)
 			: PIEInstance(InPIEInstance)
-			, ContextProxy(new FImGuiContextProxy(ContextName, ContextIndex, &FontAtlas, DPIScale))
+			, ContextProxy(new FImGuiContextProxy(ContextName, ContextIndex, &FontAtlas, DPIScale, TextureManager))
 		{
 		}
 
@@ -103,15 +100,13 @@ private:
 
 	void SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo);
 	void BuildFontAtlas();
-	void RebuildFontAtlas();
 
 	TMap<int32, FContextData> Contexts;
 
 	ImFontAtlas FontAtlas;
-	TArray<TUniquePtr<ImFontAtlas>> FontResourcesToRelease;
 
 	FImGuiModuleSettings& Settings;
+	FTextureManager& TextureManager;
 
 	float DPIScale = -1.f;
-	int32 FontResourcesReleaseCountdown = 0;
 };

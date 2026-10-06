@@ -25,6 +25,24 @@ public:
 	// Array for navigation input states.
 	using FNavInputArray = ImGuiInterops::ImGuiTypes::FNavInputArray;
 
+	enum class EEventType : uint8 { Key, Gamepad, Character, MousePosition, MouseButton, MouseWheel, Focus };
+	struct FInputEvent
+	{
+		EEventType Type;
+		ImGuiKey Key = ImGuiKey_None;
+		bool bIsDown = false;
+		float X = 0.f;
+		float Y = 0.f;
+		uint32 Character = 0;
+		int Button = 0;
+		ImGuiMouseSource MouseSource = ImGuiMouseSource_Mouse;
+	};
+	const TArray<FInputEvent>& GetEvents() const { return InputEvents; }
+	bool ShouldResetKeyboard() const { return bResetKeyboard; }
+	bool ShouldResetMouse() const { return bResetMouse; }
+	bool ShouldResetGamepad() const { return bResetGamepad; }
+	void SetFocused(bool bIsFocused);
+
 	// Pair of indices defining range in mouse buttons array.
 	using FMouseButtonsIndexRange = Utilities::TArrayIndexRange<FMouseButtonsArray, uint32>;
 
@@ -37,8 +55,7 @@ public:
 	// Get reference to input characters buffer.
 	const FCharactersBuffer& GetCharacters() const { return InputCharacters; }
 
-	// Add a character to the characters buffer. We can store and send to ImGui up to 16 characters per frame. Any
-	// character beyond that limit will be discarded.
+	// Append a character in arrival order; the buffer grows when a paste exceeds its inline capacity.
 	// @param Char - Character to add
 	void AddCharacter(TCHAR Char);
 
@@ -79,14 +96,14 @@ public:
 
 	// Add mouse wheel delta.
 	// @param DeltaValue - Mouse wheel delta to add
-	void AddMouseWheelDelta(float DeltaValue) { MouseWheelDelta += DeltaValue; }
+	void AddMouseWheelDelta(float DeltaValue);
 
 	// Get the mouse position.
 	const FVector2D& GetMousePosition() const { return MousePosition; }
 
 	// Set the mouse position.
 	// @param Position - Mouse position
-	void SetMousePosition(const FVector2D& Position) { MousePosition = Position; }
+	void SetMousePosition(const FVector2D& Position);
 
 	// Check whether input has active mouse pointer.
 	bool HasMousePointer() const { return bHasMousePointer; }
@@ -104,35 +121,36 @@ public:
 
 	// Set whether touch input is down.
 	// @param bIsDown - True, if touch is down (or started) and false, if touch is up (or ended)
-	void SetTouchDown(bool bIsDown) { bTouchDown = bIsDown; }
+	void SetTouchDown(bool bIsDown);
 
 	// Get the touch position.
 	const FVector2D& GetTouchPosition() const { return TouchPosition; }
 
 	// Set the touch position.
 	// @param Position - Touch position
-	void SetTouchPosition(const FVector2D& Position) { TouchPosition = Position; }
+	void SetTouchPosition(const FVector2D& Position);
 
 	// Get Control down state.
 	bool IsControlDown() const { return bIsControlDown; }
 
 	// Set Control down state.
 	// @param bIsDown - True, if Control is down
-	void SetControlDown(bool bIsDown) { bIsControlDown = bIsDown; }
+	void SetControlDown(bool bIsDown) { SetModifierKey(bIsControlDown, bIsDown, ImGuiMod_Ctrl); }
 
 	// Get Shift down state.
 	bool IsShiftDown() const { return bIsShiftDown; }
 
 	// Set Shift down state.
 	// @param bIsDown - True, if Shift is down
-	void SetShiftDown(bool bIsDown) { bIsShiftDown = bIsDown; }
+	void SetShiftDown(bool bIsDown) { SetModifierKey(bIsShiftDown, bIsDown, ImGuiMod_Shift); }
 
 	// Get Alt down state.
 	bool IsAltDown() const { return bIsAltDown; }
 
 	// Set Alt down state.
 	// @param bIsDown - True, if Alt is down
-	void SetAltDown(bool bIsDown) { bIsAltDown = bIsDown; }
+	void SetAltDown(bool bIsDown) { SetModifierKey(bIsAltDown, bIsDown, ImGuiMod_Alt); }
+	void SetSuperDown(bool bIsDown) { SetModifierKey(bIsSuperDown, bIsDown, ImGuiMod_Super); }
 
 	// Get reference to the array with navigation input states.
 	const FNavInputArray& GetNavigationInputs() const { return NavigationInputs; }
@@ -140,12 +158,14 @@ public:
 	// Change state of the navigation input associated with this gamepad key.
 	// @param KeyEvent - Key event with gamepad key input
 	// @param bIsDown - True, if key is down
-	void SetGamepadNavigationKey(const FKeyEvent& KeyEvent, bool bIsDown) { ImGuiInterops::SetGamepadNavigationKey(NavigationInputs, KeyEvent.GetKey(), bIsDown); }
+	void SetGamepadNavigationKey(const FKeyEvent& KeyEvent, bool bIsDown) { SetGamepadNavigationKey(KeyEvent.GetKey(), bIsDown); }
+	void SetGamepadNavigationKey(const FKey& Key, bool bIsDown);
 
 	// Change state of the navigation input associated with this gamepad axis.
 	// @param AnalogInputEvent - Analogue input event with gamepad axis input
 	// @param Value - Analogue value that should be set for this axis
-	void SetGamepadNavigationAxis(const FAnalogInputEvent& AnalogInputEvent, float Value) { ImGuiInterops::SetGamepadNavigationAxis(NavigationInputs, AnalogInputEvent.GetKey(), Value); }
+	void SetGamepadNavigationAxis(const FAnalogInputEvent& AnalogInputEvent, float Value) { SetGamepadNavigationAxis(AnalogInputEvent.GetKey(), Value); }
+	void SetGamepadNavigationAxis(const FKey& Key, float Value);
 
 	// Check whether keyboard navigation is enabled.
 	bool IsKeyboardNavigationEnabled() const { return bKeyboardNavigationEnabled; }
@@ -159,43 +179,26 @@ public:
 
 	// Set whether gamepad navigation is enabled.
 	// @param bEnabled - True, if navigation is enabled
-	void SetGamepadNavigationEnabled(bool bEnabled) { bGamepadNavigationEnabled = bEnabled; }
+	void SetGamepadNavigationEnabled(bool bEnabled);
 
 	// Check whether gamepad is attached.
 	bool HasGamepad() const { return bHasGamepad; }
 
 	// Set whether gamepad is attached.
 	// @param bInHasGamepad - True, if gamepad is attached
-	void SetGamepad(bool bInHasGamepad) { bHasGamepad = bInHasGamepad; }
+	void SetGamepad(bool bInHasGamepad);
 
 	// Reset the whole input state and mark it as dirty.
-	void Reset()
-	{
-		ResetKeyboard();
-		ResetMouse();
-		ResetGamepadNavigation();
-	}
+	void Reset();
 
 	// Reset the keyboard input state and mark it as dirty.
-	void ResetKeyboard()
-	{
-		ClearCharacters();
-		ClearKeys();
-		ClearModifierKeys();
-	}
+	void ResetKeyboard();
 
 	// Reset the mouse input state and mark it as dirty.
-	void ResetMouse()
-	{
-		ClearMouseButtons();
-		ClearMouseAnalogue();
-	}
+	void ResetMouse();
 
 	// Reset the gamepad navigation state.
-	void ResetGamepadNavigation()
-	{
-		ClearNavigationInputs();
-	}
+	void ResetGamepadNavigation();
 
 	// Clear part of the state that is meant to be updated in every frame like: accumulators, buffers, navigation data
 	// and information about dirty parts of keys or mouse buttons arrays.
@@ -205,27 +208,30 @@ private:
 
 	void SetKeyDown(uint32 KeyIndex, bool bIsDown);
 	void SetMouseDown(uint32 MouseIndex, bool IsDown);
+	void SetModifierKey(bool& State, bool bIsDown, ImGuiKey Key);
 
 	void ClearCharacters();
-	void ClearKeys();
-	void ClearMouseButtons();
-	void ClearMouseAnalogue();
-	void ClearModifierKeys();
-	void ClearNavigationInputs();
+	void QueueNavigationChanges(const FNavInputArray& Previous);
+	void QueuePointerPosition(const FVector2D& Position, ImGuiMouseSource Source);
 
 	FVector2D MousePosition = FVector2D::ZeroVector;
 	FVector2D TouchPosition = FVector2D::ZeroVector;
 	float MouseWheelDelta = 0.f;
 
-	FMouseButtonsArray MouseButtonsDown;
+	FMouseButtonsArray MouseButtonsDown = {};
 	FMouseButtonsIndexRange MouseButtonsUpdateRange;
 
 	FCharactersBuffer InputCharacters;
 
-	FKeysArray KeysDown;
+	FKeysArray KeysDown = {};
 	FKeysIndexRange KeysUpdateRange;
 
-	FNavInputArray NavigationInputs;
+	FNavInputArray NavigationInputs = {};
+	TArray<FInputEvent> InputEvents;
+	bool bFocused = true;
+	bool bResetKeyboard = false;
+	bool bResetMouse = false;
+	bool bResetGamepad = false;
 
 	bool bHasMousePointer = false;
 	bool bTouchDown = false;
@@ -234,6 +240,7 @@ private:
 	bool bIsControlDown = false;
 	bool bIsShiftDown = false;
 	bool bIsAltDown = false;
+	bool bIsSuperDown = false;
 
 	bool bKeyboardNavigationEnabled = false;
 	bool bGamepadNavigationEnabled = false;

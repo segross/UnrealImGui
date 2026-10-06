@@ -57,8 +57,9 @@ namespace
 #endif // WITH_EDITOR
 }
 
-FImGuiContextManager::FImGuiContextManager(FImGuiModuleSettings& InSettings)
+FImGuiContextManager::FImGuiContextManager(FImGuiModuleSettings& InSettings, FTextureManager& InTextureManager)
 	: Settings(InSettings)
+	, TextureManager(InTextureManager)
 {
 	Settings.OnDPIScaleChangedDelegate.AddRaw(this, &FImGuiContextManager::SetDPIScale);
 
@@ -80,6 +81,8 @@ FImGuiContextManager::~FImGuiContextManager()
 #if ENGINE_COMPATIBILITY_WITH_WORLD_POST_ACTOR_TICK
 	FWorldDelegates::OnWorldPostActorTick.RemoveAll(this);
 #endif
+	// The shared atlas must outlive every context that references it.
+	Contexts.Empty();
 }
 
 void FImGuiContextManager::Tick(float DeltaSeconds)
@@ -101,12 +104,6 @@ void FImGuiContextManager::Tick(float DeltaSeconds)
 		}
 	}
 
-	// Once all context tick they should use new fonts and we can release the old resources. Extra countdown is added
-	// wait for contexts that ticked outside of this function, before rebuilding fonts.
-	if (FontResourcesReleaseCountdown > 0 && !--FontResourcesReleaseCountdown)
-	{
-		FontResourcesToRelease.Empty();
-	}
 }
 
 #if ENGINE_COMPATIBILITY_LEGACY_WORLD_ACTOR_TICK
@@ -151,7 +148,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetEditorContextData()
 
 	if (UNLIKELY(!Data))
 	{
-		Data = &Contexts.Emplace(Utilities::EDITOR_CONTEXT_INDEX, FContextData{ GetEditorContextName(), Utilities::EDITOR_CONTEXT_INDEX, FontAtlas, DPIScale, -1 });
+		Data = &Contexts.Emplace(Utilities::EDITOR_CONTEXT_INDEX, FContextData{ GetEditorContextName(), Utilities::EDITOR_CONTEXT_INDEX, FontAtlas, DPIScale, TextureManager, -1 });
 		OnContextProxyCreated.Broadcast(Utilities::EDITOR_CONTEXT_INDEX, *Data->ContextProxy);
 	}
 
@@ -166,7 +163,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetStandaloneWorldCont
 
 	if (UNLIKELY(!Data))
 	{
-		Data = &Contexts.Emplace(Utilities::STANDALONE_GAME_CONTEXT_INDEX, FContextData{ GetWorldContextName(), Utilities::STANDALONE_GAME_CONTEXT_INDEX, FontAtlas, DPIScale });
+		Data = &Contexts.Emplace(Utilities::STANDALONE_GAME_CONTEXT_INDEX, FContextData{ GetWorldContextName(), Utilities::STANDALONE_GAME_CONTEXT_INDEX, FontAtlas, DPIScale, TextureManager });
 		OnContextProxyCreated.Broadcast(Utilities::STANDALONE_GAME_CONTEXT_INDEX, *Data->ContextProxy);
 	}
 
@@ -208,7 +205,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 #if WITH_EDITOR
 	if (UNLIKELY(!Data))
 	{
-		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, FontAtlas, DPIScale, WorldContext->PIEInstance });
+		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, FontAtlas, DPIScale, TextureManager, WorldContext->PIEInstance });
 		OnContextProxyCreated.Broadcast(Index, *Data->ContextProxy);
 	}
 	else
@@ -219,7 +216,7 @@ FImGuiContextManager::FContextData& FImGuiContextManager::GetWorldContextData(co
 #else
 	if (UNLIKELY(!Data))
 	{
-		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, FontAtlas, DPIScale });
+		Data = &Contexts.Emplace(Index, FContextData{ GetWorldContextName(World), Index, FontAtlas, DPIScale, TextureManager });
 		OnContextProxyCreated.Broadcast(Index, *Data->ContextProxy);
 	}
 #endif
@@ -238,12 +235,6 @@ void FImGuiContextManager::SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo)
 	{
 		DPIScale = Scale;
 
-		// Only rebuild font atlas if it is already built. Otherwise allow the other logic to pick a moment.
-		if (FontAtlas.IsBuilt())
-		{
-			RebuildFontAtlas();
-		}
-
 		for (auto& Pair : Contexts)
 		{
 			if (Pair.Value.ContextProxy)
@@ -256,32 +247,10 @@ void FImGuiContextManager::SetDPIScale(const FImGuiDPIScaleInfo& ScaleInfo)
 
 void FImGuiContextManager::BuildFontAtlas()
 {
-	if (!FontAtlas.IsBuilt())
+	if (FontAtlas.Fonts.empty())
 	{
 		ImFontConfig FontConfig = {};
-		FontConfig.SizePixels = FMath::RoundFromZero(13.f * DPIScale);
+		FontConfig.SizePixels = 13.f;
 		FontAtlas.AddFontDefault(&FontConfig);
-
-		unsigned char* Pixels;
-		int Width, Height, Bpp;
-		FontAtlas.GetTexDataAsRGBA32(&Pixels, &Width, &Height, &Bpp);
-
-		OnFontAtlasBuilt.Broadcast();
 	}
-}
-
-void FImGuiContextManager::RebuildFontAtlas()
-{
-	if (FontAtlas.IsBuilt())
-	{
-		// Keep the old resources alive for a few frames to give all contexts a chance to bind to new ones.
-		FontResourcesToRelease.Add(TUniquePtr<ImFontAtlas>(new ImFontAtlas()));
-		Swap(*FontResourcesToRelease.Last(), FontAtlas);
-
-		// Typically, one frame should be enough but since we allow for custom ticking, we need at least to frames to
-		// wait for contexts that already ticked and will not do that before the end of the next tick of this manager.
-		FontResourcesReleaseCountdown = 3;
-	}
-
-	BuildFontAtlas();
 }

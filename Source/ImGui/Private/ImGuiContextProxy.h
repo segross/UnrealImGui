@@ -19,7 +19,7 @@ class FImGuiContextProxy
 {
 public:
 
-	FImGuiContextProxy(const FString& Name, int32 InContextIndex, ImFontAtlas* InFontAtlas, float InDPIScale);
+	FImGuiContextProxy(const FString& Name, int32 InContextIndex, ImFontAtlas* InFontAtlas, float InDPIScale, FTextureManager& InTextureManager);
 	~FImGuiContextProxy();
 
 	FImGuiContextProxy(const FImGuiContextProxy&) = delete;
@@ -56,7 +56,7 @@ public:
 	// Get the DPI scale set for this context.
 	float GetDPIScale() const { return DPIScale; }
 
-	// Set the DPI scale for this context.
+	// Set the DPI scale while preserving the current theme. Invalid scales fall back to 1.
 	void SetDPIScale(float Scale);
 
 	// Whether this context has an active item (read once per frame during context update).
@@ -95,9 +95,14 @@ private:
 	void BroadcastMultiContextDebug();
 
 	ImGuiContext* Context;
+	FTextureManager& TextureManager;
 
 	FVector2D DisplaySize = FVector2D::ZeroVector;
 	float DPIScale = 1.f;
+	// Cache unrounded dimensions and the last applied values to recognize subsequent theme edits.
+	ImGuiStyle UnscaledStyle;
+	ImGuiStyle LastDPIScaleStyle;
+	bool bHasDPIScaleStyle = false;
 
 	EMouseCursor::Type MouseCursor = EMouseCursor::None;
 	bool bHasActiveItem = false;
@@ -114,7 +119,7 @@ private:
 	FString Name;
 	int32 ContextIndex = Utilities::INVALID_CONTEXT_INDEX;
 
-	uint32 LastFrameNumber = 0;
+	uint64 LastFrameNumber = MAX_uint64;
 
 	FSimpleMulticastDelegate DrawEvent;
 

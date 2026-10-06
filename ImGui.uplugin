@@ -1,9 +1,9 @@
 {
 	"FileVersion": 3,
-	"Version": 1,
-	"VersionName": "1.22",
+	"Version": 2,
+	"VersionName": "1.23",
 	"FriendlyName": "ImGui",
-	"Description": "",
+	"Description": "Dear ImGui 1.92.9b integration for Unreal Engine 5, including UE 5.8.",
 	"Category": "Debug",
 	"CreatedBy": "",
 	"CreatedByURL": "",
@@ -16,7 +16,7 @@
 	"Modules": [
 		{
 			"Name": "ImGui",
-			"Type": "Developer",
+			"Type": "DeveloperTool",
 			"LoadingPhase": "PreDefault"
 		}
 	]

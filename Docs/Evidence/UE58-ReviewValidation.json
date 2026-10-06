@@ -1,0 +1,229 @@
+{
+  "verifiedOn": "2026-10-04",
+  "engine": "5.8.0 source build",
+  "platform": "Win64",
+  "imgui": "1.92.9b",
+  "msvc": "14.44.35228",
+  "windowsSDK": "10.0.22621.0",
+  "gpu": "NVIDIA RTX 3080",
+  "independentReview": "all confirmed findings fixed; final review found no actionable issue",
+  "editorBuild": "passed",
+  "gameDevelopmentModules": "ImGui and ImGuiValidation source compilation passed; executable not linked",
+  "shippingHost": "WITH_IMGUI=0 compilation passed; executable not linked",
+  "automation": [
+    {
+      "mode": "NullRHI",
+      "passed": 13,
+      "failed": 0,
+      "warnings": 0,
+      "notRun": 0,
+      "tests": [
+        {
+          "name": "ImGui.Integration.AtlasGrowthAndContextLifetime",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.DrawOffsetsAndCallbacks",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.DynamicTextureLifecycle",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.FastGamepadAndTouch",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.FastInputAndReset",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.GamepadConnectionTransitions",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.GamepadMappingAndDisconnect",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.KeyMappingAndTextureHandles",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.OrderedPointerAndText",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.PendingInputCancellation",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.RuntimeDPIAndTheme",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.SharedAtlasAndDPI",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.TextureIdentityAndGC",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        }
+      ]
+    },
+    {
+      "mode": "D3D12",
+      "passed": 13,
+      "failed": 0,
+      "warnings": 0,
+      "notRun": 0,
+      "tests": [
+        {
+          "name": "ImGui.Integration.AtlasGrowthAndContextLifetime",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.DrawOffsetsAndCallbacks",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.DynamicTextureLifecycle",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.FastGamepadAndTouch",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.FastInputAndReset",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.GamepadConnectionTransitions",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.GamepadMappingAndDisconnect",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.KeyMappingAndTextureHandles",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.OrderedPointerAndText",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.PendingInputCancellation",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.RuntimeDPIAndTheme",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.SharedAtlasAndDPI",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        },
+        {
+          "name": "ImGui.Integration.TextureIdentityAndGC",
+          "state": "Success",
+          "warnings": 0,
+          "errors": 0
+        }
+      ]
+    }
+  ],
+  "slateSmoke": {
+    "drawCount": 161,
+    "viewportTicks": 161,
+    "normalExit": true,
+    "screenshotSha256": "982da18d31470b483ba508bb13def8e461361a6b3bcfedbe8a746091f405a982"
+  },
+  "vendor": {
+    "tag": "v1.92.9b",
+    "commit": "f1cc2ae15e53a861a874c3034aae6798fde194ab",
+    "sha256MatchedFiles": 17
+  },
+  "packagedGameVerified": false,
+  "physicalGamepadVerified": false,
+  "hotReloadVerified": false,
+  "evidenceLogs": [
+    {
+      "file": "editor-build.log",
+      "sha256": "66f35346166c1a60bc435aa739e4c0147ca93ea61e8405d0fc72f2aa343a34bd"
+    },
+    {
+      "file": "game-modules-Development.log",
+      "sha256": "f1aed04af9f3fd1a2cbd6377251b9d3ca25d9ed0c4d06e931082a76aeaddff75"
+    },
+    {
+      "file": "game-modules-Shipping.log",
+      "sha256": "5a6b5ef3922e8d32062cf83a098d2a71e1f570cc39cbee8c8494878b95938eb9"
+    },
+    {
+      "file": "automation-NullRHI.log",
+      "sha256": "ef0f48944495853491d1b76be2f36c85ca2c272afd05e8a2062dc6233f12a508"
+    },
+    {
+      "file": "automation-D3D12.log",
+      "sha256": "71a0f00852116b4398b21118b64e6e121bbdbc82992f7af6f1b635b97cdd7662"
+    },
+    {
+      "file": "slate-smoke.log",
+      "sha256": "712bbd63e99213e1c9621ad3d6797b358b7a6778f7e20602e84ea243a5df9dcb"
+    }
+  ]
+}

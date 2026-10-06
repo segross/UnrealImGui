@@ -10,13 +10,7 @@
 #include <Styling/SlateTypes.h>
 #include <UObject/Object.h>
 
-// We use FStringClassReference, which is supported by older and newer engine versions. Starting from 4.18, it is
-// a typedef of FSoftClassPath, which is also recognized by UHT.
-#if ENGINE_COMPATIBILITY_LEGACY_STRING_CLASS_REF
-#include <StringClassReference.h>
-#else
 #include <UObject/SoftObjectPath.h>
-#endif
 
 #include "ImGuiModuleSettings.generated.h"
 
@@ -175,8 +169,8 @@ protected:
 
 	// Path to own implementation of ImGui Input Handler allowing to customize handling of keyboard and gamepad input.
 	// If not set then default handler is used.
-	UPROPERTY(EditAnywhere, config, Category = "Extensions", meta = (MetaClass = "ImGuiInputHandler"))
-	FStringClassReference ImGuiInputHandlerClass;
+	UPROPERTY(EditAnywhere, config, Category = "Extensions", meta = (MetaClass = "/Script/ImGui.ImGuiInputHandler"))
+	FSoftClassPath ImGuiInputHandlerClass;
 
 	// Whether ImGui should share keyboard input with game.
 	// This defines initial behaviour which can be later changed using 'ImGui.ToggleKeyboardInputSharing' command or
@@ -236,7 +230,7 @@ public:
 
 	// Generic delegate used to notify changes of boolean properties.
 	DECLARE_MULTICAST_DELEGATE_OneParam(FBoolChangeDelegate, bool);
-	DECLARE_MULTICAST_DELEGATE_OneParam(FStringClassReferenceChangeDelegate, const FStringClassReference&);
+	DECLARE_MULTICAST_DELEGATE_OneParam(FSoftClassPathChangeDelegate, const FSoftClassPath&);
 	DECLARE_MULTICAST_DELEGATE_OneParam(FImGuiCanvasSizeInfoChangeDelegate, const FImGuiCanvasSizeInfo&);
 	DECLARE_MULTICAST_DELEGATE_OneParam(FImGuiDPIScaleInfoChangeDelegate, const FImGuiDPIScaleInfo&);
 
@@ -253,7 +247,7 @@ public:
 	// event that are defined depending on needs.
 
 	// Get the path to custom implementation of ImGui Input Handler.
-	const FStringClassReference& GetImGuiInputHandlerClass() const { return ImGuiInputHandlerClass; }
+	const FSoftClassPath& GetImGuiInputHandlerClass() const { return ImGuiInputHandlerClass; }
 
 	// Get the software cursor configuration.
 	bool UseSoftwareCursor() const { return bUseSoftwareCursor; }
@@ -268,7 +262,7 @@ public:
 	const FImGuiDPIScaleInfo& GetDPIScaleInfo() const { return DPIScale; }
 
 	// Delegate raised when ImGui Input Handle is changed.
-	FStringClassReferenceChangeDelegate OnImGuiInputHandlerClassChanged;
+	FSoftClassPathChangeDelegate OnImGuiInputHandlerClassChanged;
 
 	// Delegate raised when software cursor configuration is changed.
 	FBoolChangeDelegate OnUseSoftwareCursorChanged;
@@ -285,7 +279,7 @@ private:
 	void UpdateSettings();
 	void UpdateDPIScaleInfo();
 
-	void SetImGuiInputHandlerClass(const FStringClassReference& ClassReference);
+	void SetImGuiInputHandlerClass(const FSoftClassPath& ClassReference);
 	void SetShareKeyboardInput(bool bShare);
 	void SetShareGamepadInput(bool bShare);
 	void SetShareMouseInput(bool bShare);
@@ -301,7 +295,7 @@ private:
 	FImGuiModuleProperties& Properties;
 	FImGuiModuleCommands& Commands;
 
-	FStringClassReference ImGuiInputHandlerClass;
+	FSoftClassPath ImGuiInputHandlerClass;
 	FImGuiKeyInfo ToggleInputKey;
 	FImGuiCanvasSizeInfo CanvasSize;
 	FImGuiDPIScaleInfo DPIScale;

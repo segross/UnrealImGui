@@ -10,7 +10,7 @@ void FImGuiDrawList::CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const
 #endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 {
 	// Reset and reserve space in destination buffer.
-	OutVertexBuffer.SetNumUninitialized(ImGuiVertexBuffer.Size, false);
+	OutVertexBuffer.SetNumUninitialized(ImGuiVertexBuffer.Size, EAllowShrinking::No);
 
 	// Transform and copy vertex data.
 	for (int Idx = 0; Idx < ImGuiVertexBuffer.Size; Idx++)
@@ -22,6 +22,9 @@ void FImGuiDrawList::CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const
 		SlateVertex.TexCoords[0] = ImGuiVertex.uv.x;
 		SlateVertex.TexCoords[1] = ImGuiVertex.uv.y;
 		SlateVertex.TexCoords[2] = SlateVertex.TexCoords[3] = 1.f;
+		SlateVertex.MaterialTexCoords = FVector2f(ImGuiVertex.uv.x, ImGuiVertex.uv.y);
+		SlateVertex.SecondaryColor = FColor::Transparent;
+		SlateVertex.PixelSize[0] = SlateVertex.PixelSize[1] = 0;
 
 #if ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 		const FVector2D VertexPosition = Transform.TransformPoint(ImGuiInterops::ToVector2D(ImGuiVertex.pos));
@@ -29,7 +32,7 @@ void FImGuiDrawList::CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const
 		SlateVertex.Position[1] = VertexPosition.Y;
 		SlateVertex.ClipRect = VertexClippingRect;
 #else
-		SlateVertex.Position = Transform.TransformPoint(ImGuiInterops::ToVector2D(ImGuiVertex.pos));
+		SlateVertex.Position = FVector2f(Transform.TransformPoint(ImGuiInterops::ToVector2D(ImGuiVertex.pos)));
 #endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 
 		// Unpack ImU32 color.
@@ -37,21 +40,34 @@ void FImGuiDrawList::CopyVertexData(TArray<FSlateVertex>& OutVertexBuffer, const
 	}
 }
 
-void FImGuiDrawList::CopyIndexData(TArray<SlateIndex>& OutIndexBuffer, const int32 StartIndex, const int32 NumElements) const
+void FImGuiDrawList::CopyIndexData(TArray<SlateIndex>& OutIndexBuffer, int32 StartIndex, int32 NumElements, uint32 VertexOffset) const
 {
 	// Reset buffer.
-	OutIndexBuffer.SetNumUninitialized(NumElements, false);
+	OutIndexBuffer.SetNumUninitialized(NumElements, EAllowShrinking::No);
 
 	// Copy elements (slow copy because of different sizes of ImDrawIdx and SlateIndex and because SlateIndex can
 	// have different size on different platforms).
 	for (int i = 0; i < NumElements; i++)
 	{
-		OutIndexBuffer[i] = ImGuiIndexBuffer[StartIndex + i];
+		OutIndexBuffer[i] = static_cast<SlateIndex>(ImGuiIndexBuffer[StartIndex + i] + VertexOffset);
 	}
 }
 
 void FImGuiDrawList::TransferDrawData(ImDrawList& Src)
 {
+	for (ImDrawCmd& Command : Src.CmdBuffer)
+	{
+		if (Command.UserCallback)
+		{
+			if (Command.UserCallback != ImDrawCallback_ResetRenderState)
+			{
+				Command.UserCallback(&Src, &Command);
+			}
+			Command.ElemCount = 0;
+		}
+		// Resolve the reference now, before Dear ImGui can discard an old atlas's metadata.
+		Command.TexRef = ImTextureRef(Command.GetTexID());
+	}
 	// Move data from source to this list.
 	Src.CmdBuffer.swap(ImGuiCommandBuffer);
 	Src.IdxBuffer.swap(ImGuiIndexBuffer);
@@ -59,5 +75,5 @@ void FImGuiDrawList::TransferDrawData(ImDrawList& Src)
 
 	// ImGui seems to clear draw lists in every frame, but since source list can contain pointers to buffers that
 	// we just swapped, it is better to clear explicitly here.
-	Src.Clear();
+	Src._ResetForNewFrame();
 }

@@ -31,6 +31,9 @@ public:
 	// Get texture resources manager.
 	FTextureManager& GetTextureManager() { return TextureManager; }
 
+	// Refresh input configuration and device state before contexts consume queued events.
+	FSimpleMulticastDelegate& OnPreImGuiUpdate() { return PreImGuiUpdateEvent; }
+
 	// Event called right after ImGui is updated, to give other subsystems chance to react.
 	FSimpleMulticastDelegate& OnPostImGuiUpdate() { return PostImGuiUpdateEvent; }
 
@@ -46,7 +49,6 @@ private:
 	FImGuiModuleManager& operator=(FImGuiModuleManager&&) = delete;
 
 	void LoadTextures();
-	void BuildFontAtlasTexture();
 
 	bool IsTickRegistered() { return TickDelegateHandle.IsValid(); }
 	void RegisterTick();
@@ -64,6 +66,8 @@ private:
 
 	void OnContextProxyCreated(int32 ContextIndex, FImGuiContextProxy& ContextProxy);
 
+	FSimpleMulticastDelegate PreImGuiUpdateEvent;
+
 	// Event that we call after ImGui is updated.
 	FSimpleMulticastDelegate PostImGuiUpdateEvent;
 
@@ -79,11 +83,11 @@ private:
 	// Widget that we add to all created contexts to draw ImGui demo. 
 	FImGuiDemo ImGuiDemo;
 
-	// Manager for ImGui contexts.
-	FImGuiContextManager ContextManager;
-
 	// Manager for textures resources.
 	FTextureManager TextureManager;
+
+	// Destroy contexts before the textures they reference.
+	FImGuiContextManager ContextManager;
 
 	// Slate widgets that we created.
 	TArray<TWeakPtr<SImGuiLayout>> Widgets;

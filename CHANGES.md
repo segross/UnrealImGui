@@ -5,6 +5,15 @@ Versions marked as 'unofficial' are labelled only for the needs of this changelo
 Change History
 --------------
 
+Version: 1.23 (2026/10)
+- Updated Dear ImGui from 1.74 to the stable 1.92.9b release, including tables and current upstream documentation.
+- Updated build rules, module type, soft class paths, UHT metadata, array APIs, and Slate coordinates for UE 5.8.
+- Migrated keyboard, mouse, and gamepad input to Dear ImGui's event API, preserving fast press/release events.
+- Added dynamic font atlas texture creation, partial updates, deferred destruction, and font DPI scaling across shared PIE contexts.
+- Updated texture handles for ImTextureRef and reserved the invalid texture ID.
+- Honored index/vertex offsets and draw callbacks when staging draw data for Slate.
+- Added Unreal automation tests for input, texture lifetime, draw offsets, and shared font atlas/DPI behavior.
+
 Version: 1.22 (2021/04)
 - Fixed potential for initialization fiasco when using delegates container.
 - Fixed bug in code protecting redirecting handles from self-referencing.

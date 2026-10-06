@@ -176,11 +176,13 @@ FReply SImGuiWidget::OnAnalogValueChanged(const FGeometry& MyGeometry, const FAn
 
 FReply SImGuiWidget::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
+	InputHandler->OnMouseMove(TransformScreenPointToImGui(MyGeometry, MouseEvent.GetScreenSpacePosition()), MouseEvent);
 	return InputHandler->OnMouseButtonDown(MouseEvent).LockMouseToWidget(SharedThis(this));
 }
 
 FReply SImGuiWidget::OnMouseButtonDoubleClick(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
+	InputHandler->OnMouseMove(TransformScreenPointToImGui(MyGeometry, MouseEvent.GetScreenSpacePosition()), MouseEvent);
 	return InputHandler->OnMouseButtonDoubleClick(MouseEvent).LockMouseToWidget(SharedThis(this));
 }
 
@@ -199,6 +201,7 @@ namespace
 
 FReply SImGuiWidget::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
+	InputHandler->OnMouseMove(TransformScreenPointToImGui(MyGeometry, MouseEvent.GetScreenSpacePosition()), MouseEvent);
 	FReply Reply = InputHandler->OnMouseButtonUp(MouseEvent);
 	if (!NeedMouseLock(MouseEvent))
 	{
@@ -209,6 +212,7 @@ FReply SImGuiWidget::OnMouseButtonUp(const FGeometry& MyGeometry, const FPointer
 
 FReply SImGuiWidget::OnMouseWheel(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
+	InputHandler->OnMouseMove(TransformScreenPointToImGui(MyGeometry, MouseEvent.GetScreenSpacePosition()), MouseEvent);
 	return InputHandler->OnMouseWheel(MouseEvent);
 }
 
@@ -275,7 +279,7 @@ FReply SImGuiWidget::OnTouchEnded(const FGeometry& MyGeometry, const FPointerEve
 	return InputHandler->OnTouchEnded(TransformScreenPointToImGui(MyGeometry, TouchEvent.GetScreenSpacePosition()), TouchEvent);
 }
 
-void SImGuiWidget::CreateInputHandler(const FStringClassReference& HandlerClassReference)
+void SImGuiWidget::CreateInputHandler(const FSoftClassPath& HandlerClassReference)
 {
 	ReleaseInputHandler();
 
@@ -650,15 +654,12 @@ int32 SImGuiWidget::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeo
 			DrawList.CopyVertexData(VertexBuffer, ImGuiToScreen);
 #endif // ENGINE_COMPATIBILITY_LEGACY_CLIPPING_API
 
-			int IndexBufferOffset = 0;
 			for (int CommandNb = 0; CommandNb < DrawList.NumCommands(); CommandNb++)
 			{
 				const auto& DrawCommand = DrawList.GetCommand(CommandNb, ImGuiToScreen);
 
-				DrawList.CopyIndexData(IndexBuffer, IndexBufferOffset, DrawCommand.NumElements);
-
-				// Advance offset by number of copied elements to position it for the next command.
-				IndexBufferOffset += DrawCommand.NumElements;
+				if (DrawCommand.NumElements == 0) continue;
+				DrawList.CopyIndexData(IndexBuffer, DrawCommand.IndexOffset, DrawCommand.NumElements, DrawCommand.VertexOffset);
 
 				// Get texture resource handle for this draw command (null index will be also mapped to a valid texture).
 				const FSlateResourceHandle& Handle = ModuleManager->GetTextureManager().GetTextureHandle(DrawCommand.TextureId);
@@ -697,7 +698,7 @@ FVector2D SImGuiWidget::ComputeDesiredSize(float Scale) const
 static TArray<FKey> GetImGuiMappedKeys()
 {
 	TArray<FKey> Keys;
-	Keys.Reserve(Utilities::ArraySize<ImGuiInterops::ImGuiTypes::FKeyMap>::value + 8);
+	Keys.Reserve(ImGuiKey_NamedKey_COUNT);
 
 	// ImGui IO key map.
 	Keys.Emplace(EKeys::Tab);

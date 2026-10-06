@@ -75,7 +75,8 @@ void FImGuiModule::RemoveImGuiDelegate(const FImGuiDelegateHandle& Handle)
 FImGuiTextureHandle FImGuiModule::FindTextureHandle(const FName& Name)
 {
 	const TextureIndex Index = ImGuiModuleManager->GetTextureManager().FindTextureIndex(Name);
-	return (Index != INDEX_NONE) ? FImGuiTextureHandle{ Name, ImGuiInterops::ToImTextureID(Index) } : FImGuiTextureHandle{};
+	const ImTextureID Id = ImGuiModuleManager->GetTextureManager().GetTextureId(Index);
+	return Id != ImTextureID_Invalid ? FImGuiTextureHandle{ Name, Id } : FImGuiTextureHandle{};
 }
 
 FImGuiTextureHandle FImGuiModule::RegisterTexture(const FName& Name, class UTexture2D* Texture, bool bMakeUnique)
@@ -87,14 +88,16 @@ FImGuiTextureHandle FImGuiModule::RegisterTexture(const FName& Name, class UText
 		TEXT("or use bMakeUnique false, to update existing texture resources."), *Name.ToString());
 
 	const TextureIndex Index = TextureManager.CreateTextureResources(Name, Texture);
-	return FImGuiTextureHandle{ Name, ImGuiInterops::ToImTextureID(Index) };
+	return FImGuiTextureHandle{ Name, TextureManager.GetTextureId(Index) };
 }
 
 void FImGuiModule::ReleaseTexture(const FImGuiTextureHandle& Handle)
 {
-	if (Handle.IsValid())
+	if (ImGuiModuleManager && !Handle.IsNull())
 	{
-		ImGuiModuleManager->GetTextureManager().ReleaseTextureResources(ImGuiInterops::ToTextureIndex(Handle.GetTextureId()));
+		FTextureManager& Manager = ImGuiModuleManager->GetTextureManager();
+		const TextureIndex Index = ImGuiInterops::ToTextureIndex(Handle.GetTextureId());
+		if (Manager.IsRegisteredTextureId(Handle.GetTextureId()) && Manager.GetTextureName(Index) == Handle.GetName()) Manager.ReleaseTextureResources(Index);
 	}
 }
 
@@ -301,7 +304,8 @@ FImGuiModuleLoader FImGuiModuleLoader::Instance;
 bool FImGuiTextureHandle::HasValidEntry() const
 {
 	const TextureIndex Index = ImGuiInterops::ToTextureIndex(TextureId);
-	return Index != INDEX_NONE && ImGuiModuleManager && ImGuiModuleManager->GetTextureManager().GetTextureName(Index) == Name;
+	return Index != INDEX_NONE && ImGuiModuleManager && ImGuiModuleManager->GetTextureManager().IsValidTextureId(TextureId)
+		&& ImGuiModuleManager->GetTextureManager().GetTextureName(Index) == Name;
 }
 
 

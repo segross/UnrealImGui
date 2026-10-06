@@ -10,7 +10,9 @@
 /**
  * Handle to texture resources registered in module instance. Returned after successful texture registration.
  * Can be implicitly converted to ImTextureID making it possible to use it directly with ImGui interface.
- * Once texture is not needed handle can be used to release resources.
+ * Once texture is not needed handle can be used to release resources. IDs are opaque, session-local values:
+ * releasing and recreating a registration invalidates old handles, even when its name is reused.
+ * Externally registered textures must remain referenced by their owner to survive Unreal garbage collection.
  */
 class IMGUI_API FImGuiTextureHandle
 {
@@ -43,6 +45,7 @@ public:
 
 	/** Implicit conversion to ImTextureID. */
 	operator ImTextureID() const { return GetTextureId(); }
+	operator ImTextureRef() const { return ImTextureRef(GetTextureId()); }
 
 private:
 
@@ -53,7 +56,7 @@ private:
 	 */
 	FImGuiTextureHandle(const FName& InName, ImTextureID InTextureId);
 
-	/** Checks if texture manager has entry that matches this name and texture id index. */
+	/** Checks if texture manager has a live texture matching this name and complete texture identity. */
 	bool HasValidEntry() const;
 
 	FName Name;

@@ -1,0 +1,7 @@
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.8",
+  "DisableEnginePluginsByDefault": true,
+  "Modules": [{ "Name": "ImGuiValidation", "Type": "Runtime", "LoadingPhase": "Default" }],
+  "Plugins": [{ "Name": "ImGui", "Enabled": true }]
+}
